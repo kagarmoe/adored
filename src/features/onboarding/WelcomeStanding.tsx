@@ -4,37 +4,33 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui";
 import { TierBadge } from "@/components/ui/TierBadge";
-import { usageChipLabel } from "@/features/items/usage-chip-copy";
 import {
   buildStanding,
   type CompareRoundResult,
   type SampleItem,
   type Tier,
   type TriageOutcome,
-  type UsageOutcome,
 } from "./sampleData";
 
 interface WelcomeStandingProps {
   comparisons: CompareRoundResult[];
   triage: Record<string, TriageOutcome>;
-  usageByItemId?: Record<string, UsageOutcome>;
   onNext: () => void;
 }
 
 const HEADING_ID = "welcome-standing-heading";
 
-// Beat 5 — the payoff, mirroring the real results page (RankedResults): the
+// Beat 4 — the payoff, mirroring the real results page (RankedResults): the
 // beat is titled "Your ranking so far", the most-loved item leads under the
 // "What you love most" eyebrow, then the ranking, then the onward / set-aside /
 // deferred groups in subordinate styling, closing on the affirmation. The
 // ranking is built from the user's own taps (buildStanding), so the top feels
 // earned — the anti-marketplace weight: from things you own.
-export function WelcomeStanding({ comparisons, triage, usageByItemId, onNext }: WelcomeStandingProps) {
+export function WelcomeStanding({ comparisons, triage, onNext }: WelcomeStandingProps) {
   const standing = buildStanding(comparisons, triage);
   const loved = standing.ranked.filter((row) => row.tier !== "onward");
   const onward = standing.ranked.filter((row) => row.tier === "onward");
   const [hero, ...lovedRest] = loved;
-  const heroUsage = hero ? usageFor(hero.item, usageByItemId) : null;
 
   return (
     <section aria-labelledby={HEADING_ID} className="flex flex-col items-center text-center gap-6">
@@ -42,7 +38,7 @@ export function WelcomeStanding({ comparisons, triage, usageByItemId, onNext }: 
         Your ranking so far
       </h1>
       <p className="max-w-md text-ink-soft">
-        Compare folds those pair choices into the same ranking. Triage groups and Usage notes stay with each piece.
+        Your pair choices put the ones you love most in order.
       </p>
 
       {hero ? (
@@ -54,14 +50,7 @@ export function WelcomeStanding({ comparisons, triage, usageByItemId, onNext }: 
             <Image src={hero.item.imageSrc} alt={hero.item.name} fill className="object-cover" unoptimized />
           </div>
           <p className="font-display text-xl text-ink">{hero.item.name}</p>
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {heroUsage && (
-              <span className="rounded-full bg-content-soft px-2 py-1 text-xs font-semibold text-ink">
-                {usageChipLabel(heroUsage)}
-              </span>
-            )}
-            <TierBadge tier={hero.tier} />
-          </div>
+          <TierBadge tier={hero.tier} />
         </div>
       ) : (
         <p className="max-w-sm text-ink-soft">
@@ -77,7 +66,6 @@ export function WelcomeStanding({ comparisons, triage, usageByItemId, onNext }: 
               item={row.item}
               tier={row.tier}
               rank={index + 2}
-              usage={usageFor(row.item, usageByItemId)}
             />
           ))}
         </ol>
@@ -102,12 +90,9 @@ export function WelcomeStanding({ comparisons, triage, usageByItemId, onNext }: 
         </StandingGroup>
       )}
 
-      {/* ponytail: deliberate demo compression — a "Not yet" item shows here as a
-         gentle deferred group because a one-pass 3-item walkthrough has no later
-         round; in the real app a deferred item resurfaces in the triage queue,
-         not on the results page. */}
+      {/* A Not yet piece rests in Still deciding, as on the real Ranking. */}
       {standing.deferred.length > 0 && (
-        <StandingGroup label="Ready when you are">
+        <StandingGroup label="Still deciding">
           {standing.deferred.map((item) => (
             <StandingRowItem key={item.id} item={item} />
           ))}
@@ -152,12 +137,10 @@ function StandingRowItem({
   item,
   tier,
   rank,
-  usage,
 }: {
   item: SampleItem;
   tier?: Tier;
   rank?: number;
-  usage?: "uses" | "not_uses" | null;
 }) {
   return (
     <li className="flex items-center gap-3 rounded-card p-2 bg-surface border border-hairline">
@@ -170,24 +153,7 @@ function StandingRowItem({
         <Image src={item.imageSrc} alt={item.name} fill className="object-cover" unoptimized />
       </span>
       <span className="flex-1 text-left text-ink">{item.name}</span>
-      <span className="flex shrink-0 items-center gap-2">
-        {usage && (
-          <span className="rounded-full bg-content-soft px-2 py-1 text-xs font-semibold text-ink">
-            {usageChipLabel(usage)}
-          </span>
-        )}
-        {tier && <TierBadge tier={tier} showLabel={false} />}
-      </span>
+      {tier && <TierBadge tier={tier} showLabel={false} />}
     </li>
   );
-}
-
-function usageFor(
-  item: SampleItem,
-  usageByItemId?: Record<string, UsageOutcome>,
-): "uses" | "not_uses" | null {
-  const usage = usageByItemId?.[item.id];
-  if (usage?.kind === "used") return "uses";
-  if (usage?.kind === "unused") return "not_uses";
-  return null;
 }

@@ -1,15 +1,12 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { WelcomePurpose } from "./WelcomePurpose";
 import { WelcomeTriage } from "./WelcomeTriage";
-import { WelcomeUsage } from "./WelcomeUsage";
 import { WelcomeCompare } from "./WelcomeCompare";
-import { WelcomeRoundStanding } from "./WelcomeRoundStanding";
 import { WelcomeStanding } from "./WelcomeStanding";
-import { WelcomeRefine } from "./WelcomeRefine";
 import { WelcomeHandoff } from "./WelcomeHandoff";
 import {
   COMPARE_PAIR,
@@ -21,10 +18,8 @@ import {
 import {
   COMPARE_SUBLINE,
   ROUND_COPY,
-  USAGE_PASS_ARIA_LABEL,
   WELCOME_ROUND_KICKER,
 } from "@/features/sorting/roundCopy";
-import { moveUpLabel } from "@/features/results/rerank-copy";
 
 // The triage beat now renders the real sorting controls, which call useRouter()
 // unconditionally. Local mode never touches the router, but the hook still reads
@@ -34,21 +29,14 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("WelcomePurpose", () => {
-  it("renders the Playfair hero and the sample sorting walkthrough framing", () => {
+  it("frames the walkthrough as two steps, not rounds", () => {
     render(<WelcomePurpose onNext={() => {}} />);
     expect(screen.getByRole("heading", { name: "Rediscover what you love." })).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /In this tutorial, you.?ll sort a small sample collection through three short rounds\./
-      )
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Add photos to a collection.")).not.toBeInTheDocument();
-    expect(screen.queryByText("Make items when you’re ready.")).not.toBeInTheDocument();
-    expect(screen.getByText(/Triage groups by how you feel/i)).toBeInTheDocument();
-    expect(screen.getByText(/Usage asks what happens in your life/i)).toBeInTheDocument();
-    expect(screen.getByText(/Compare puts pieces in order/i)).toBeInTheDocument();
-    expect(screen.getByText("After each round, you’ll see what changed and what you adore.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Show me how" })).toBeInTheDocument();
+    expect(screen.getByText("In this tutorial, you’ll sort a small sample collection in two steps.")).toBeInTheDocument();
+    expect(screen.getByText("First, how you feel about each piece.")).toBeInTheDocument();
+    expect(screen.getByText("Then, two at a time, which you’d reach for first.")).toBeInTheDocument();
+    expect(screen.getByText("At the end, you’ll see what you love most.")).toBeInTheDocument();
+    expect(screen.queryByText(/round/i)).not.toBeInTheDocument();
   });
 
   it("advances when 'Show me how' is tapped", async () => {
@@ -118,59 +106,6 @@ describe("WelcomeTriage", () => {
   });
 });
 
-describe("WelcomeUsage", () => {
-  const item = TRIAGE_ITEMS[0];
-
-  it("renders the kicker + shared usage explainer and the 'Do you use this?' prompt", () => {
-    render(<WelcomeUsage item={item} onOutcome={vi.fn()} />);
-    // Kicker is the neutral round noun distinct from the person-side arc names (user decision).
-    expect(screen.getByText(WELCOME_ROUND_KICKER)).toBeInTheDocument();
-    expect(screen.getByText(ROUND_COPY.usage.explainer)).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Do you use this?" })).toBeInTheDocument();
-  });
-
-  it("offers both usage decisions and the write-nothing 'Skip for now' pass", () => {
-    render(<WelcomeUsage item={item} onOutcome={vi.fn()} />);
-    expect(screen.getByRole("button", { name: "Yes, I use it" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Not these days" })).toBeInTheDocument();
-    // The pass's accessible name begins with its visible label (WCAG 2.5.3), so it
-    // is distinct from the shell's own "Leave tutorial" exit.
-    expect(screen.getByRole("button", { name: USAGE_PASS_ARIA_LABEL })).toBeInTheDocument();
-  });
-
-  it("'Yes, I use it' reports a used outcome; 'Not these days' reports an unused outcome", async () => {
-    const onOutcome = vi.fn();
-    render(<WelcomeUsage item={item} onOutcome={onOutcome} />);
-    await userEvent.click(screen.getByRole("button", { name: "Yes, I use it" }));
-    expect(onOutcome).toHaveBeenCalledWith({ kind: "used" });
-    await userEvent.click(screen.getByRole("button", { name: "Not these days" }));
-    expect(onOutcome).toHaveBeenCalledWith({ kind: "unused" });
-  });
-
-  it("'Skip for now' reports a pass outcome", async () => {
-    const onOutcome = vi.fn();
-    render(<WelcomeUsage item={item} onOutcome={onOutcome} />);
-    await userEvent.click(screen.getByRole("button", { name: USAGE_PASS_ARIA_LABEL }));
-    expect(onOutcome).toHaveBeenCalledWith({ kind: "pass" });
-  });
-
-  it("never fetches across taps (local mode is synchronous)", async () => {
-    const fetchSpy = vi.fn();
-    vi.stubGlobal("fetch", fetchSpy);
-    try {
-      const onOutcome = vi.fn();
-      render(<WelcomeUsage item={item} onOutcome={onOutcome} />);
-      await userEvent.click(screen.getByRole("button", { name: "Yes, I use it" }));
-      await userEvent.click(screen.getByRole("button", { name: USAGE_PASS_ARIA_LABEL }));
-      expect(fetchSpy).not.toHaveBeenCalled();
-      // Non-vacuous: the taps really landed on the local handler.
-      expect(onOutcome).toHaveBeenCalledTimes(2);
-    } finally {
-      vi.unstubAllGlobals();
-    }
-  });
-});
-
 describe("WelcomeCompare", () => {
   const [left, right] = COMPARE_PAIR;
 
@@ -223,43 +158,6 @@ describe("WelcomeCompare", () => {
   });
 });
 
-describe("WelcomeRoundStanding", () => {
-  it("shows the triage standing after the first round", () => {
-    render(
-      <WelcomeRoundStanding
-        stage="triage"
-        triage={{
-          [TRIAGE_ITEMS[0].id]: { kind: "tier", tier: "love" },
-          [TRIAGE_ITEMS[1].id]: { kind: "tier", tier: "like" },
-          [TRIAGE_ITEMS[2].id]: { kind: "tier", tier: "maybe" },
-        }}
-        onNext={vi.fn()}
-      />
-    );
-    expect(screen.getByRole("heading", { name: "After Triage" })).toBeInTheDocument();
-    expect(screen.getByText("Your first groups are taking shape.")).toBeInTheDocument();
-    expect(screen.getByText(TRIAGE_ITEMS[0].name)).toBeInTheDocument();
-  });
-
-  it("shows usage as a note without changing the ranking", () => {
-    render(
-      <WelcomeRoundStanding
-        stage="usage"
-        triage={{
-          [TRIAGE_ITEMS[0].id]: { kind: "tier", tier: "love" },
-          [TRIAGE_ITEMS[1].id]: { kind: "tier", tier: "like" },
-          [TRIAGE_ITEMS[2].id]: { kind: "tier", tier: "maybe" },
-        }}
-        usageByItemId={{ [TRIAGE_ITEMS[0].id]: { kind: "used" } }}
-        onNext={vi.fn()}
-      />
-    );
-    expect(screen.getByRole("heading", { name: "After Usage" })).toBeInTheDocument();
-    expect(screen.getByText("The Triage order stays. Usage adds a note to each piece.")).toBeInTheDocument();
-    expect(screen.getByText("In your life")).toBeInTheDocument();
-  });
-});
-
 describe("WelcomeStanding", () => {
   const win: CompareOutcome = { kind: "win", winnerId: COMPARE_PAIR[0].id };
   const winRound: CompareRoundResult = {
@@ -291,12 +189,8 @@ describe("WelcomeStanding", () => {
 
   it("highlights the compare-driven order change", () => {
     render(<WelcomeStanding comparisons={[winRound]} triage={{}} onNext={vi.fn()} />);
-    expect(
-      screen.getByText(
-        "Compare folds those pair choices into the same ranking. Triage groups and Usage notes stay with each piece."
-      )
-    ).toBeInTheDocument();
-    expect(screen.queryByText(/Usage adds a quiet note/i)).not.toBeInTheDocument();
+    expect(screen.getByText("Your pair choices put the ones you love most in order.")).toBeInTheDocument();
+    expect(screen.queryByText(/Usage/)).not.toBeInTheDocument();
   });
 
   it("shows 'Where these go next' for onward-tier items, and omits it when none", () => {
@@ -335,9 +229,9 @@ describe("WelcomeStanding", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows the 'Ready when you are' row only after a Not-yet (deferred)", () => {
+  it("shows the 'Still deciding' row only after a Not-yet (deferred)", () => {
     const { unmount } = render(<WelcomeStanding comparisons={[winRound]} triage={{}} onNext={vi.fn()} />);
-    expect(screen.queryByText("Ready when you are")).not.toBeInTheDocument();
+    expect(screen.queryByText("Still deciding")).not.toBeInTheDocument();
     unmount();
     render(
       <WelcomeStanding
@@ -346,7 +240,7 @@ describe("WelcomeStanding", () => {
         onNext={vi.fn()}
       />
     );
-    expect(screen.getByText("Ready when you are")).toBeInTheDocument();
+    expect(screen.getByText("Still deciding")).toBeInTheDocument();
   });
 
   it("all triage escaped: no hero is forced, both escape rows show", () => {
@@ -363,56 +257,12 @@ describe("WelcomeStanding", () => {
     expect(
       screen.getByText("Set aside — waiting, whenever you want them")
     ).toBeInTheDocument();
-    expect(screen.getByText("Ready when you are")).toBeInTheDocument();
+    expect(screen.getByText("Still deciding")).toBeInTheDocument();
   });
 
   it("advances when Continue is tapped", async () => {
     const onNext = vi.fn();
     render(<WelcomeStanding comparisons={[winRound]} triage={{}} onNext={onNext} />);
-    await userEvent.click(screen.getByRole("button", { name: "Continue" }));
-    expect(onNext).toHaveBeenCalledOnce();
-  });
-});
-
-describe("WelcomeRefine", () => {
-  it("quotes the real 'Adjust results' button and the finalize/share forward reference", () => {
-    render(<WelcomeRefine onNext={vi.fn()} />);
-    expect(screen.getByRole("heading", { name: "Refine it any time" })).toBeInTheDocument();
-    expect(screen.getByText(/adjust results/i)).toBeInTheDocument();
-    expect(screen.getByText(/finalize it and share it/i)).toBeInTheDocument();
-  });
-
-  it("shows a sample hand-order list with draggable rows", () => {
-    render(<WelcomeRefine onNext={vi.fn()} />);
-    const list = screen.getByRole("list", { name: "Sample hand-order list" });
-    const rows = within(list).getAllByRole("listitem");
-    expect(rows).toHaveLength(3);
-    expect(rows[0]).toHaveAttribute("draggable", "true");
-    expect(rows[0]).toHaveTextContent(TRIAGE_ITEMS[2].name);
-    expect(rows[1]).toHaveTextContent(TRIAGE_ITEMS[0].name);
-    expect(rows[2]).toHaveTextContent(TRIAGE_ITEMS[1].name);
-  });
-
-  it("lets the sample order change by drag and by arrow buttons", async () => {
-    const user = userEvent.setup();
-    render(<WelcomeRefine onNext={vi.fn()} />);
-    const list = screen.getByRole("list", { name: "Sample hand-order list" });
-
-    let rows = within(list).getAllByRole("listitem");
-    fireEvent.dragStart(rows[0]);
-    fireEvent.dragOver(rows[2]);
-    fireEvent.drop(rows[2]);
-    rows = within(list).getAllByRole("listitem");
-    expect(rows[2]).toHaveTextContent(TRIAGE_ITEMS[2].name);
-
-    await user.click(screen.getByRole("button", { name: moveUpLabel(TRIAGE_ITEMS[2].name) }));
-    rows = within(list).getAllByRole("listitem");
-    expect(rows[1]).toHaveTextContent(TRIAGE_ITEMS[2].name);
-  });
-
-  it("advances when Continue is tapped", async () => {
-    const onNext = vi.fn();
-    render(<WelcomeRefine onNext={onNext} />);
     await userEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(onNext).toHaveBeenCalledOnce();
   });
@@ -426,7 +276,7 @@ describe("WelcomeHandoff", () => {
       screen.getByText("Begin with photos. They can wait in the pool until you make items.")
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Sort whenever you like, one gentle round at a time.")
+      screen.getByText("Sort whenever you like, a few pieces at a time.")
     ).toBeInTheDocument();
     const cta = screen.getByRole("link", { name: "Start a collection" });
     expect(cta).toHaveAttribute("href", "/collections/new");

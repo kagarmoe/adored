@@ -51,8 +51,6 @@ export const TRIAGE_ITEMS: readonly SampleItem[] = [
   SAMPLE_ITEMS[2],
 ];
 
-export const USAGE_ITEMS: readonly SampleItem[] = TRIAGE_ITEMS;
-
 interface StandingRow {
   item: SampleItem;
   tier: Tier;
@@ -71,12 +69,6 @@ export type CompareOutcome =
   | { kind: "tie" }
   | { kind: "skip" };
 
-// The outcome of the usage teaching beat: in use, resting, or passed (Skip for now).
-export type UsageOutcome =
-  | { kind: "used" }
-  | { kind: "unused" }
-  | { kind: "pass" };
-
 export interface CompareRoundResult {
   itemAId: string;
   itemBId: string;
@@ -85,7 +77,7 @@ export interface CompareRoundResult {
 
 export interface Standing {
   ranked: StandingRow[]; // hero = ranked[0] when non-empty
-  deferred: SampleItem[]; // "Ready when you are"
+  deferred: SampleItem[]; // "Still deciding"
   setAside: SampleItem[]; // "Waiting, whenever you want them"
 }
 
@@ -160,7 +152,8 @@ export function buildTriageStanding(triage: Record<string, TriageOutcome>): Stan
 }
 
 export function comparePairsFor(standing: Standing): Array<readonly [SampleItem, SampleItem]> {
-  const rankedItems = standing.ranked.map((row) => row.item);
+  // Spec §4: only Love and Like are compared — the same rule as the real sort.
+  const rankedItems = standing.ranked.filter((row) => row.tier === "love" || row.tier === "like").map((row) => row.item);
   const pairs: Array<readonly [SampleItem, SampleItem]> = [];
   for (let i = 0; i < rankedItems.length; i++) {
     for (let j = i + 1; j < rankedItems.length; j++) {

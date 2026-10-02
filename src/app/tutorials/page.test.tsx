@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 import TutorialsPage from "./page";
 
 describe("/tutorials", () => {
-  it("lists the four tutorial routes with the requested wording", () => {
+  it("lists the three tutorial routes with the requested wording", () => {
     render(<TutorialsPage />);
 
     expect(screen.getByRole("heading", { name: "Tutorials" })).toBeInTheDocument();
@@ -20,7 +20,6 @@ describe("/tutorials", () => {
       ["Start a collection", "/tutorials/collection"],
       ["Sort and refine", "/tutorials/sort"],
       ["Invite and share", "/tutorials/sharing"],
-      ["Round timers", "/tutorials/timers"],
     ] as const;
 
     for (const [label, href] of links) {

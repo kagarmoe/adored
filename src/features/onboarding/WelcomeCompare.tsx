@@ -13,7 +13,7 @@ interface WelcomeCompareProps {
 
 // Beat 4 — two of YOUR things side by side, taught with the REAL CompareChoice
 // in its synchronous local mode: no fetch and no router. The kicker
-// uses a NEUTRAL round noun (WELCOME_ROUND_KICKER) distinct from the person-side
+// uses a NEUTRAL kicker (WELCOME_ROUND_KICKER) distinct from the person-side
 // arc names in ROUND_COPY (user decision); the explainer still comes from ROUND_COPY —
 // never two product cards to buy.
 export function WelcomeCompare({

@@ -4,10 +4,6 @@ import {
   COMPARE_SUBLINE,
   ROUND_COPY,
   triageDecisions,
-  usageDecisions,
-  USAGE_PASS_ARIA_LABEL,
-  USAGE_PASS_LABEL,
-  USAGE_PASS_TITLE,
 } from "./roundCopy";
 
 describe("roundCopy", () => {
@@ -20,13 +16,6 @@ describe("roundCopy", () => {
     }
   });
 
-  it("carries the usage round copy verbatim", () => {
-    expect(ROUND_COPY.usage.name).toBe("Do you use this?");
-    expect(ROUND_COPY.usage.explainer).toBe(
-      "One piece at a time — is it in your life these days?",
-    );
-  });
-
   it("builds the four tier decisions for an item", () => {
     expect(triageDecisions("item-1")).toEqual([
       { label: "Love", decision: { itemId: "item-1", result: "top" } },
@@ -34,21 +23,6 @@ describe("roundCopy", () => {
       { label: "Maybe", decision: { itemId: "item-1", result: "medium" } },
       { label: "Onward", decision: { itemId: "item-1", result: "low" } },
     ]);
-  });
-
-  it("builds the two usage decisions for an item", () => {
-    expect(usageDecisions("item-1")).toEqual([
-      { label: "Yes, I use it", decision: { itemId: "item-1", result: "uses" } },
-      { label: "Not these days", decision: { itemId: "item-1", result: "not_uses" } },
-    ]);
-  });
-
-  it("carries the usage pass-button copy verbatim", () => {
-    expect(USAGE_PASS_LABEL).toBe("Skip for now");
-    expect(USAGE_PASS_TITLE).toBe("It'll come around again");
-    expect(USAGE_PASS_ARIA_LABEL).toBe("Skip for now — it'll come around again");
-    // WCAG 2.5.3: the accessible name begins with the visible label.
-    expect(USAGE_PASS_ARIA_LABEL.startsWith(USAGE_PASS_LABEL)).toBe(true);
   });
 
   it("carries the compare sub-line", () => {
