@@ -12,7 +12,7 @@ import { Button, EmptyState, Input } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { ArchivedItemCard } from "@/features/items/ArchivedItemCard";
 import { ItemFilterPills, type ItemsView } from "@/features/items/ItemFilterPills";
-import { RemovedItemNotice } from "@/features/items/RemovedItemNotice";
+import { ArchivedNotice } from "@/features/items/ArchivedNotice";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { filterItems, itemsEmptyState } from "@/lib/items";
 import Link from "next/link";
@@ -87,7 +87,7 @@ export default async function ItemsPage({ params, searchParams: searchParamsProm
         {typeof searchParams?.removed === "string" &&
           view !== "archived" &&
           !items.some((i) => i.id === searchParams.removed) && (
-            <RemovedItemNotice itemId={searchParams.removed} />
+            <ArchivedNotice kind="item" id={searchParams.removed} />
           )}
 
         {/* Section index, not the workspace root: Build is the current section,

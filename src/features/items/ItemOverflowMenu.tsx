@@ -18,7 +18,7 @@ interface ItemOverflowMenuProps {
 type Step = null | "confirm" | "in-ranking" | "finished-ranking";
 
 // Archive = the reversible soft delete; the undo waits on the items list
-// (RemovedItemNotice). Delete = the owner-only permanent purge. The server
+// (ArchivedNotice). Delete = the owner-only permanent purge. The server
 // answers 409 while any sort result holds the item: drafts can be cleared via
 // remove-from-sorts, after which Delete is offered again; a finished (finalized)
 // ranking is a hard block, so archive is the way out there.

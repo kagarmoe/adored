@@ -31,21 +31,17 @@ describe("CollectionCard images", () => {
     );
   });
 
-  it("renders a 'View photo' control AND the navigating link (valid DOM) when viewerPhoto is set", () => {
+  it("renders the menu slot alongside the single navigating link, and no status badge", () => {
     render(
       <CollectionCard
-        collection={collection as any}
-        coverPhotoUrl="/x"
-        viewerPhoto={{ id: "p", itemId: "i", collectionId: "c", rotation: 0, updatedAt: new Date().toISOString() }}
+        collection={{ ...collection, status: "archived" } as any}
+        menu={<button type="button">More</button>}
       />,
     );
-    expect(screen.getByRole("button", { name: /view photo/i })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Favorites" })).toBeInTheDocument();
-  });
-
-  it("renders no 'View photo' control when viewerPhoto is absent", () => {
-    render(<CollectionCard collection={collection as any} coverPhotoUrl="/x" />);
+    expect(screen.getByRole("button", { name: "More" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link")).toHaveLength(1);
     expect(screen.queryByRole("button", { name: /view photo/i })).not.toBeInTheDocument();
+    expect(screen.queryByText("archived")).not.toBeInTheDocument(); // the Archived pill says it
   });
 });
 

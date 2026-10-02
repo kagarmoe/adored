@@ -5,20 +5,23 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui";
 import { AsyncActionButton } from "@/features/sorting/AsyncActionButton";
 
-interface RemovedItemNoticeProps {
-  itemId: string;
+interface ArchivedNoticeProps {
+  kind: "item" | "collection";
+  id: string;
 }
 
-// The undo half of the archive flow: the item panel's Archive (ItemOverflowMenu)
-// lands on the items list with ?removed=<id>; this notice
+// The undo half of the archive flow (an item from its panel, a collection from its card):
+// the archiving surface lands on the list with ?removed=<id>; this notice
 // offers the existing restore endpoint as an immediate way back. Focus moves to
 // the notice on mount — an aria-live region server-rendered into a freshly
 // navigated page is NOT announced (live regions announce mutations, not initial
 // content), so the focus move is what tells an AT user the archive happened and
 // where the way back is. Dismissing strips only the `removed` param, so any
 // co-present filters (?status=…) survive. A stale/foreign id just 404s into the
-// gentle retry line. The copy points at the Archived pill, one tap away on this list.
-export function RemovedItemNotice({ itemId }: RemovedItemNoticeProps) {
+// gentle retry line. The restore URL is built HERE from kind + an encoded id — never
+// passed in — so a hostile ?removed= (e.g. "../collections/x/archive#") cannot aim Undo
+// at another route. The copy points at the Archived pill, one tap away on this list.
+export function ArchivedNotice({ kind, id }: ArchivedNoticeProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -36,7 +39,12 @@ export function RemovedItemNotice({ itemId }: RemovedItemNoticeProps) {
   }
 
   async function restore() {
-    const res = await fetch(`/api/items/${itemId}/restore`, { method: "POST" });
+    const safe = encodeURIComponent(id);
+    // Literal paths (not a joined segment) so the UI-route connectivity scan can verify both wires.
+    const res =
+      kind === "item"
+        ? await fetch(`/api/items/${safe}/restore`, { method: "POST" })
+        : await fetch(`/api/collections/${safe}/restore`, { method: "POST" });
     if (!res.ok) throw new Error("restore failed");
     router.replace(hrefWithoutRemoved());
   }
