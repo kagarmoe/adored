@@ -295,6 +295,11 @@ export function ItemPhotoCarousel({
             // A mostly-vertical flick is a page scroll, not a swipe.
             if (Math.abs(dx) >= SWIPE_MIN_PX && Math.abs(dx) > Math.abs(dy)) {
               swiped.current = true;
+              // The synthetic click a swipe can produce lands in this same task; a
+              // real swipe produces none, so clear the flag before the next input.
+              setTimeout(() => {
+                swiped.current = false;
+              }, 0);
               go(dx < 0 ? current + 1 : current - 1);
             }
           }}
