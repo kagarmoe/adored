@@ -1,5 +1,5 @@
 import type { Collection } from "@/types";
-import { itemsViewHref } from "@/features/items/ItemFilterPills";
+import { viewHref } from "@/components/ui/viewHref";
 
 export type CollectionsView = "all" | "archived";
 export const COLLECTION_PILLS: [CollectionsView, string][] = [["all", "All"], ["archived", "Archived"]];
@@ -9,7 +9,7 @@ export function collectionsViewFrom(status: unknown): CollectionsView {
   return status === "archived" ? "archived" : "all";
 }
 
-export const collectionsViewHref = (view: CollectionsView, q: string) => itemsViewHref("/collections", view, q);
+export const collectionsViewHref = (view: CollectionsView, q: string) => viewHref("/collections", view, q);
 
 /** All = not archived (no status is silently hidden), Archived = archived; plain-text
  *  search (never a pattern) over name and description. */
