@@ -49,13 +49,4 @@ describe("AsyncActionButton", () => {
     );
     expect(btn).not.toBeDisabled(); // busy rolled back so a retry is possible
   });
-
-  it("calls onBusyChange(true) then onBusyChange(false) around a failed action", async () => {
-    const onBusyChange = vi.fn();
-    const action = vi.fn().mockRejectedValue(new Error("boom"));
-    render(<AsyncActionButton label="Do it" action={action} onBusyChange={onBusyChange} />);
-    fireEvent.click(screen.getByRole("button", { name: "Do it" }));
-    await waitFor(() => expect(onBusyChange).toHaveBeenCalledWith(false));
-    expect(onBusyChange.mock.calls).toEqual([[true], [false]]);
-  });
 });

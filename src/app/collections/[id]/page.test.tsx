@@ -4,21 +4,20 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import type { Collection, Item, Photo, Session } from "@/types";
 
-const { mockGetSession, mockRequireAccess, photoRepo, itemRepo, sessionRepo, prefRepo, dispositionRepo } = vi.hoisted(() => ({
+const { mockGetSession, mockRequireAccess, photoRepo, itemRepo, sessionRepo, prefRepo } = vi.hoisted(() => ({
   mockGetSession: vi.fn(),
   mockRequireAccess: vi.fn(),
   photoRepo: { findPoolByCollection: vi.fn(), findCoverPhotosByItemIds: vi.fn() },
   itemRepo: { findByCollection: vi.fn() },
   sessionRepo: { findByCollectionAndCurator: vi.fn() },
   prefRepo: { findByCollection: vi.fn() },
-  dispositionRepo: { findByCollectionAndCurator: vi.fn() },
 }));
 vi.mock("@/lib/auth", () => ({ getSession: mockGetSession }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
-  // ActiveSessionPanel is a client island that calls useRouter.
-  useRouter: () => ({ refresh: vi.fn() }),
+  // KeepSortingButton is a client island that calls useRouter.
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
 }));
 vi.mock("@/components/layout", () => ({ AppLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div> }));
 vi.mock("@/lib/collection-access", () => ({ requireCollectionAccess: mockRequireAccess }));
@@ -26,7 +25,6 @@ vi.mock("@/server/repositories/implementations/PhotoRepository", () => ({ PhotoR
 vi.mock("@/server/repositories/implementations/ItemRepository", () => ({ ItemRepository: vi.fn(function () { return itemRepo; }) }));
 vi.mock("@/server/repositories/implementations/SessionRepository", () => ({ SessionRepository: vi.fn(function () { return sessionRepo; }) }));
 vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({ CollectionPreferenceItemRepository: vi.fn(function () { return prefRepo; }) }));
-vi.mock("@/server/repositories/implementations/ItemDispositionRepository", () => ({ ItemDispositionRepository: vi.fn(function () { return dispositionRepo; }) }));
 
 import CollectionPage from "./page";
 
@@ -122,7 +120,6 @@ beforeEach(() => {
   itemRepo.findByCollection.mockResolvedValue([]);
   sessionRepo.findByCollectionAndCurator.mockResolvedValue([]);
   prefRepo.findByCollection.mockResolvedValue([]);
-  dispositionRepo.findByCollectionAndCurator.mockResolvedValue([]);
 });
 
 async function renderPage() {
@@ -163,42 +160,23 @@ describe("adaptive workspace states", () => {
     );
   });
 
-  it("no sessions but existing decisions (only session was set aside): the start card says Keep sorting, not day-one copy", async () => {
-    // purses-1xbp.2: a curator whose ONLY session was set aside has zero session
-    // rows (soft-deleted), but their preference rows persist — they HAVE sorted.
+  it("decisions but no open sort: Start sorting, plus a quiet way to the ranking", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
     prefRepo.findByCollection.mockResolvedValue([{ itemId: "item_1" }]);
     await renderPage();
-    expect(screen.getByRole("heading", { name: "Keep sorting" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Start sorting" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start sorting" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "See your ranking" })).toHaveAttribute("href", "/collections/summer-bags/results");
   });
 
-  it("items-first, never sorted: Sort wins — Start sorting is dominant, Add photos/Add item/View all items are secondary", async () => {
+  it("items-first, never sorted: Start sorting is the one dominant action", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
-    // No session, so the Continue panel's Resume button is absent — but items
-    // exist, so the start card claims the one primary action (spec §2: "Sort
-    // wins once items exist").
-    const { container } = await renderPage();
-
-    const startSortingLink = screen.getByRole("link", { name: "Start sorting" });
-    expect(startSortingLink).toHaveAttribute("href", "/collections/summer-bags/sort/new");
-    const startSorting = screen.getByRole("button", { name: "Start sorting" });
-    expect(startSorting.className).toContain("bg-primary"); // dominant (primary button)
-
-    // The adaptive lead action and the other item actions exist but are NOT
-    // peer primaries — demoted because items exist (leadActionVariant).
-    const addPhotos = screen.getByRole("link", { name: "Add photos" });
-    const addItem = screen.getByRole("link", { name: "Add item" });
-    const viewAll = screen.getByRole("link", { name: "View all items" });
-    expect(addPhotos).toHaveAttribute("href", "/collections/summer-bags/pool");
-    expect(addItem).toHaveAttribute("href", "/collections/summer-bags/items/new");
-    expect(viewAll).toHaveAttribute("href", "/collections/summer-bags/items");
-    expect(addPhotos.className).not.toContain("bg-primary");
-    expect(addItem.className).not.toContain("bg-primary");
-    expect(viewAll.className).not.toContain("bg-primary");
-
-    // Exactly one dominant (primary-styled) action on the page.
-    expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
+    await renderPage();
+    // One button-style action; the other entry points are plain links.
+    expect(screen.getAllByRole("button", { name: /sorting/ })).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Start sorting" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Add photos" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Add item" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "See your ranking" })).not.toBeInTheDocument();
   });
 
   it("empty: exactly one add-photos action and no pool/items sections", async () => {
@@ -210,8 +188,7 @@ describe("adaptive workspace states", () => {
     expect(screen.queryByRole("region", { name: "Items" })).not.toBeInTheDocument();
     // B2 (spec §11): empty uses ONE clear action — the Continue/sorting chrome
     // (which would only lead to empty pages) must not compete with it.
-    expect(screen.queryByRole("heading", { name: "Continue" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Start sorting" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /sorting/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Results" })).not.toBeInTheDocument();
     expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
   });
@@ -219,35 +196,35 @@ describe("adaptive workspace states", () => {
 
 describe("one dominant action when a session is active (A1)", () => {
   // Net invariant: at most ONE bg-primary action renders on the workspace in
-  // every state × session combo. When a session exists, Resume is that one
+  // every state × session combo. When a session exists, Keep sorting is that one
   // dominant action and the adaptive lead action is demoted to a non-primary.
-  it("pool-first + active session: the only dominant action is Resume", async () => {
+  it("pool-first + active session: the only dominant action is Keep sorting", async () => {
     photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
     const { container } = await renderPage();
 
-    const resume = screen.getByRole("button", { name: "Resume sorting" });
-    expect(resume.className).toContain("bg-primary");
+    const keep = screen.getByRole("button", { name: "Keep sorting" });
+    expect(keep.className).toContain("bg-primary");
     // the adaptive lead action ("Make items") is demoted — no longer a primary
     expect(screen.getByRole("link", { name: "Make items" }).className).not.toContain("bg-primary");
-    // exactly one dominant action, and it is the Resume control
+    // exactly one dominant action, and it is the Keep sorting control
     const dominant = container.querySelectorAll(".bg-primary");
     expect(dominant).toHaveLength(1);
-    expect(dominant[0]).toBe(resume);
+    expect(dominant[0]).toBe(keep);
   });
 
-  it("items-first + active session: the only dominant action is Resume", async () => {
+  it("items-first + active session: the only dominant action is Keep sorting", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
     const { container } = await renderPage();
 
-    const resume = screen.getByRole("button", { name: "Resume sorting" });
-    expect(resume.className).toContain("bg-primary");
+    const keep = screen.getByRole("button", { name: "Keep sorting" });
+    expect(keep.className).toContain("bg-primary");
     // the adaptive lead action ("Add photos") is demoted — no longer a primary
     expect(screen.getByRole("link", { name: "Add photos" }).className).not.toContain("bg-primary");
     const dominant = container.querySelectorAll(".bg-primary");
     expect(dominant).toHaveLength(1);
-    expect(dominant[0]).toBe(resume);
+    expect(dominant[0]).toBe(keep);
   });
 
   it("pool-first WITHOUT a session: the lead action stays primary", async () => {
@@ -328,7 +305,7 @@ describe("accessibility and governed labels", () => {
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
     await renderPage();
 
-    for (const name of ["Photo pool", "Items", "Continue"]) {
+    for (const name of ["Photo pool", "Items"]) {
       expect(screen.getByRole("heading", { name })).toBeInTheDocument();
     }
     for (const name of ["Make items", "Add more photos", "View all items", "Collection settings", "Members"]) {
@@ -337,9 +314,7 @@ describe("accessibility and governed labels", () => {
     // The old quiet "Results"/"Start sorting" links are gone — the workspace
     // mode chips (Build/Sort/Decide) now own those routes.
     expect(screen.queryByRole("link", { name: "Start sorting" })).not.toBeInTheDocument();
-    // The resume affordance carries the governed label (spec §9), not bare "Resume".
-    expect(screen.getByRole("button", { name: "Resume sorting" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Keep sorting" })).toBeInTheDocument();
     // legacy dashboard copy is gone
     expect(screen.queryByText("Finalized")).not.toBeInTheDocument();
     expect(screen.queryByText(/Manage/)).not.toBeInTheDocument();
@@ -381,49 +356,6 @@ describe("workspace mode chips", () => {
   });
 });
 
-describe("workspace resume card meta (spec §B, purses-1xbp.1)", () => {
-  it("shows accomplished-count meta using the REAL total, not the bounded preview (12)", async () => {
-    sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
-    // 20 real items — well past the 12-item preview bound.
-    const allItems = Array.from({ length: 20 }, (_, i) => makeItem(i + 1, `Item ${i + 1}`));
-    itemRepo.findByCollection.mockImplementation((_id: string, options?: { limit?: number }) =>
-      Promise.resolve(options?.limit ? allItems.slice(0, options.limit) : allItems),
-    );
-    // 3 preference rows + 2 set-aside dispositions = 5 decided.
-    prefRepo.findByCollection.mockResolvedValue([
-      { id: "p1", collectionId: COLLECTION_ID, curatorId: "u1", itemId: "item_1", score: 0.5, confidence: 0.5, rankBucket: "top", comparisonCount: 0, orderRank: null, lastSeen: new Date(), createdAt: new Date(), updatedAt: new Date() },
-      { id: "p2", collectionId: COLLECTION_ID, curatorId: "u1", itemId: "item_2", score: 0.5, confidence: 0.5, rankBucket: "high", comparisonCount: 0, orderRank: null, lastSeen: new Date(), createdAt: new Date(), updatedAt: new Date() },
-      { id: "p3", collectionId: COLLECTION_ID, curatorId: "u1", itemId: "item_3", score: 0.5, confidence: 0.5, rankBucket: "medium", comparisonCount: 0, orderRank: null, lastSeen: new Date(), createdAt: new Date(), updatedAt: new Date() },
-    ]);
-    dispositionRepo.findByCollectionAndCurator.mockResolvedValue([
-      { id: "d1", collectionId: COLLECTION_ID, curatorId: "u1", itemId: "item_4", disposition: "set_aside", createdAt: new Date(), updatedAt: new Date() },
-      { id: "d2", collectionId: COLLECTION_ID, curatorId: "u1", itemId: "item_5", disposition: "set_aside", createdAt: new Date(), updatedAt: new Date() },
-    ]);
-
-    await renderPage();
-
-    expect(screen.getByText("5 of 20 sorted so far")).toBeInTheDocument();
-  });
-
-  it("omits the meta line when nothing is decided", async () => {
-    sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
-    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
-
-    await renderPage();
-
-    expect(screen.queryByText(/sorted so far/)).not.toBeInTheDocument();
-  });
-
-  it("without a session, skips the meta-only fetches (dispositions/items) but still reads preferences for hasEverSorted", async () => {
-    await renderPage(); // no session set up
-
-    // Preferences are always read — they feed the sorted-before signal
-    // (purses-1xbp.2: a set-aside-only history has no session rows).
-    expect(prefRepo.findByCollection).toHaveBeenCalledTimes(1);
-    expect(dispositionRepo.findByCollectionAndCurator).not.toHaveBeenCalled();
-  });
-});
-
 describe("navigation links", () => {
   it("uses slug for nav links and resume; no raw ULIDs in hrefs", async () => {
     photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
@@ -433,7 +365,7 @@ describe("navigation links", () => {
 
     const hrefs = screen.getAllByRole("link").map((a) => a.getAttribute("href") ?? "");
     expect(hrefs).toContain("/collections/summer-bags/items");
-    expect(hrefs).toContain("/collections/summer-bags/sort/5"); // active session resume
+    expect(hrefs).toContain("/collections/summer-bags/results");
     expect(hrefs.every((h) => !h.includes(COLLECTION_ID))).toBe(true);
     expect(hrefs.every((h) => !h.includes("sess_zzz"))).toBe(true);
     // purses-t9l: the active-session affordance is scoped to THIS user's sessions.

@@ -3,7 +3,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui";
 
-// Shared shell for the sorting control buttons (Defer / Resume / Take a break /
+// Shared shell for the sorting control buttons (Defer / Keep sorting / Take a break /
 // Bring back). Each is a single quiet tap that fires one async action and then
 // navigates. The double-submit guard, the identical gentle error notice, and the
 // "Just a moment…" busy label all live here so a fix lands in one place.
@@ -21,7 +21,6 @@ export function AsyncActionButton({
   align = "start",
   title,
   ariaLabel,
-  onBusyChange,
 }: {
   action: () => Promise<void>;
   label: string;
@@ -30,9 +29,6 @@ export function AsyncActionButton({
   align?: "start" | "end";
   title?: string;
   ariaLabel?: string;
-  // Only ResumeControl uses this: lets a parent disable a sibling control while
-  // this action is in flight so the two can't fire concurrently on one session.
-  onBusyChange?: (busy: boolean) => void;
 }): ReactNode {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -42,14 +38,12 @@ export function AsyncActionButton({
     if (inFlight.current) return; // a double-tap before `busy` renders is a no-op
     inFlight.current = true;
     setBusy(true);
-    onBusyChange?.(true);
     setError("");
     try {
       await action(); // caller navigates on success; this island then unmounts/refreshes
     } catch {
       setError("That didn't go through — give it another try in a moment.");
       setBusy(false);
-      onBusyChange?.(false);
       inFlight.current = false;
     }
   }

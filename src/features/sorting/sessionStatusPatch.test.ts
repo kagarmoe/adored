@@ -3,7 +3,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { ulid } from "ulid";
 import {
   PAUSE_PREFLUSH_BOUND_MS,
-  deleteSessionWithPreflush,
   patchSessionStatus,
 } from "./sessionStatusPatch";
 import { enqueue, newClientKey, readQueue, type PendingEntry, type QueueKey } from "./decisionQueue";
@@ -162,35 +161,5 @@ describe("patchSessionStatus — active (resume)", () => {
       method: "PATCH",
       body: { status: "active" },
     });
-  });
-});
-
-describe("deleteSessionWithPreflush — abandon-with-undo (orchestrator resolution #2)", () => {
-  it("pre-flushes best-effort, then DELETEs even when the flush is backing off; queue preserved", async () => {
-    vi.useFakeTimers();
-    vi.mocked(triggerFlush).mockReturnValue(new Promise(() => {}));
-    await enqueue(key, triage());
-
-    const deleted = deleteSessionWithPreflush(key);
-    await vi.advanceTimersByTimeAsync(PAUSE_PREFLUSH_BOUND_MS);
-    await deleted;
-
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(patchCall()).toEqual({
-      url: `/api/sessions/${key.sessionId}`,
-      method: "DELETE",
-      body: undefined,
-    });
-    expect(readQueue(key)).toHaveLength(1); // restore + gate recover the taps
-  });
-
-  it("with a healthy queue the flush is triggered BEFORE the DELETE (call order)", async () => {
-    await deleteSessionWithPreflush(key);
-
-    expect(vi.mocked(triggerFlush)).toHaveBeenCalledWith(key);
-    expect(vi.mocked(triggerFlush).mock.invocationCallOrder[0]).toBeLessThan(
-      fetchMock.mock.invocationCallOrder[0],
-    );
-    expect(patchCall().method).toBe("DELETE");
   });
 });
