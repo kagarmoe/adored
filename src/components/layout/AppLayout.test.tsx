@@ -46,3 +46,14 @@ it("stacks page chrome actions on phone and restores the row on tablet", () => {
   expect(actionWrap?.className).toContain("sm:w-auto");
   expect(actionWrap?.className).toContain("sm:justify-end");
 });
+
+it("reserveActionBar pads for the bar, released where the bar goes static", () => {
+  const { container } = render(
+    <AppLayout reserveActionBar>
+      <p>content</p>
+    </AppLayout>,
+  );
+  expect((container.firstChild as HTMLElement).className).toContain(
+    "pb-36 md:pb-0 [@media(max-height:500px)]:pb-0",
+  );
+});

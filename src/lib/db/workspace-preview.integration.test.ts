@@ -8,7 +8,7 @@ import { getPoolPhotoAssetUrl } from "@/lib/photos";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
-// Un-mocked seam tests for the bounded workspace preview reads (Task 2):
+// Un-mocked seam tests for the workspace pool preview and item ordering reads:
 // real PhotoRepository / ItemRepository -> the local test DB, no mocks. These
 // prove the SQL LIMIT (not a UI slice), the deterministic ordering with a unique
 // tiebreaker, and the pool filters (deleted / assigned / foreign collection).
@@ -189,14 +189,9 @@ describeDb("workspace pool preview (repo -> DB)", () => {
   });
 });
 
-describeDb("workspace item preview (repo -> DB)", () => {
+describeDb("workspace item ordering (repo -> DB)", () => {
   let userId: string;
   let collectionId: string;
-
-  function photoRepo() {
-    const { db } = getTestDb();
-    return new PhotoRepository(db);
-  }
 
   function itemRepo() {
     const { db } = getTestDb();
@@ -205,21 +200,6 @@ describeDb("workspace item preview (repo -> DB)", () => {
 
   async function seedItem(number: number) {
     return itemRepo().create({ collectionId, number, name: `Item ${number}` });
-  }
-
-  async function seedItemWithPhoto(number: number) {
-    const item = await seedItem(number);
-    await photoRepo().create({
-      itemId: item.id,
-      collectionId,
-      blobKey: `item-${number}`,
-      filename: `item-${number}.jpg`,
-      mimeType: "image/jpeg",
-      fileSize: 1,
-      uploadedBy: userId,
-      isHero: false,
-    });
-    return item;
   }
 
   beforeEach(async () => {
@@ -237,19 +217,17 @@ describeDb("workspace item preview (repo -> DB)", () => {
     await closeDb();
   });
 
-  it("returns only the preview slice in number ASC order", async () => {
+  it("returns all items in number ASC order", async () => {
     // seed out of insertion order to prove ordering is by number, not insert order
     for (const n of [5, 1, 3, 12, 8, 2, 15, 4, 6, 10, 7, 9, 11, 13, 14]) {
       await seedItem(n);
     }
 
-    const result = await itemRepo().findByCollection(collectionId, {
-      limit: 12,
-      orderBy: "number",
-    });
+    const result = await itemRepo().findByCollection(collectionId, { orderBy: "number" });
 
-    expect(result).toHaveLength(12);
-    expect(result.map((i) => i.number)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    expect(result.map((i) => i.number)).toEqual([
+      1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+    ]);
   });
 
   it("breaks number ties by id ascending (number is nullable, so it can't order alone)", async () => {
@@ -264,30 +242,9 @@ describeDb("workspace item preview (repo -> DB)", () => {
         ('item_aaa', ${collectionId}, NULL, now(), now())
     `);
 
-    const result = await itemRepo().findByCollection(collectionId, {
-      limit: 12,
-      orderBy: "number",
-    });
+    const result = await itemRepo().findByCollection(collectionId, { orderBy: "number" });
 
     expect(result.map((i) => i.id)).toEqual(["item_aaa", "item_zzz"]);
-  });
-
-  it("resolves covers only for the displayed item ids via findCoverPhotosByItemIds", async () => {
-    const items = [];
-    for (let n = 1; n <= 14; n++) items.push(await seedItemWithPhoto(n));
-
-    const preview = await itemRepo().findByCollection(collectionId, {
-      limit: 12,
-      orderBy: "number",
-    });
-    const previewIds = preview.map((i) => i.id);
-
-    const covers = await photoRepo().findCoverPhotosByItemIds(previewIds);
-
-    // every displayed item resolved a cover; no cover key outside the slice
-    expect([...covers.keys()].sort()).toEqual([...previewIds].sort());
-    const excluded = items.filter((i) => (i.number ?? 0) > 12).map((i) => i.id);
-    for (const id of excluded) expect(covers.has(id)).toBe(false);
   });
 
   it("returns all items unchanged when no options are passed (existing callers)", async () => {

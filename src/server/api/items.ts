@@ -51,8 +51,7 @@ export class ItemController {
     return new ItemController(new ItemRepository(db));
   }
 
-  // `options` opts into the bounded workspace preview ({ limit: 12, orderBy:
-  // "number" }); omit it for the full /items grid read.
+  // `options.orderBy: "number"` for a stable grid order; omit it for an unordered read.
   async listItems(
     collectionId: string,
     options?: FindByCollectionOptions,

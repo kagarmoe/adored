@@ -20,7 +20,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ breadcrumbs, actions, reserveActionBar, children }: AppLayoutProps) {
   return (
-    <div className={`flex min-h-screen flex-col bg-ground ${reserveActionBar ? "pb-36 md:pb-0" : ""}`}>
+    <div className={`flex min-h-screen flex-col bg-ground ${reserveActionBar ? "pb-36 md:pb-0 [@media(max-height:500px)]:pb-0" : ""}`}>
       <Header />
 
       <main className="flex-1 pt-20">
