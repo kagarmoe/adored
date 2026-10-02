@@ -47,8 +47,10 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  // One idempotency key per in-flight tap slot, reused if that same tap is retried;
-  // cleared on ack. Revisit slots are namespaced so they never reuse a pair key.
+  // One idempotency key per in-flight tap, reused if that same tap is retried so the
+  // server dedupes the retry; cleared on ack. The slot names the PAIR as well as the
+  // choice: Undo changes the shown pair without an ack, so a choice-only slot could
+  // hand an unacked key from one pair to another and the server would drop the answer.
   const clientKeys = useRef<Record<string, string>>({});
   // Mounted empty so the region exists before its text changes (SC 4.1.3).
   const [announcement, setAnnouncement] = useState("");
@@ -59,10 +61,10 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
   const shown: Pair = revisit ?? { itemA, itemB, heroA, heroB };
   const mode = revisit ? "revisit" : "pair";
 
-  function settle(clientKey: string, slot: string, answered: Answered) {
+  function settle(clientKey: string, keySlot: string, answered: Answered) {
     if (submit.kind !== "session" || settled.current.has(clientKey)) return;
     settled.current.add(clientKey);
-    delete clientKeys.current[slot];
+    delete clientKeys.current[keySlot];
     setError(null);
     const a = itemDisplayName(answered.itemA);
     const b = itemDisplayName(answered.itemB);
@@ -80,6 +82,19 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
     router.refresh();
   }
 
+  // The pair changes under the person's focus, so say which pair is in front of them.
+  function undo(answered: Answered) {
+    setRevisit(answered);
+    setAnnouncement(
+      `Back to ${itemDisplayName(answered.itemA)} and ${itemDisplayName(answered.itemB)}. You chose ${answerLabel(answered)} — change it?`,
+    );
+  }
+
+  function keepGoing() {
+    setRevisit(null);
+    setAnnouncement(`Back to ${itemDisplayName(itemA)} and ${itemDisplayName(itemB)}.`);
+  }
+
   async function choose(result: Result, tapped: string) {
     if (submit.kind === "local") {
       submit.onDecision(result); // walkthrough: no keys, no pending, no refresh
@@ -87,10 +102,11 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
     }
     const pair = shown;
     const slot = `${mode}:${tapped}`;
+    const keySlot = `${pair.itemA.id}:${pair.itemB.id}:${tapped}`;
     setPending(slot);
     setError(null);
     const key: QueueKey = { curatorId: submit.curatorId, sessionId: submit.sessionId, collectionId: submit.collectionId };
-    const clientKey = (clientKeys.current[slot] ??= newClientKey());
+    const clientKey = (clientKeys.current[keySlot] ??= newClientKey());
     const decision = { itemAId: pair.itemA.id, itemBId: pair.itemB.id, result };
 
     // NEVER a bare fetch: the answer rides the queue as a batch-of-1.
@@ -118,7 +134,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
           setPending(null);
           return;
         }
-        settle(clientKey, slot, { ...pair, result });
+        settle(clientKey, keySlot, { ...pair, result });
         return;
       }
     }
@@ -134,10 +150,10 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
     if (outcome === "slow") {
       setPending(null);
       setError(COMPARE_SLOW_SAVE_LINE);
-      void ack.then(() => settle(clientKey, slot, { ...pair, result }));
+      void ack.then(() => settle(clientKey, keySlot, { ...pair, result }));
       return;
     }
-    settle(clientKey, slot, { ...pair, result });
+    settle(clientKey, keySlot, { ...pair, result });
   }
 
   const busy = pending !== null;
@@ -201,22 +217,16 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
         </Button>
       </div>
 
-      {submit.kind === "session" && revisit && (
-        <div className="flex justify-center">
-          <Button type="button" variant="ghost" onClick={() => setRevisit(null)}>
-            Keep going
-          </Button>
-        </div>
-      )}
-      {submit.kind === "session" && !revisit && last && (
+      {/* One button that swaps Undo ↔ Keep going, so focus stays put (SC 2.4.3). */}
+      {submit.kind === "session" && last && (
         <div className="flex justify-center">
           <button
             type="button"
             disabled={busy}
-            onClick={() => setRevisit(last)}
+            onClick={() => (revisit ? keepGoing() : undo(last))}
             className="inline-flex h-11 items-center rounded-control px-2 text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
           >
-            Undo: {answerLabel(last)}
+            {revisit ? "Keep going" : `Undo: ${answerLabel(last)}`}
           </button>
         </div>
       )}

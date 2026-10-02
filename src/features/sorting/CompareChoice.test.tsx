@@ -30,6 +30,8 @@ vi.mock("./decisionQueue", async (importOriginal) => {
 // SHARED batch schema, so anything else would be quarantined, never POSTed.
 const ITEM_A = "item_0000000000000000000000000a";
 const ITEM_B = "item_0000000000000000000000000b";
+const ITEM_C = "item_0000000000000000000000000c";
+const ITEM_D = "item_0000000000000000000000000d";
 
 // jsdom in this setup does not expose a working localStorage on file:// URLs —
 // install the house Map-backed Storage (see decisionQueue.test.ts).
@@ -356,8 +358,8 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     rerender(
       <CompareChoice
         submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
-        itemA={item(ITEM_A, "Bag C") as any}
-        itemB={item(ITEM_B, "Bag D") as any}
+        itemA={item(ITEM_C, "Bag C") as any}
+        itemB={item(ITEM_D, "Bag D") as any}
       />,
     );
 
@@ -380,8 +382,8 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     rerender(
       <CompareChoice
         submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
-        itemA={item(ITEM_A, "Bag C") as any}
-        itemB={item(ITEM_B, "Bag D") as any}
+        itemA={item(ITEM_C, "Bag C") as any}
+        itemB={item(ITEM_D, "Bag D") as any}
       />,
     );
     await user.click(screen.getByRole("button", { name: "Undo: Tie" }));
@@ -389,6 +391,28 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     await user.click(screen.getByRole("button", { name: "Keep going" }));
     expect(screen.getByRole("button", { name: "Choose Bag C" })).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("focus follows the swap: Undo lands on Keep going, Keep going lands back on Undo, and the revisit is announced", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderChoice();
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    rerender(
+      <CompareChoice
+        submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
+        itemA={item(ITEM_C, "Bag C") as any}
+        itemB={item(ITEM_D, "Bag D") as any}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Undo: Bag A" }));
+    expect(screen.getByRole("button", { name: "Keep going" })).toHaveFocus();
+    expect(screen.getByRole("status")).toHaveTextContent("Back to Bag A and Bag B. You chose Bag A — change it?");
+
+    await user.click(screen.getByRole("button", { name: "Keep going" }));
+    expect(screen.getByRole("button", { name: "Undo: Bag A" })).toHaveFocus();
+    expect(screen.getByRole("status")).toHaveTextContent("Back to Bag C and Bag D.");
   });
 
   it("shows the transition line until the first answer lands", async () => {
