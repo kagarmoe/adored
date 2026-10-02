@@ -69,7 +69,8 @@ only (pill `Button`/`Input`, `rounded-pill`, `InYourLifeChip`'s lazy-session pat
 2. **Out-of-range or foreign pin targets** — position `0`, non-integer, extra keys, a position past
    the list, an Onward or untriaged piece, a piece from another collection: 400/404 with nothing
    opened, or clamped to the nearest end. Pinned: Task 3 `applyPins` "clamps a pin past either end";
-   Task 4 route test "404s an Onward, untriaged or foreign piece and 400s a bad body — nothing opens".
+   Task 4 route test "404s a foreign piece and opens nothing" (the 400/Onward/untriaged permutations are
+   unit tests on `RankingController` / `pinItem`).
 3. **Save retried or replayed** — double tap, network retry, the same key aimed at another
    collection: same link back with nothing new; 409 across collections. Pinned: Task 6 "a retry with
    the same key returns the same link and creates nothing new" + "a key used in another collection is a 409".
@@ -98,19 +99,28 @@ only (pill `Button`/`Input`, `rounded-pill`, `InYourLifeChip`'s lazy-session pat
   insertion order / comparable count. Shown as a bar; the numbers are `sr-only`.
 - **Pins live inside the loved list** (Love, Like, Maybe). Onward is shown, not reordered. The new
   surface writes `manualRank` only (`manualBucket` stays null); a legacy draft's cross-tier
-  `manualBucket` is ignored by the live ranking.
+  `manualBucket` is ignored by the live ranking. **`manualRank` stays 0-based** (the existing
+  convention); the pure `Pin.position` and the pins API are 1-based, and the service converts at the
+  boundary (`pinsFromRows` reads `manualRank + 1`; `pinItem` and revision write `position - 1`). Legacy
+  rows are not cleared: an old hand order simply reads as pins at the right slots.
 - **The lazy draft is an empty `sort_results` row named "Still deciding"**; it gains a
   `sort_result_items` row only for a pinned piece. Save rebuilds its rows from the live order (pins
   applied), stamps usage, then finalizes it. The saved snapshot carries plain `computedRank`s.
 - **Idempotency key storage**: a nullable `sort_results.save_key` with a partial unique index
   `(curator_id, save_key) WHERE save_key IS NOT NULL`, in the same migration as the open-draft index.
-- **Duplicate drafts in prod** would make `CREATE UNIQUE INDEX` fail. No data rewrite: a read-only
-  pre-deploy check (Task 5) must return zero rows; if it doesn't, stop and ask the owner.
+- **Duplicate drafts in prod** would make `CREATE UNIQUE INDEX` fail. Migration 0003 therefore carries
+  one reviewed data step before the index: per (collection, curator) it removes every open draft except
+  the newest (`created_at DESC, id DESC`), items first. `sort_results` has no terminal status other than
+  `finalized` (`SortResultStatus = "draft" | "finalized"`) and no `deleted_at`, so removal is the only
+  option that does not mint a saved ranking; it is what `createDraftResult` already does to a prior
+  draft. Recorded in decision 42 as an amendment to spec §6 ("no data rewrite"); the PR body flags it
+  for owner veto. Finalized rows and answers are untouched.
 - **`POST /api/sort-results` stays** (API compatibility, no UI caller): `createDraftResult` now reaps
   the open draft *inside* the same locked transaction before inserting the new one.
 - **Revision** (`supersede`) replaces the open draft with a copy whose loved rows are pinned at their
   saved positions, then sends the person to the live Ranking to adjust and save.
-- `results/[n]` for a **draft** redirects to `/results`; `results/[n]/finalize` redirects to `/results`.
+- `results/[n]` for a **draft** redirects to `/results` (the URL still resolves); a non-draft result
+  renders read-only as today. `results/[n]/finalize` redirects to `/results`.
 - `/sort` with no in-progress session renders a calm start state with the same button (it does not
   redirect), so the Build/Sort/Decide chip never dead-ends.
 - Home keeps one primary: **Start sorting** / **Keep sorting** (+ a quiet "See your ranking" once
@@ -140,7 +150,7 @@ only (pill `Button`/`Input`, `rounded-pill`, `InYourLifeChip`'s lazy-session pat
 **Files:** Modify `src/lib/compare-selection.ts` (whole file), `src/lib/pairwise-selection.ts` (whole
 file), `src/server/services/PreferenceStateService.ts:84-98` (`deriveOrderRanks`),
 `src/server/services/sortResultMaterialization.ts:28-56` (`rankPreferencesToItems`),
-`src/lib/next-round.ts:85` and `src/app/collections/[id]/sort/[sessionNumber]/compare/page.tsx:118-123`
+`src/lib/next-round.ts:95` and `src/app/collections/[id]/sort/[sessionNumber]/compare/page.tsx:109-114`
 (drop the removed `dispositionByItemId` argument — both files are retired in Task 8).
 Tests: create `src/lib/compare-selection.test.ts`; replace `src/lib/pairwise-selection.test.ts`;
 modify `src/server/services/PreferenceStateService.test.ts:204-257`,
@@ -599,10 +609,11 @@ export function buildRanking(
   pins: readonly Pin[],
 ): { loved: RankingEntry[]; onward: RankingEntry[] };
 export function savedOrderPositions(rows: readonly SortResultItem[]): Map<string, number>;
+export function pinsFromRows(rows: readonly SortResultItem[]): Pin[];   // manualRank (0-based) -> Pin.position (1-based)
 ```
 
 - [ ] **Step 1: Failing tests** (append to `sortResultMaterialization.test.ts`; add `applyPins`,
-  `buildRanking`, `savedOrderPositions`, `type Pin` to the import):
+  `buildRanking`, `savedOrderPositions`, `pinsFromRows`, `type Pin` to the import):
 
 ```ts
 const pin = (itemId: string, position: number, at = 0): Pin => ({ itemId, position, pinnedAt: new Date(at) });
@@ -669,6 +680,17 @@ describe("savedOrderPositions (a revision starts from the saved order)", () => {
       sortResultItem({ itemId: "a", computedRank: 0, computedBucket: "top" }),
     ];
     expect([...savedOrderPositions(rows)]).toEqual([["a", 1], ["b", 2]]);
+  });
+});
+
+describe("pinsFromRows (manualRank stays 0-based; a Pin is 1-based)", () => {
+  it("reads manualRank 0 as position 1 and skips unpinned rows", () => {
+    const rows = [
+      sortResultItem({ itemId: "a", manualRank: 0 }),
+      sortResultItem({ itemId: "b", manualRank: 2 }),
+      sortResultItem({ itemId: "c", manualRank: null }),
+    ];
+    expect(pinsFromRows(rows).map((p) => [p.itemId, p.position])).toEqual([["a", 1], ["b", 3]]);
   });
 });
 ```
@@ -747,6 +769,17 @@ export function buildRanking(
   return { loved, onward };
 }
 
+/**
+ * Pure: the open draft's pins. `manualRank` keeps its existing 0-based convention
+ * (the legacy "Adjust results" rank space); a Pin is the 1-based slot, so this is
+ * the one place the +1 happens. Used by both listPins and saveAndShare.
+ */
+export function pinsFromRows(rows: readonly SortResultItem[]): Pin[] {
+  return rows.flatMap((r) =>
+    r.manualRank === null ? [] : [{ itemId: r.itemId, position: r.manualRank + 1, pinnedAt: r.updatedAt }],
+  );
+}
+
 /** Pure: a saved ranking's loved order as 1-based positions (Onward excluded). */
 export function savedOrderPositions(rows: readonly SortResultItem[]): Map<string, number> {
   const ordered = [...rows].sort(
@@ -769,11 +802,12 @@ method), `SortResultItemRepository.ts` (add one), `src/server/services/SortResul
 and `createResultWithItems`), `src/server/api/http-errors.ts` (map two errors),
 `src/server/services/SortResultService.test.ts` (mocks + two assertions),
 `src/lib/db/route-authz-enumeration.integration.test.ts` (stranger cases).
-Create `src/server/api/ranking.ts`, `src/app/api/collections/[id]/ranking/pins/[itemId]/route.ts`,
+Create `src/server/api/ranking.ts`, `src/server/api/ranking.test.ts`,
+`src/app/api/collections/[id]/ranking/pins/[itemId]/route.ts`,
 `src/lib/db/ranking-pins-routes.integration.test.ts`.
 
 **Interfaces:**
-- Consumes: `Pin`, `savedOrderPositions`, `cloneItemsFrom`, `rankPreferencesToItems` (Task 3/1);
+- Consumes: `Pin`, `pinsFromRows`, `savedOrderPositions`, `cloneItemsFrom`, `rankPreferencesToItems` (Task 3/1);
   `lockCollectionCurator(tx, collectionId, curatorId)`, `withTransaction` (`src/lib/transactions.ts`).
 - Produces (repositories):
   `SortResultRepository.findDraftForUpdate(collectionId, curatorId): Promise<SortResult | null>`;
@@ -860,7 +894,7 @@ describeDb("ranking pins (route -> service -> DB)", () => {
     const open = await drafts(collectionId);
     expect(open).toHaveLength(1);
     expect(open[0].name).toBe("Still deciding");
-    expect(await pinsOf(open[0].id)).toEqual(new Map([[itemIds[2], 1], [itemIds[0], 3]]));
+    expect(await pinsOf(open[0].id)).toEqual(new Map([[itemIds[2], 0], [itemIds[0], 2]])); // manualRank is 0-based
   });
 
   it("unpin clears the placement and keeps the draft (idempotent)", async () => {
@@ -872,16 +906,10 @@ describeDb("ranking pins (route -> service -> DB)", () => {
     expect(await pinsOf(open.id)).toEqual(new Map([[itemIds[1], null]]));
   });
 
-  it("404s an Onward, untriaged or foreign piece and 400s a bad body — nothing opens", async () => {
-    const { collectionId, itemIds } = await seedRanked(["top", "low"]);
-    const loose = await new ItemRepository(getTestDb().db).create({ collectionId, name: "Untriaged" });
+  it("404s a piece from another collection and opens nothing", async () => {
+    const { collectionId } = await seedRanked(["top"]);
     const other = await seedRanked(["top"]);
-    expect((await pin(req("PUT", { position: 1 }), ctx(collectionId, itemIds[1]))).status).toBe(404);
-    expect((await pin(req("PUT", { position: 1 }), ctx(collectionId, loose.id))).status).toBe(404);
     expect((await pin(req("PUT", { position: 1 }), ctx(collectionId, other.itemIds[0]))).status).toBe(404);
-    expect((await pin(req("PUT", { position: 0 }), ctx(collectionId, itemIds[0]))).status).toBe(400);
-    expect((await pin(req("PUT", { position: 1.5 }), ctx(collectionId, itemIds[0]))).status).toBe(400);
-    expect((await pin(req("PUT", { position: 1, extra: true }), ctx(collectionId, itemIds[0]))).status).toBe(400);
     expect(await drafts(collectionId)).toHaveLength(0);
   });
 });
@@ -928,7 +956,7 @@ describeDb("ranking pins (route -> service -> DB)", () => {
 
 - [ ] **Step 4: Service.** In `SortResultService.ts` add imports
   `import { lockCollectionCurator, withTransaction } from "@/lib/transactions";` and extend the
-  materialization import with `savedOrderPositions, type Pin`. Add:
+  materialization import with `pinsFromRows, savedOrderPositions, type Pin`. Add:
 
 ```ts
 /** The open draft's name until Save and share names it. */
@@ -1032,10 +1060,7 @@ Replace `createDraftResult`, `supersedePriorDrafts` and `createResultWithItems` 
   async listPins(collectionId: string, curatorId: string): Promise<Pin[]> {
     const draft = await this.sortResultRepo.findDraft(collectionId, curatorId);
     if (!draft) return [];
-    const rows = await this.sortResultItemRepo.findByResult(draft.id);
-    return rows.flatMap((r) =>
-      r.manualRank === null ? [] : [{ itemId: r.itemId, position: r.manualRank, pinnedAt: r.updatedAt }],
-    );
+    return pinsFromRows(await this.sortResultItemRepo.findByResult(draft.id));
   }
 
   /** Hand-place one piece (spec §4 "Adjusting"); the first pin opens the draft. */
@@ -1048,7 +1073,8 @@ Replace `createDraftResult`, `supersedePriorDrafts` and `createResultWithItems` 
       const row =
         (await itemRepo.findByResultAndItem(draft.id, itemId)) ??
         (await itemRepo.create({ sortResultId: draft.id, itemId, computedRank: position - 1, computedBucket: pref.rankBucket }));
-      await itemRepo.update(row.id, { manualRank: position, manualBucket: null });
+      // manualRank is 0-based (existing convention); the API position is 1-based.
+      await itemRepo.update(row.id, { manualRank: position - 1, manualBucket: null });
     });
   }
 
@@ -1083,7 +1109,7 @@ Replace the body of `supersedeResult` after the two guards with:
       const itemRepo = new SortResultItemRepository(tx);
       for (const row of await itemRepo.findByResult(revision.id)) {
         const position = positions.get(row.itemId);
-        if (position !== undefined) await itemRepo.update(row.id, { manualRank: position, manualBucket: null });
+        if (position !== undefined) await itemRepo.update(row.id, { manualRank: position - 1, manualBucket: null });
       }
       return revision;
     });
@@ -1198,10 +1224,48 @@ In `route-authz-enumeration.integration.test.ts`, after the dispositions block a
   `findByResult: vi.fn(), update: vi.fn()` to `txItemRepo`; in `beforeEach` add
   `txResultRepo.findDrafts.mockResolvedValue([]); txItemRepo.findByResult.mockResolvedValue([]);`.
   In the first `createDraftResult` test, pass `{} as unknown as SortResultRepository` as the injected
-  repo and replace the two `findDrafts` assertions with
-  `expect(txResultRepo.findDrafts).toHaveBeenCalledWith(COLLECTION, CURATOR);` (keep
-  `expect(txResultRepo.delete).not.toHaveBeenCalled();`). In the third test pass
+  repo and add one
+  `expect(txResultRepo.findDrafts).toHaveBeenCalledWith(COLLECTION, CURATOR);` (the first test has a
+  single `findDrafts` assertion, at its line ~159; line ~147 is a comment — and keep
+  `expect(txResultRepo.delete).not.toHaveBeenCalled();`). Add no further mock-wiring assertions: the
+  DB tests own the behaviour. In the third test pass
   `{} as unknown as SortResultRepository` too.
+
+- [ ] **Step 6b: Branch tests at the unit tier** (the DB test keeps one 404-foreign crossing).
+  Create `src/server/api/ranking.test.ts` — body validation is pure Zod and needs no database:
+
+```ts
+import { describe, expect, it, vi } from "vitest";
+import { RankingController } from "./ranking";
+import type { SortResultService } from "@/server/services/SortResultService";
+
+const pinItem = vi.fn().mockResolvedValue(undefined);
+const controller = new RankingController({ pinItem } as unknown as SortResultService);
+
+describe("RankingController.pin body", () => {
+  it.each([[{ position: 0 }], [{ position: 1.5 }], [{ position: 1, extra: true }], [{}]])(
+    "rejects %j before any write",
+    (body) => {
+      expect(() => controller.pin("c", "u", "i", body)).toThrow();
+      expect(pinItem).not.toHaveBeenCalled();
+    },
+  );
+
+  it("passes a valid 1-based position through", async () => {
+    await controller.pin("c", "u", "i", { position: 3 });
+    expect(pinItem).toHaveBeenCalledWith("c", "u", "i", 3);
+  });
+});
+```
+
+  In `SortResultService.test.ts` add, beside the other tx-bound repo mocks,
+  `const { txPrefRepo } = vi.hoisted(() => ({ txPrefRepo: { findByItem: vi.fn() } }));` and
+  `vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({ CollectionPreferenceItemRepository: vi.fn(function () { return txPrefRepo; }) }));`
+  (the file already imports only the type), then a `describe("pinItem targets")` with two cases —
+  `txPrefRepo.findByItem.mockResolvedValue(null)` (untriaged) and
+  `mockResolvedValue(preference({ collectionId: COLLECTION, rankBucket: "low" }))` (Onward) — each
+  `await expect(service.pinItem(COLLECTION, CURATOR, "item-1", 1)).rejects.toBeInstanceOf(PinTargetError)`
+  and `expect(txResultRepo.insertWithNumber).not.toHaveBeenCalled()` (import `PinTargetError`).
 
 - [ ] **Step 7: Run.** Step 2 command → PASS. `npx vitest run src/server` → PASS. Then
   `RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db/sort-results-pipeline.integration.test.ts src/lib/db/sort-pipeline.integration.test.ts src/lib/db/sort-results-usage-snapshot.integration.test.ts src/lib/db/route-authz-enumeration.integration.test.ts`
@@ -1221,10 +1285,17 @@ Create `src/lib/db/sort-results-open-draft.integration.test.ts`.
   on `(collection_id, curator_id) WHERE status = 'draft'`; unique index
   `sort_results_save_key_unique` on `(curator_id, save_key) WHERE save_key IS NOT NULL`.
   The domain `SortResult` type is **unchanged** (the save key is read/written only by the
-  repository methods in Task 6).
+  repository methods in Task 6). No `deleted_at`; no reader changes.
+- Data step (owner ruling, an amendment to spec §6 "no data rewrite"): before the open-draft index,
+  the migration removes every open draft except the newest per `(collection_id, curator_id)`
+  (`ORDER BY created_at DESC, id DESC`), `sort_result_items` first. `sort_results` has only the
+  statuses `draft` and `finalized` (`SortResultStatus`), so there is no terminal status to move a
+  duplicate to; removal matches what `createDraftResult` already does to a prior draft. Finalized
+  rows, other curators, other collections and all answers are untouched.
 
-- [ ] **Step 1: Pre-deploy data check (owner, read-only).** Before this PR merges, the owner runs in
-  the Neon console against the **production** branch:
+- [ ] **Step 1: Know the blast radius (optional, read-only).** The owner may run in the Neon console
+  against **production** to learn how many older drafts the data step will remove; record the number
+  in the PR body. It is informational — the data step makes the index build unconditional.
 
 ```sql
 SELECT collection_id, curator_id, count(*) AS drafts
@@ -1233,10 +1304,6 @@ WHERE status = 'draft'
 GROUP BY collection_id, curator_id
 HAVING count(*) > 1;
 ```
-
-  Zero rows → proceed. Any row → **stop**: `CREATE UNIQUE INDEX` would fail the deploy (safely —
-  `vercel-build` runs `db:migrate` before `next build`, so prod keeps serving the old build). Do not
-  write a data fix in the migration; ask the owner which draft to keep. Record the result in the PR body.
 
 - [ ] **Step 2: Failing DB test** `src/lib/db/sort-results-open-draft.integration.test.ts`:
 
@@ -1248,6 +1315,11 @@ HAVING count(*) > 1;
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection, seedUserRow } from "../../../e2e/fixtures/seed";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { eq, sql } from "drizzle-orm";
+import { sortResultItemsTable, sortResultsTable } from "@/lib/db/schema";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 import { isUniqueViolation } from "@/server/repositories/pg-conflict";
 
@@ -1285,6 +1357,54 @@ describeDb("sort_results: one open draft per (collection, curator)", () => {
     await repo.create({ collectionId: elsewhere, curatorId: ownerId, name: "Elsewhere", status: "draft" });
     expect(await repo.findByCollection(collectionId)).toHaveLength(4);
   });
+
+  // The 0003 data step on real rows: window function + partial unique index. The test
+  // runs the migration FILE's own statements, so the shipped SQL is what is proven.
+  it("0003's data step keeps the newest open draft per (collection, curator) and the index then builds", async () => {
+    const { db } = getTestDb();
+    const file = readdirSync("drizzle").find((f) => f.startsWith("0003_"))!;
+    const statements = readFileSync(join("drizzle", file), "utf8").split("--> statement-breakpoint");
+    const dedupe = statements.filter((q) => q.includes("row_number()"));
+    const index = statements.find((q) => q.includes('CREATE UNIQUE INDEX "sort_results_open_draft_unique"'))!;
+    expect(dedupe.length).toBeGreaterThan(0);
+
+    const collectionId = await seedBareCollection(ownerId);
+    const elsewhere = await seedBareCollection(ownerId);
+    const otherCurator = await seedUserRow("open-draft-dedupe-other");
+    const item = await new ItemRepository(db).create({ collectionId, name: "Piece" });
+    const at = (n: number) => new Date(Date.UTC(2026, 0, n));
+    const row = (id: string, cId: string, curatorId: string, number: number, status: string, day: number) =>
+      ({ id, collectionId: cId, curatorId, number, status, name: id, createdAt: at(day), updatedAt: at(day) });
+
+    try {
+      await db.execute(sql`DROP INDEX IF EXISTS sort_results_open_draft_unique`);
+      await db.insert(sortResultsTable).values([
+        row("d1", collectionId, ownerId, 1, "draft", 1),
+        row("d2", collectionId, ownerId, 2, "draft", 2),
+        row("d3", collectionId, ownerId, 3, "draft", 3),
+        row("theirs", collectionId, otherCurator, 4, "draft", 1),
+        row("away", elsewhere, ownerId, 1, "draft", 1),
+        row("saved", collectionId, ownerId, 5, "finalized", 1),
+      ]);
+      await db.insert(sortResultItemsTable).values(
+        ["d1", "d3", "saved"].map((sortResultId) => ({
+          sortResultId, itemId: item.id, computedRank: 0, computedBucket: "top",
+        })),
+      );
+
+      for (const q of dedupe) await db.execute(sql.raw(q));
+      await db.execute(sql.raw(index)); // building is the real assertion
+
+      const ids = (await db.select({ id: sortResultsTable.id }).from(sortResultsTable)).map((r) => r.id).sort();
+      expect(ids).toEqual(["away", "d3", "saved", "theirs"]);
+      const kept = await db.select().from(sortResultItemsTable).where(eq(sortResultItemsTable.sortResultId, "d3"));
+      expect(kept).toHaveLength(1); // the newest draft keeps its rows
+      expect(await db.select().from(sortResultItemsTable)).toHaveLength(2); // d1's row went with d1; saved's stays
+    } finally {
+      await resetDb();
+      await db.execute(sql.raw(index.replace("CREATE UNIQUE INDEX", "CREATE UNIQUE INDEX IF NOT EXISTS")));
+    }
+  });
 });
 ```
 
@@ -1314,34 +1434,68 @@ describeDb("sort_results: one open draft per (collection, curator)", () => {
 
   Run `npm run db:generate`. **Review the generated SQL** (`ls drizzle/0003_*.sql`): it must contain
   exactly one `ALTER TABLE "sort_results" ADD COLUMN "save_key" text;` and two
-  `CREATE UNIQUE INDEX … WHERE …` statements — nothing that drops, rewrites, or alters existing data.
-  If drizzle-kit emitted anything else, fix `schema.ts`, delete the generated files and regenerate;
-  never hand-edit a generated migration. Pin its hash: `shasum -a 256 drizzle/0003_*.sql` and add
-  the line to `APPLIED` in `scripts/migration-hashes.test.ts`:
+  `CREATE UNIQUE INDEX … WHERE …` statements — nothing that drops or alters existing columns. If
+  drizzle-kit emitted anything else, fix `schema.ts`, delete the generated files and regenerate.
+
+  **Then insert the data step by hand — the one reviewed edit to a generated migration.** Put these two
+  statements immediately after the `ADD COLUMN` line and **before**
+  `CREATE UNIQUE INDEX "sort_results_open_draft_unique"` (DML does not touch the snapshot JSON):
+
+```sql
+-- Data step (owner ruling, amends spec §6): keep the NEWEST open draft per (collection, curator)
+-- and remove the rest (items first; no ON DELETE CASCADE), so the partial unique index below
+-- can build on production data. Finalized rows, other curators and answers are untouched.
+DELETE FROM "sort_result_items" WHERE "sort_result_id" IN (
+  SELECT "id" FROM (
+    SELECT "id", row_number() OVER (
+      PARTITION BY "collection_id", "curator_id" ORDER BY "created_at" DESC, "id" DESC
+    ) AS "rn"
+    FROM "sort_results" WHERE "status" = 'draft'
+  ) AS "ranked" WHERE "ranked"."rn" > 1
+);--> statement-breakpoint
+DELETE FROM "sort_results" WHERE "id" IN (
+  SELECT "id" FROM (
+    SELECT "id", row_number() OVER (
+      PARTITION BY "collection_id", "curator_id" ORDER BY "created_at" DESC, "id" DESC
+    ) AS "rn"
+    FROM "sort_results" WHERE "status" = 'draft'
+  ) AS "ranked" WHERE "ranked"."rn" > 1
+);--> statement-breakpoint
+```
+
+  Final review checklist: one `ADD COLUMN`, exactly two `DELETE`s (the data step above, nothing else),
+  two `CREATE UNIQUE INDEX … WHERE …`, no `DROP`/`ALTER COLUMN`. Pin the hash **after** the edit:
+  `shasum -a 256 drizzle/0003_*.sql`, and add the line to `APPLIED` in
+  `scripts/migration-hashes.test.ts`:
 
 ```ts
   "0003_<the generated name>.sql":
     "<the sha256 printed above>",
 ```
 
-- [ ] **Step 5: Run.** Step 3 command → PASS. `npx vitest run scripts/migration-hashes.test.ts` → PASS.
-  Then the whole DB suite: `npm run test:db`. A failure naming `sort_results_open_draft_unique` means a
-  test seeds two drafts for one curator in one collection — give the second draft a different
-  curator (`seedUserRow`) when the test is about drafts across curators, or reuse the first draft
-  when it is not. (`createDraftResult` and `supersedeResult` already reap the open draft inside the
-  locked transaction since Task 4, so the service paths never trip the index.)
+- [ ] **Step 5: Run.** Step 3 command → PASS (all three tests). `npx vitest run scripts/migration-hashes.test.ts`
+  → PASS. Then fix the two known collisions with the new index before the whole suite
+  (`createDraftResult` / `supersedeResult` already reap inside the locked transaction since Task 4, so
+  service paths never trip it; only tests that seed two drafts directly do):
+  - `src/lib/db/result-number.integration.test.ts:34-35` seeds two drafts for `u_r` in one collection —
+    create the second (`r2`) as `status: "finalized"` (the test is about numbering, not drafts).
+  - `src/lib/db/sort-results-rerank.integration.test.ts:227-229` seeds a sibling "Other" draft next to
+    `seedResultWithItems`' draft — create "Other" as `status: "finalized"` (the IDOR proof only needs a
+    different result id).
+  Run `grep -rn 'status: "draft"' src/lib/db e2e/fixtures` once and confirm no other test seeds two
+  drafts for one (collection, curator); then `npm run test:db` → PASS.
 - [ ] **Step 6:** `git add src/lib/db drizzle scripts/migration-hashes.test.ts && git commit -m "feat(db): one open draft per collection and curator; save key for idempotent save"`
 
 ## Task 6: Save and share — one transaction, idempotent
 
 **Files:** Modify `src/server/repositories/implementations/SortResultRepository.ts` (add
 `findBySaveKey`, `markSaved`), `src/server/services/SortResultService.ts` (add `saveAndShare` + two errors),
-`src/server/api/ranking.ts` (add `save`), `src/server/api/http-errors.ts` (map the two errors to 409),
+`src/server/api/ranking.ts` (add `save`), `src/server/api/ranking.test.ts` (append), `src/server/api/http-errors.ts` (map the two errors to 409),
 `src/lib/db/route-authz-enumeration.integration.test.ts`. Create
 `src/app/api/collections/[id]/ranking/save/route.ts`, `src/lib/db/ranking-save-route.integration.test.ts`.
 
 **Interfaces:**
-- Consumes: `inCuratorTx`, `getOrCreateOpenDraft` (Task 4), `buildRanking` (Task 3), the `save_key`
+- Consumes: `inCuratorTx`, `getOrCreateOpenDraft` (Task 4), `buildRanking`, `pinsFromRows` (Task 3), the `save_key`
   column (Task 5), `SortResultShareRepository.create/findByResult`,
   `SessionRepository.findInProgress/update`, `loadCuratorDecisionEvents`, `deriveUsage`.
 - Produces: `SortResultRepository.findBySaveKey(curatorId, saveKey): Promise<SortResult | null>`,
@@ -1460,11 +1614,9 @@ describeDb("save and share (route -> service -> DB)", () => {
     expect((await save(saveReq({ name: "There", saveKey: KEY }), ctx(other.collectionId))).status).toBe(409);
   });
 
-  it("409s with nothing to save and writes nothing; 400s a blank name or a malformed key", async () => {
+  it("409s with nothing to save and writes nothing", async () => {
     const collectionId = await seedBareCollection(ownerId);
     expect((await save(saveReq({ name: "Empty", saveKey: KEY }), ctx(collectionId))).status).toBe(409);
-    expect((await save(saveReq({ name: "   ", saveKey: KEY }), ctx(collectionId))).status).toBe(400);
-    expect((await save(saveReq({ name: "x", saveKey: "not-a-ulid" }), ctx(collectionId))).status).toBe(400);
     expect(await new SortResultRepository(getTestDb().db).findByCollection(collectionId)).toEqual([]);
   });
 
@@ -1530,7 +1682,7 @@ describeDb("save and share (route -> service -> DB)", () => {
 ```
 
   **Service.** Imports: `import { randomBytes } from "crypto";`,
-  `ItemRepository`, `SortResultShareRepository`, and `buildRanking` from the materialization module.
+  `ItemRepository`, `SortResultShareRepository`, and `buildRanking` (the `pinsFromRows` import already exists from Task 4) from the materialization module.
 
 ```ts
 /** Nothing is ranked yet → 409 (the button is hidden then; this is the direct-API net). */
@@ -1579,9 +1731,7 @@ export interface SavedRanking {
       const preferences = await new CollectionPreferenceItemRepository(tx).findByCollection(collectionId, curatorId);
       const draft = await this.getOrCreateOpenDraft(tx, collectionId, curatorId);
       const itemRepo = new SortResultItemRepository(tx);
-      const pins = (await itemRepo.findByResult(draft.id)).flatMap((r) =>
-        r.manualRank === null ? [] : [{ itemId: r.itemId, position: r.manualRank, pinnedAt: r.updatedAt }],
-      );
+      const pins = pinsFromRows(await itemRepo.findByResult(draft.id));
       const { loved, onward } = buildRanking(preferences, liveIds, pins);
       const ordered = [...loved, ...onward];
       if (ordered.length === 0) throw new NothingToSaveError();
@@ -1671,7 +1821,26 @@ Enumeration test, in the ranking block:
       { name: "Stranger", saveKey: "01j00000000000000000000000" }),
 ```
 
-- [ ] **Step 4: Run.** Step 2 command → PASS;
+- [ ] **Step 3b: Body validation at the unit tier.** Append to `src/server/api/ranking.test.ts`
+  (created in Task 4; the service is stubbed the same way as `pinItem`):
+
+```ts
+const saveAndShare = vi.fn();
+const saver = new RankingController({ saveAndShare } as unknown as SortResultService);
+const KEY = "01j00000000000000000000000";
+
+describe("RankingController.save body", () => {
+  it.each([[{ name: "   ", saveKey: KEY }], [{ name: "x", saveKey: "not-a-ulid" }], [{ name: "x" }], [{ name: "x", saveKey: KEY, extra: 1 }]])(
+    "rejects %j before any write",
+    (body) => {
+      expect(() => saver.save("c", "u", body)).toThrow();
+      expect(saveAndShare).not.toHaveBeenCalled();
+    },
+  );
+});
+```
+
+- [ ] **Step 4: Run.** Step 2 command → PASS; `npx vitest run src/server/api/ranking.test.ts` → PASS;
   `RUN_DB_TESTS=1 npx vitest run --no-file-parallelism src/lib/db/route-authz-enumeration.integration.test.ts` → PASS;
   `npx vitest run src/server src/lib/__tests__/ui-route-connectivity.test.ts` → PASS.
 - [ ] **Step 5:** `git add src/server src/app/api/collections src/lib/db && git commit -m "feat(ranking): save and share in one idempotent transaction"`
@@ -1986,7 +2155,7 @@ export function PauseControl({
   `sort/[sessionNumber]/page.tsx`, `sort/[sessionNumber]/triage/page.tsx`,
   `sort/[sessionNumber]/usage/page.tsx`, `sort/[sessionNumber]/compare/page.tsx`, `sort/set-aside/page.tsx`.
 - Modify: `src/components/layout/breadcrumb-trails.ts` (+ test), `src/lib/db/page-authz-enumeration.integration.test.ts`,
-  `src/app/globals.css` (ring tokens, lines ~29-30, ~132-135, ~230-231), `src/lib/design/contrast.test.ts:101-102`,
+  `src/app/globals.css` (ring tokens, lines ~29-30, ~132-135, ~230-231), `src/lib/design/contrast.test.ts:101` (delete) and `:102` (relabel),
   `DESIGN.md:101` (the "Ring — timer violet" bullet).
 - Delete (with tests): sort/landing + hub + round page tests; `UsageRound`, `RoundSurface`,
   `RoundShell`, `RoundTimer`, `TimerRing`, `TimerDial`, `RoundLengthDialog`, `round-dial`, `WhatMoved`,
@@ -2898,7 +3067,10 @@ git rm -q --ignore-unmatch \
 ```
 
 Then `grep -rnE "round-preference|round-timer|what-moved|next-round|usage-selection|usage-round-prefs|RoundShell|RoundTimer|TimerRing|TimerDial|WhatMoved|UsageRound|TakeABreakControl|StartSortingButton" src e2e/fixtures`
-→ no hits outside `src/features/onboarding` (Task 12 handles those, and they don't import any of these).
+→ no `import` hits. Comment-only mentions remain in `e2e/fixtures/seed.ts`, `decisionQueue.ts`,
+`roundCopy.ts`, `triage-selection.ts`, `useDeviceValue.ts`, `onboarding/testStorage.ts` and three tests;
+check imports with `grep -rnE "from .*(round-preference|round-timer|what-moved|next-round|usage-selection|usage-round-prefs)" src e2e`
+→ no output (Task 12 handles `src/features/onboarding`, which imports none of these).
 
 `breadcrumb-trails.ts`: delete `sessionPrefix`, `sortNew`, `session`, `triage`, `compare`, `usage`.
 In its test, delete those five map rows and replace the "parents Set aside under Decide and Session
@@ -2914,8 +3086,9 @@ under Sort" test with:
 ```
 
 Ring tokens (timer only): delete `--color-ring-sweep` / `--color-ring-track` from the `@theme inline`
-block, `:root` (with its two-line comment) and the dark block in `globals.css`; delete the two ring
-rows (lines 101-102) from `pairings()` in `contrast.test.ts`; delete the "Ring — timer violet" bullet
+block, `:root` (with its two-line comment) and the dark block in `globals.css`; delete only the ring
+row (line 101, "ring sweep on ring track") from `pairings()` in `contrast.test.ts` and relabel line 102
+(`ink` on `surfaceRaised`, 4.5 — a real text pair that stays) to "ink on surface-raised"; delete the "Ring — timer violet" bullet
 from `DESIGN.md`.
 
 - [ ] **Step 7: Run.** `npx vitest run src/features/sorting src/features/sessions src/components/layout src/lib/design src/lib/__tests__`
@@ -3241,7 +3414,7 @@ In the Sort page's pairs branch, drop `comparisonsMade={0}` and pass
   (+ `.test.tsx`), `src/features/results/MakeRevisionButton.tsx`,
   `src/lib/db/ranking-view-creates-nothing.integration.test.ts`.
 - Modify: `src/app/collections/[id]/results/[resultNumber]/page.tsx` (+ test),
-  `src/lib/db/sort-results-pipeline.integration.test.ts:39, 888-918` (`deriveStanding` → `buildRanking`),
+  `src/lib/db/sort-results-pipeline.integration.test.ts:39, ~707-712 and 888-918` (`deriveStanding` → `buildRanking`, **both** call sites),
   `src/lib/db/page-authz-enumeration.integration.test.ts` (two more member redirects),
   `src/components/layout/breadcrumb-trails.ts` (+ test).
 - Replace with guarded redirects: `results/set-aside/page.tsx`, `results/[resultNumber]/finalize/page.tsx`.
@@ -4039,15 +4212,27 @@ export default async function RetiredSetAsidePage({ params }: { params: Promise<
 "Save and share replaced Finalize (spec §4.4)".
 
 In `sort-results-pipeline.integration.test.ts` replace the `deriveStanding` import with
-`import { buildRanking } from "@/server/services/sortResultMaterialization";` and in the shared-
-derivation test replace the three `items`/`itemById`/`standing` lines with:
+`import { buildRanking } from "@/server/services/sortResultMaterialization";`. `deriveStanding` has
+**two** call sites; replace both or the file fails to import after `git rm standing.ts`. In the
+shared-derivation test (~888-918) replace the three `items`/`itemById`/`standing` lines with:
 
 ```ts
       const livePrefs = await prefRepo.findByCollection(collectionId, ownerId);
       const standingMostLoved = buildRanking(livePrefs, new Set([highItemId, lowItemId]), []).loved[0].itemId;
 ```
 
-(drop the now-unused `Item` import if the linter flags it). `breadcrumb-trails.ts`: delete
+and drop the `standing.loved[0].item.id` line below it (`standingMostLoved` is already defined). In the
+"freezes the snapshot" test (~707-712) replace the `items`/`itemById`/`standing` block and its two
+assertions with:
+
+```ts
+      const livePrefs = await prefRepo.findByCollection(collectionId, ownerId);
+      const live = buildRanking(livePrefs, new Set([highItemId, lowItemId, inserted.id]), []);
+      expect(live.loved).toHaveLength(3);
+      expect(live.loved[0].itemId).toBe(inserted.id); // new item is most-loved live
+```
+
+(drop the now-unused `Item` import if the linter flags it — both uses are gone). `breadcrumb-trails.ts`: delete
 `resultPrefix`, `setAside`, `finalize`; in its test delete those two map rows and the "parents Set
 aside under Decide" test. Delete the retired files:
 
@@ -4095,13 +4280,13 @@ Delete `src/features/sessions/{ActiveSessionPanel,SessionResumeCard}.tsx` (+ tes
 ```tsx
   it("items-first, never sorted: Start sorting is the one dominant action", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
-    const { container } = await renderPage();
-    const start = screen.getByRole("button", { name: "Start sorting" });
-    expect(start.className).toContain("bg-primary");
-    expect(screen.getByRole("link", { name: "Add photos" }).className).not.toContain("bg-primary");
-    expect(screen.getByRole("link", { name: "Add item" }).className).not.toContain("bg-primary");
+    await renderPage();
+    // One button-style action; the other entry points are plain links.
+    expect(screen.getAllByRole("button", { name: /sorting/ })).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Start sorting" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Add photos" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Add item" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "See your ranking" })).not.toBeInTheDocument();
-    expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
   });
 ```
 
@@ -4683,7 +4868,8 @@ test.describe("sort journey", () => {
       ["sort", `/collections/${triageSlug}/sort`],
 ```
 
-  (drop `triageSessionNumber`; update the "Scans 9 screens" comment to 10).
+  (drop `triageSessionNumber` **and the now-unused `resultNumber` binding** — only
+  `finalizedResultNumber` is used; update the "Scans 9 screens" comment to 10).
   `e2e/welcome-walkthrough.spec.ts`: rewrite `walkToHandoff` (and its header comment) to
 
 ```ts
@@ -4712,7 +4898,9 @@ git rm -q e2e/{sort-session,usage-round,compare,timer-ring,session-pause,session
 - [ ] **Step 4: CI map.** In `ci.yml` `sort:` filter replace `round-preference.ts`, `round-timer.ts`
   and `usage-selection.ts` with `- 'src/lib/sort-phase.ts'` and `- 'src/lib/compare-selection.ts'`;
   in `results:` replace `next-round.ts` and `what-moved.ts` with
-  `- 'src/server/services/sortResultMaterialization.ts'`. The selection lines become:
+  `- 'src/server/services/sortResultMaterialization.ts'` **and add**
+  `- 'src/app/api/collections/*/ranking/**'` (otherwise a ranking-API-only PR selects only the floor
+  specs). The selection lines become:
 
 ```bash
           if [ "$A_SORT" = "true" ]; then
@@ -4799,7 +4987,7 @@ git rm -q e2e/{sort-session,usage-round,compare,timer-ring,session-pause,session
 ```
 
   (`let pairsSlug = "";` beside the other slugs; drop the now-unused `resultNumber`,
-  `waitingSessionNumber` and `triageSessionNumber` bindings). `npx tsc --noEmit -p tsconfig.json`
+  `waitingSessionNumber` and `triageSessionNumber` bindings from `capture.ts`). `npx tsc --noEmit -p tsconfig.json`
   must stay clean for `e2e/`.
 
 - [ ] **Step 6: Run.** `npx playwright test e2e/sort-journey.spec.ts e2e/sort-images.spec.ts e2e/a11y.spec.ts e2e/welcome-walkthrough.spec.ts e2e/layout.spec.ts e2e/smoke.spec.ts --project=tablet`
@@ -4830,6 +5018,7 @@ git rm -q e2e/{sort-session,usage-round,compare,timer-ring,session-pause,session
 The live Ranking's writes (UX redesign PR 2, decision 42). Curator is always the caller. Every write
 runs in one transaction holding the `(collection, curator)` advisory lock; the partial unique index
 `sort_results_open_draft_unique` (one `status = 'draft'` row per collection + curator) is the backstop.
+The API position is 1-based; `manualRank` stays 0-based and the service converts at the boundary.
 
 ### `PUT·DELETE /api/collections/[id]/ranking/pins/[itemId]`
 `requireAuth` + `requireApiCollectionAccess` (`401`/`403`/`404`) before the body. **PUT body (strict):**
@@ -4860,7 +5049,7 @@ share was revoked). `400` on a bad body.
 
 ```markdown
 **42. One sort path: feelings then pairs, a live Ranking with pins, one atomic Save (UX redesign PR 2, 2026-10-01, migration 0003).**
-- *Decision:* `/collections/[id]/sort` is the only sort surface. A pure chooser (`src/lib/sort-phase.ts`) shows *feelings* until every live piece is placed (Not yet last, Not mine never), then *pairs* over the comparable set **Love + Like** — `selectComparableItems` now feeds both `selectNextPair` and the recompute's `deriveOrderRanks`, and `rankPreferencesToItems` orders tier first, then `orderRank`. The hand-off is `?phase=pairs`. Undo re-presents the last answer (queued → removed; sent → superseded, latest wins). The live Ranking (`/results`) reads only; a hand move pins one piece (`manualRank`) in the curator's single open draft, created lazily inside `SortResultService.inCuratorTx` (advisory lock); `buildRanking`/`applyPins` give page and save one derivation. Save and share is one transaction keyed by `sort_results.save_key`. Migration `0003` adds `save_key` and two partial unique indexes (`sort_results_open_draft_unique`, `sort_results_save_key_unique`); additive, no data rewrite, guarded by a read-only pre-deploy duplicate-draft check. The round pages, hub, recaps, timer (+ ring tokens), usage round, Finalize page, "Adjust results" mode and `/tutorials/timers` are gone; old URLs are guard-then-308 pages. Revisions replace the open draft with the saved order pinned.
+- *Decision:* `/collections/[id]/sort` is the only sort surface. A pure chooser (`src/lib/sort-phase.ts`) shows *feelings* until every live piece is placed (Not yet last, Not mine never), then *pairs* over the comparable set **Love + Like** — `selectComparableItems` now feeds both `selectNextPair` and the recompute's `deriveOrderRanks`, and `rankPreferencesToItems` orders tier first, then `orderRank`. The hand-off is `?phase=pairs`. Undo re-presents the last answer (queued → removed; sent → superseded, latest wins). The live Ranking (`/results`) reads only; a hand move pins one piece (`manualRank`) in the curator's single open draft, created lazily inside `SortResultService.inCuratorTx` (advisory lock); `buildRanking`/`applyPins` give page and save one derivation. Save and share is one transaction keyed by `sort_results.save_key`. Migration `0003` adds `save_key` and two partial unique indexes (`sort_results_open_draft_unique`, `sort_results_save_key_unique`); additive except one reviewed data step that runs before the open-draft index and removes every open draft except the newest per (collection, curator) — items first; finalized rows and answers untouched (an amendment to spec §6 "no data rewrite"; `sort_results` has no terminal status besides `finalized`, so removal mirrors what `createDraftResult` already does to a prior draft; flagged in the PR body for owner veto). The round pages, hub, recaps, timer (+ ring tokens), usage round, Finalize page, "Adjust results" mode and `/tutorials/timers` are gone; old URLs are guard-then-308 pages. Revisions replace the open draft with the saved order pinned.
 - *Rationale:* spec §1 (9-12 screens and four ways to resume; a draft per "See results" tap), §4. One lock for every draft writer makes the index a backstop, never a 500; the save key makes a retried save return the same link.
 - *Status:* Shipped (PR 2). Accepted loss: sessions set aside before PR 2 stay excluded from the curator's log.
 ```
@@ -4869,7 +5058,10 @@ share was revoked). `400` on a bad body.
   `npm run lint && npm run test:ci && npm run build && npm run auth:verify && npm run test:db`, then
   `npm run test:e2e` (the change touches `src/server/**` and many UI routes — the full suite, tablet),
   then `PW_VIEWPORT=phone npx playwright test e2e/sort-journey.spec.ts e2e/welcome-walkthrough.spec.ts e2e/item-panel.spec.ts`.
-  Paste Task 5 Step 1's production duplicate-draft check result (must be zero rows).
+  PR-body checklist: (a) Task 5 Step 1's production duplicate-draft count (informational — the data
+  step removes the older drafts); (b) the data step is called out as a decision-42 amendment to spec §6,
+  for owner veto; (c) deploy-window note: the migration runs before the build, and `POST /api/sort-results`
+  has no UI caller, so the old build serving during the window cannot hit the new index from the UI.
 - [ ] **Step 4:** `/sync-docs` (README if it names removed routes or the timer), then
   `git add docs && git commit -m "docs: ranking API and decision 42"`. (The controller runs
   `/graphify --update` before pushing.)
@@ -4889,7 +5081,7 @@ selector and derivation → Task 1; Undo → Tasks 8, 9; Pause → Tasks 7, 8; n
 regression; lazy single draft + reuse → Tasks 4, 5; pins + Unpin → Tasks 3, 4, 10. §4.4 Save and
 share → Task 6 (+ UI Task 10); revision → Task 4 (+ Task 6 test, Task 10 button). Removed routes and
 redirects → Tasks 8, 10 (enumeration test both). Onboarding → Task 12. Live data on deploy → Task 5
-pre-check, Task 4 `findDraftForUpdate` newest-first, decision notes. §6 one migration → Task 5. §7
+data step, Task 4 `findDraftForUpdate` newest-first, decision notes. §6 one migration → Task 5. §7
 rows: phase chooser (unit, T2), comparable set (unit, T1), Undo (unit, T8/T9), pause/resume (DB, T7),
 Not yet/Not mine (unit T8 + e2e T13), viewing creates nothing (DB, T10), one open draft (DB, T5 index + T4 reuse),
 pins/Unpin (unit T3 + DB T4), save atomic + retry (DB, T6), revision (DB, T6 + existing supersede
@@ -4901,7 +5093,8 @@ dark/phone screenshots (T14). §9: timer removed (T8, T12), one quiet Save (T10)
 hash are produced by `npm run db:generate` and `shasum` in Task 5 — the only values the plan cannot
 know in advance, with the exact command to obtain each.
 
-**Type consistency.** `Pin { itemId, position, pinnedAt }` (Task 3) is what `listPins` returns
+**Type consistency.** `Pin { itemId, position, pinnedAt }` (Task 3; `position` 1-based, built by the one `pinsFromRows`
+from the 0-based `manualRank`) is what `listPins` returns
 (Task 4), what `saveAndShare` rebuilds (Task 6) and what the Ranking page passes to `buildRanking`
 (Task 10). `chooseSortPhase` input/`SortPhase` (Task 2) match the page (Task 8) and the DB test
 (Task 7). `TriageRound` props (`placedSeed`, `nextHref`) match page and test. `CompareChoice` loses
@@ -4911,7 +5104,7 @@ in Tasks 7, 8, 11. `RankingController.pin(collectionId, curatorId, itemId, body)
 curatorId, body)` match both routes.
 
 **Review Focus.** The five classes are pinned: (1) Task 8 "a second Not yet lets a returning piece
-rest…"; (2) Task 3 clamp test + Task 4 "404s an Onward, untriaged or foreign piece and 400s a bad
-body"; (3) Task 6 retry + cross-collection key tests; (4) Task 3 "drops pieces that are no longer
+rest…"; (2) Task 3 clamp test + Task 4 "404s a piece from another collection" (DB) with the Onward,
+untriaged and bad-body permutations as unit tests; (3) Task 6 retry + cross-collection key tests; (4) Task 3 "drops pieces that are no longer
 live" + Task 2 "does not count a preference for a piece that is no longer live"; (5) Task 3 "gives a
 shared slot to the newer pin".
