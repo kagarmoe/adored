@@ -114,7 +114,7 @@ describe("PoolPhotoGrid selection + grouping", () => {
       }),
     ));
     const link = await screen.findByRole("link", { name: "2 items are ready — see them all." });
-    expect(link).toHaveAttribute("href", "/collections/c1/items");
+    expect(link).toHaveAttribute("href", "/collections/c1");
     expect(screen.queryByRole("button", { name: /one/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /two/i })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: /three/i })).toBeInTheDocument();

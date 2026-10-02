@@ -9,8 +9,8 @@ export const IN_RANKING_LINE = "This one is part of a saved ranking.";
 
 interface ItemOverflowMenuProps {
   itemId: string;
-  /** The collection's items-list path; archive lands here with ?removed=<id>. */
-  itemsHref: string;
+  /** The collection home — its items grid; archive lands here with ?removed=<id>. */
+  listHref: string;
   /** Owner-only: purge and remove-from-sorts are `items:purge` server-side. */
   isOwner: boolean;
 }
@@ -22,7 +22,7 @@ type Step = null | "confirm" | "in-ranking" | "finished-ranking";
 // answers 409 while any sort result holds the item: drafts can be cleared via
 // remove-from-sorts, after which Delete is offered again; a finished (finalized)
 // ranking is a hard block, so archive is the way out there.
-export function ItemOverflowMenu({ itemId, itemsHref, isOwner }: ItemOverflowMenuProps) {
+export function ItemOverflowMenu({ itemId, listHref, isOwner }: ItemOverflowMenuProps) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(null);
   const [busy, setBusy] = useState(false);
@@ -56,7 +56,7 @@ export function ItemOverflowMenu({ itemId, itemsHref, isOwner }: ItemOverflowMen
   async function archive() {
     if (!confirmLeave()) return;
     const res = await send(() => fetch(`/api/items/${itemId}`, { method: "DELETE" }));
-    if (res?.ok) router.push(`${itemsHref}?removed=${itemId}`);
+    if (res?.ok) router.push(`${listHref}?removed=${itemId}`);
   }
 
   async function purge() {
@@ -70,7 +70,7 @@ export function ItemOverflowMenu({ itemId, itemsHref, isOwner }: ItemOverflowMen
       { conflictIsAnswer: true },
     );
     if (!res) return;
-    if (res.ok) router.push(itemsHref);
+    if (res.ok) router.push(listHref);
     else setStep("in-ranking");
   }
 

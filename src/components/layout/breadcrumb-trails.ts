@@ -32,10 +32,6 @@ const collectionPrefix = (c: TrailCollection): Crumb[] => [
   collectionsCrumb,
   { label: c.name, href: base(c) },
 ];
-const itemsPrefix = (c: TrailCollection): Crumb[] => [
-  ...collectionPrefix(c),
-  { label: "Items", href: `${base(c)}/items` },
-];
 const decidePrefix = (c: TrailCollection): Crumb[] => [
   ...collectionPrefix(c),
   { label: "Decide", href: `${base(c)}/results` },
@@ -48,10 +44,9 @@ export const trail = {
   collectionEdit: (c: TrailCollection): Crumb[] => [...collectionPrefix(c), { label: "Edit" }],
   members: (c: TrailCollection): Crumb[] => [...collectionPrefix(c), { label: "People" }],
   pool: (c: TrailCollection): Crumb[] => [...collectionPrefix(c), { label: "Photos" }],
-  items: (c: TrailCollection): Crumb[] => [...collectionPrefix(c), { label: "Items" }],
-  itemNew: (c: TrailCollection): Crumb[] => [...itemsPrefix(c), { label: "Add item" }],
+  itemNew: (c: TrailCollection): Crumb[] => [...collectionPrefix(c), { label: "Add item" }],
   item: (c: TrailCollection, item: TrailItem): Crumb[] => [
-    ...itemsPrefix(c),
+    ...collectionPrefix(c),
     { label: itemDisplayName(item) },
   ],
   sort: (c: TrailCollection): Crumb[] => [...collectionPrefix(c), { label: "Sort" }],

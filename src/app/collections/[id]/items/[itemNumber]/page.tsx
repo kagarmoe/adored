@@ -38,7 +38,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
       : null;
 
   if (!item) {
-    redirect(`/collections/${collection.slug ?? collection.id}/items`);
+    redirect(`/collections/${collection.slug ?? collection.id}`);
   }
 
   const [photos, curatorEvents, curatorSessions] = await Promise.all([
@@ -77,7 +77,7 @@ export default async function ItemDetailPage({ params }: ItemDetailPageProps) {
           </div>
           <ItemOverflowMenu
             itemId={item.id}
-            itemsHref={`/collections/${collection.slug ?? collection.id}/items`}
+            listHref={`/collections/${collection.slug ?? collection.id}`}
             isOwner={collection.ownerId === session.user.id}
           />
         </header>

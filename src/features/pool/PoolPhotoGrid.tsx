@@ -99,7 +99,7 @@ export function PoolPhotoGrid({
         const data = (await res.json()) as { count: number };
         setNotice({
           text: `${data.count} items are ready — see them all.`,
-          href: `/collections/${collectionId}/items`,
+          href: `/collections/${collectionId}`,
         });
       } else {
         const data = (await res.json()) as { number: number };

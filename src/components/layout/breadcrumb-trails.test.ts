@@ -14,7 +14,6 @@ const allTrails: Record<string, { label: string; href?: string }[]> = {
   collectionEdit: trail.collectionEdit(c),
   members: trail.members(c),
   pool: trail.pool(c),
-  items: trail.items(c),
   itemNew: trail.itemNew(c),
   item: trail.item(c, item),
   sort: trail.sort(c),
@@ -42,7 +41,12 @@ describe("breadcrumb trails", () => {
   });
 
   it("falls back to the collection id when there is no slug", () => {
-    expect(trail.items(noSlug).at(-2)?.href).toBe("/collections/col-2");
+    expect(trail.item(noSlug, item).at(-2)?.href).toBe("/collections/col-2");
+  });
+
+  it("an item hangs off the collection home (no Items level since PR 3)", () => {
+    expect(trail.item(c, item).map((x) => x.label)).toEqual(["Collections", "Spring Bags", "Red Clutch"]);
+    expect(trail.itemNew(c).at(-2)).toEqual({ label: "Spring Bags", href: "/collections/spring-bags" });
   });
 
   it("labels items via itemDisplayName", () => {

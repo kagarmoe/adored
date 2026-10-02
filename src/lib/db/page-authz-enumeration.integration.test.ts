@@ -308,9 +308,9 @@ describeDb(
       ).toBeGreaterThanOrEqual(18);
     });
 
-    it("edit/photos redirect a member to the panel; a non-numeric number goes to the list", async () => {
+    it("edit/photos redirect a member to the panel; a non-numeric number goes home", async () => {
       mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const items = `/collections/slug-${collectionId}/items`;
+      const home = `/collections/slug-${collectionId}`;
       const outcome = async (page: "edit" | "photos", itemNumber: string) => {
         const mod = (await import(/* @vite-ignore */ `@/app/collections/[id]/items/[itemNumber]/${page}/page`)) as {
           default: (p: { params: Promise<Record<string, string>> }) => Promise<unknown>;
@@ -318,10 +318,10 @@ describeDb(
         return mod.default({ params: Promise.resolve({ id: collectionId, itemNumber }) }).catch((e: Error) => e.message);
       };
       try {
-        expect(await outcome("edit", "1")).toBe(`NEXT_PERMANENT_REDIRECT:${items}/1`);
-        expect(await outcome("photos", "1")).toBe(`NEXT_PERMANENT_REDIRECT:${items}/1`);
-        expect(await outcome("edit", "../x")).toBe(`NEXT_PERMANENT_REDIRECT:${items}`);
-        expect(await outcome("photos", "1?x")).toBe(`NEXT_PERMANENT_REDIRECT:${items}`);
+        expect(await outcome("edit", "1")).toBe(`NEXT_PERMANENT_REDIRECT:${home}/items/1`);
+        expect(await outcome("photos", "1")).toBe(`NEXT_PERMANENT_REDIRECT:${home}/items/1`);
+        expect(await outcome("edit", "../x")).toBe(`NEXT_PERMANENT_REDIRECT:${home}`);
+        expect(await outcome("photos", "1?x")).toBe(`NEXT_PERMANENT_REDIRECT:${home}`);
       } finally {
         mockGetSession.mockResolvedValue({ user: { id: strangerId } });
       }
@@ -345,6 +345,30 @@ describeDb(
         expect(await outcome("sort/set-aside")).toBe(`NEXT_PERMANENT_REDIRECT:${base}/results`);
         expect(await outcome("results/set-aside")).toBe(`NEXT_PERMANENT_REDIRECT:${base}/results`);
         expect(await outcome("results/[resultNumber]/finalize")).toBe(`NEXT_PERMANENT_REDIRECT:${base}/results`);
+      } finally {
+        mockGetSession.mockResolvedValue({ user: { id: strangerId } });
+      }
+    });
+
+    it("the retired items list sends a member home through the guard, with its allow-listed params", async () => {
+      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+      const home = `/collections/slug-${collectionId}`;
+      const mod = (await import("@/app/collections/[id]/items/page")) as {
+        default: (p: {
+          params: Promise<{ id: string }>;
+          searchParams?: Promise<Record<string, string | string[]>>;
+        }) => Promise<unknown>;
+      };
+      try {
+        // ONE un-mocked crossing (real DB, real guard, real slug resolution); the
+        // allow-list permutations are unit-tested in items/page.test.tsx.
+        const out = await mod
+          .default({
+            params: Promise.resolve({ id: collectionId }),
+            searchParams: Promise.resolve({ status: "archived", q: "tote", removed: "itm_1", utm: "x" }),
+          })
+          .catch((e: Error) => e.message);
+        expect(out).toBe(`NEXT_PERMANENT_REDIRECT:${home}?status=archived&q=tote&removed=itm_1`);
       } finally {
         mockGetSession.mockResolvedValue({ user: { id: strangerId } });
       }

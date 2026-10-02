@@ -77,7 +77,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
     const cover = covers.get(itemId);
     return cover ? getPhotoAssetUrlForPhoto(cover, collection.id, { w: PHOTO_WIDTH.card }) : undefined;
   };
-  const hrefOf = (item: Item) => (item.number === null ? `${base}/items` : `${base}/items/${item.number}`);
+  const hrefOf = (item: Item) => (item.number === null ? base : `${base}/items/${item.number}`);
 
   const rows: RankingRow[] = loved.flatMap((entry) => {
     const item = itemById.get(entry.itemId);
