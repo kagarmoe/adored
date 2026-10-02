@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import type { SortResult, SortResultItem, RankBucket } from "@/types";
 import type { Database } from "@/lib/db";
-import { lockCollectionCurator, withTransaction } from "@/lib/transactions";
+import { lockCollectionCurator, lockSaveKey, withTransaction } from "@/lib/transactions";
 import {
   SortResultRepository,
   isResultNumberConflict,
@@ -109,7 +109,7 @@ export class NothingToSaveError extends Error {
 /** A save key reused for another collection, or whose link was revoked → 409. */
 export class SaveKeyConflictError extends Error {
   constructor() {
-    super("That save already went through.");
+    super("That save can't be repeated here.");
     this.name = "SaveKeyConflictError";
   }
 }
@@ -284,6 +284,8 @@ export class SortResultService {
    */
   async saveAndShare(collectionId: string, curatorId: string, name: string, saveKey: string): Promise<SavedRanking> {
     return this.inCuratorTx(collectionId, curatorId, "save_and_share", async (tx) => {
+      // Same key in two collections takes two curator locks; this one serializes them so the loser 409s, not 500s.
+      await lockSaveKey(tx, curatorId, saveKey);
       const resultRepo = new SortResultRepository(tx);
       const shareRepo = new SortResultShareRepository(tx);
 

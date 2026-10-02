@@ -14,6 +14,8 @@ const { txResultRepo, txItemRepo, txSessionRepo, isResultNumberConflict } = vi.h
     findByIdForUpdate: vi.fn(),
     update: vi.fn(),
     findDrafts: vi.fn(),
+    findBySaveKey: vi.fn(),
+    markSaved: vi.fn(),
   },
   txItemRepo: { create: vi.fn(), deleteByResult: vi.fn(), findByResult: vi.fn(), update: vi.fn() },
   // finalizeResult resolves the curator's open session via a tx-bound
@@ -28,6 +30,10 @@ vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
   SortResultItemRepository: vi.fn(function () { return txItemRepo; }),
 }));
+const { txShareRepo } = vi.hoisted(() => ({ txShareRepo: { findByResult: vi.fn(), create: vi.fn() } }));
+vi.mock("@/server/repositories/implementations/SortResultShareRepository", () => ({
+  SortResultShareRepository: vi.fn(function () { return txShareRepo; }),
+}));
 const { txPrefRepo } = vi.hoisted(() => ({ txPrefRepo: { findByItem: vi.fn() } }));
 vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({
   CollectionPreferenceItemRepository: vi.fn(function () { return txPrefRepo; }),
@@ -37,6 +43,7 @@ vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepositor
 vi.mock("@/lib/transactions", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/transactions")>()),
   lockCollectionCurator: vi.fn(),
+  lockSaveKey: vi.fn(),
 }));
 vi.mock("@/server/repositories/implementations/SessionRepository", () => ({
   SessionRepository: vi.fn(function () { return txSessionRepo; }),
@@ -56,6 +63,7 @@ import {
   FinalizeStateError,
   ResultNumberExhaustedError,
   PinTargetError,
+  SaveKeyConflictError,
 } from "./SortResultService";
 import type {
   CollectionPreferenceItem,
@@ -527,5 +535,24 @@ describe("SortResultService manual override", () => {
       "item-a",
       expect.objectContaining({ manualRank: null, manualBucket: null }),
     );
+  });
+});
+
+describe("SortResultService.saveAndShare replay", () => {
+  it("409s when the key's link is no longer active, and writes nothing", async () => {
+    txResultRepo.findBySaveKey.mockResolvedValue(sortResult({ status: "finalized" }));
+    txShareRepo.findByResult.mockResolvedValue([{ status: "revoked" }]);
+    const service = new SortResultService(
+      {} as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
+      txDb,
+    );
+
+    await expect(service.saveAndShare(COLLECTION, CURATOR, "Again", "01j00000000000000000000000")).rejects.toBeInstanceOf(
+      SaveKeyConflictError,
+    );
+    expect(txResultRepo.markSaved).not.toHaveBeenCalled();
+    expect(txShareRepo.create).not.toHaveBeenCalled();
   });
 });

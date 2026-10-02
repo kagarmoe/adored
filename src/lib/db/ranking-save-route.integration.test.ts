@@ -100,6 +100,9 @@ describeDb("save and share (route -> service -> DB)", () => {
     const other = await seedSorting();
     await save(saveReq({ name: "Here", saveKey: KEY }), ctx(s.collectionId));
     expect((await save(saveReq({ name: "There", saveKey: KEY }), ctx(other.collectionId))).status).toBe(409);
+    const { db } = getTestDb();
+    expect(await new SortResultRepository(db).findByCollection(other.collectionId)).toEqual([]);
+    expect((await new SessionRepository(db).findById(other.sessionId))!.status).toBe("active");
   });
 
   it("409s with nothing to save and writes nothing", async () => {
