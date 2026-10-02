@@ -15,6 +15,7 @@ import {
   seedMembersScenario,
   seedJourneyScenario,
   seedWorkspaceStates,
+  seedNamedCollection,
 } from "../fixtures/seed";
 import { getTestDb } from "../fixtures/db";
 import { CollectionPreferenceItemRepository } from "@/server/repositories/implementations/CollectionPreferenceItemRepository";
@@ -36,7 +37,7 @@ let pairsSlug = "";
 let workspacePoolFirstSlug = "";
 let workspaceItemsFirstSlug = "";
 let archivedSlug = "";
-// SHOTS=items-grid,item-detail → capture only those surfaces (the full run outlasts
+// SHOTS=home,item-detail → capture only those surfaces (the full run outlasts
 // a 10-minute tool ceiling). Unset = everything.
 const only = process.env.SHOTS?.split(",");
 
@@ -111,6 +112,8 @@ test.beforeAll(async () => {
   const archived = await seedJourneyScenario(ownerId, 3);
   archivedSlug = archived.slug;
   await new ItemRepository(db).softDelete(archived.itemIds[0]);
+  // UX redesign PR 3: one archived collection, so the collections-archived shot is not empty.
+  await seedNamedCollection(ownerId, "E2E Archived shelf", "archived");
 
   // UX redesign PR 2: the pairs phase — two Love pieces, nothing compared yet.
   const pairsSeed = await seedJourneyScenario(ownerId, 2);
@@ -148,7 +151,13 @@ for (const theme of ["light", "dark"] as const) {
     const proj = testInfo.project.name;
     const surfaces: [string, string][] = [
       ["collections", "/collections"],
-      ["items-grid", `/collections/${slug}/items`],
+      // UX redesign PR 3: the collections grid's Archived view, the home as the
+      // items grid (items, pool-first, archived) — phone shots show the bottom bar.
+      ["collections-archived", "/collections?status=archived"],
+      ["home", `/collections/${slug}`],
+      ["home-pool-first", `/collections/${workspacePoolFirstSlug}`],
+      ["home-items-first", `/collections/${workspaceItemsFirstSlug}`],
+      ["home-archived", `/collections/${archivedSlug}?status=archived`],
       ["item-detail", `/collections/${slug}/items/1`],
       // The item panel with its story field filled.
       ["item-detail-story", `/collections/${waitingSlug}/items/1`],
@@ -171,19 +180,11 @@ for (const theme of ["light", "dark"] as const) {
       ["ranking-set-aside", `/collections/${setAsideSlug}/results`],
       // A paused sort on the collection page: one Keep sorting action.
       ["collection-paused", `/collections/${pausedSlug}`],
-      // Task 6: the adaptive workspace's two image-bearing shapes. pool-first
-      // leads with the Photo pool preview (+ Make items); items-first leads with
-      // the Items grid (+ the dominant Add photos action).
-      ["workspace-pool-first", `/collections/${workspacePoolFirstSlug}`],
-      ["workspace-items-first", `/collections/${workspaceItemsFirstSlug}`],
-      // Wayfinding: the Items index (back arrow + Build/Sort/Decide chips) and an
-      // item detail (deepest common trail: Collections / {name} / Items / {item};
+      // Wayfinding: an item detail (deepest common trail: Collections / {name} / {item};
       // the itemsOnly seed's single item is number 1).
-      ["items", `/collections/${workspaceItemsFirstSlug}/items`],
       ["item-detail", `/collections/${workspaceItemsFirstSlug}/items/1`],
       // Epic 3: the pool "Photos" screen (grid + copy). poolOnly has loose photos.
       ["pool", `/collections/${workspacePoolFirstSlug}/pool`],
-      ["items-archived", `/collections/${archivedSlug}/items?status=archived`],
     ].filter(([n]) => !only || only.includes(n)) as [string, string][];
     for (const [name, url] of surfaces) {
       await page.goto(url);

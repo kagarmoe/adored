@@ -17,11 +17,11 @@ test.describe("per-surface image widths", () => {
     );
   });
 
-  test("the items grid requests the resized card width (w=640)", async ({ page }) => {
+  test("the home grid requests the resized card width (w=640)", async ({ page }) => {
     const cardRequest = page.waitForRequest((r) =>
       /\/api\/photo-files\/[^?]+\?.*\bw=640\b/.test(r.url()),
     );
-    await page.goto(`/collections/${slug}/items`);
+    await page.goto(`/collections/${slug}`);
     await cardRequest;
     await expect(page.getByRole("img").first()).toBeVisible();
   });
