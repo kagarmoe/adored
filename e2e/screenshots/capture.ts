@@ -36,6 +36,10 @@ let setAsideSlug = "";
 let pausedSlug = "";
 let workspacePoolFirstSlug = "";
 let workspaceItemsFirstSlug = "";
+let archivedSlug = "";
+// SHOTS=items-grid,item-detail → capture only those surfaces (the full run outlasts
+// a 10-minute tool ceiling). Unset = everything.
+const only = process.env.SHOTS?.split(",");
 
 test.beforeAll(async () => {
   ownerId = await seedBaseline();
@@ -107,6 +111,11 @@ test.beforeAll(async () => {
   const workspace = await seedWorkspaceStates(ownerId);
   workspacePoolFirstSlug = workspace.poolOnly.slug;
   workspaceItemsFirstSlug = workspace.itemsOnly.slug;
+
+  // UX redesign PR 1: the Archived pill lists soft-deleted items (Bring back, no link).
+  const archived = await seedJourneyScenario(ownerId, 3);
+  archivedSlug = archived.slug;
+  await new ItemRepository(db).softDelete(archived.itemIds[0]);
 });
 
 for (const theme of ["light", "dark"] as const) {
@@ -212,7 +221,8 @@ for (const theme of ["light", "dark"] as const) {
       // Epic R: the usage round Relaxed surface (photo card, "Yes, I use it" /
       // "Not these days", "Skip for now", the answered cue, RoundLengthChooser + timer).
       ["usage-round", `/collections/${triageSlug}/sort/${triageSessionNumber}/usage`],
-    ];
+      ["items-archived", `/collections/${archivedSlug}/items?status=archived`],
+    ].filter(([n]) => !only || only.includes(n)) as [string, string][];
     for (const [name, url] of surfaces) {
       await page.goto(url);
       // Best-effort wait for the first image to paint, then a brief settle.
@@ -230,6 +240,8 @@ for (const theme of ["light", "dark"] as const) {
 
     const shot = (n: string) =>
       page.screenshot({ path: `pr-screenshots/${n}-${theme}-${proj}.png`, fullPage: true });
+
+    if (only && !only.includes("item-delete-confirm")) return;
 
     // purses-v7gv: the item ··· menu (owner sees Archive + Delete) and the
     // items-list undo notice. Self-restoring — the beat ends on "Undo", so the
@@ -250,6 +262,7 @@ for (const theme of ["light", "dark"] as const) {
     await page.getByRole("button", { name: "Undo", exact: true }).click();
     await page.getByRole("link", { name: /view/i }).first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
     await page.waitForTimeout(400);
+    if (only) return;
 
     // Epic R: usage-round scripted-tap surfaces. Like the /welcome beats below,
     // these are driven by role/accessible-name (never CSS), with the same img-wait
