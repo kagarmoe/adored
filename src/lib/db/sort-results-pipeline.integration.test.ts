@@ -3,7 +3,7 @@
 // Phase-3 Task 7: the HAPPY + ERROR/state-guard branches of the sort-results
 // subtree that sort-results-authz (authz / IDOR / belongs-to-parent) and
 // sort-pipeline (createDraftResult materialization, [id] PATCH/DELETE 409,
-// items/[rid] DELETE, service-level supersede clone) do NOT execute. Real
+// service-level supersede clone) do NOT execute. Real
 // handler -> controller/service -> repo -> ephemeral Postgres; mocks ONLY the
 // two true boundaries (auth + db). No blob — sort-results never touch it.
 //

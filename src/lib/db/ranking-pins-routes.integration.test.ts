@@ -71,6 +71,18 @@ describeDb("ranking pins (route -> service -> DB)", () => {
     expect(await pinsOf(open[0].id)).toEqual(new Map([[itemIds[2], 0], [itemIds[0], 2]])); // manualRank is 0-based
   });
 
+  // Regression (AR1): with every piece pinned, a move down used to wrap the displaced
+  // piece into the gap above instead of shifting the pieces it passed.
+  it("a move in a fully pinned list shifts the pieces it passes, as the list showed", async () => {
+    const { collectionId, itemIds } = await seedRanked(["top", "high", "medium"]);
+    for (const [i, itemId] of itemIds.entries()) await pin(req("PUT", { position: i + 1 }), ctx(collectionId, itemId));
+
+    expect((await pin(req("PUT", { position: 2 }), ctx(collectionId, itemIds[0]))).status).toBe(200);
+
+    const [open] = await drafts(collectionId);
+    expect(await pinsOf(open.id)).toEqual(new Map([[itemIds[1], 0], [itemIds[0], 1], [itemIds[2], 2]]));
+  });
+
   it("unpin clears the placement and keeps the draft (idempotent)", async () => {
     const { collectionId, itemIds } = await seedRanked(["top", "high"]);
     await pin(req("PUT", { position: 1 }), ctx(collectionId, itemIds[1]));

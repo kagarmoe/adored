@@ -79,7 +79,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
 
   const rows: RankingRow[] = loved.flatMap((entry) => {
     const item = itemById.get(entry.itemId);
-    if (!item || entry.bucket === "low") return [];
+    if (!item) return [];
     return [{
       itemId: item.id,
       href: hrefOf(item),

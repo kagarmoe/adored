@@ -30,7 +30,7 @@ vi.mock("@/server/repositories/implementations/SortResultRepository", () => ({
 vi.mock("@/server/repositories/implementations/SortResultItemRepository", () => ({
   SortResultItemRepository: vi.fn(function () { return txItemRepo; }),
 }));
-const { txShareRepo } = vi.hoisted(() => ({ txShareRepo: { findByResult: vi.fn(), create: vi.fn() } }));
+const { txShareRepo } = vi.hoisted(() => ({ txShareRepo: { findByResult: vi.fn(), create: vi.fn(), deleteByResult: vi.fn() } }));
 vi.mock("@/server/repositories/implementations/SortResultShareRepository", () => ({
   SortResultShareRepository: vi.fn(function () { return txShareRepo; }),
 }));
@@ -470,6 +470,9 @@ describe("SortResultService deleteResult", () => {
 
   it("deletes children BEFORE the result row (FK-safe order) inside one tx for a draft", async () => {
     const calls: string[] = [];
+    txShareRepo.deleteByResult.mockImplementation(async () => {
+      calls.push("shares");
+    });
     txItemRepo.deleteByResult.mockImplementation(async () => {
       calls.push("children");
     });
@@ -492,8 +495,8 @@ describe("SortResultService deleteResult", () => {
     // Writes land on the tx-bound repos, not the injected ones.
     expect(txItemRepo.deleteByResult).toHaveBeenCalledWith("res-1");
     expect(txResultRepo.delete).toHaveBeenCalledWith("res-1");
-    // Children-first: the sort_result_items -> sort_results FK has no cascade.
-    expect(calls).toEqual(["children", "result"]);
+    // Children-first: neither FK to sort_results cascades.
+    expect(calls).toEqual(["shares", "children", "result"]);
     expect(lockCollectionCurator).toHaveBeenCalledWith(expect.anything(), COLLECTION, CURATOR);
   });
 });

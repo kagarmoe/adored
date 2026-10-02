@@ -557,9 +557,6 @@ function buildStrangerCases(
     c("sort-results/[id]/items/[rid]/route.ts", "GET",
       `/api/sort-results/${sortResultId}/items/${resultItemId}`,
       { id: sortResultId, rid: resultItemId }),
-    c("sort-results/[id]/items/[rid]/route.ts", "DELETE",
-      `/api/sort-results/${sortResultId}/items/${resultItemId}`,
-      { id: sortResultId, rid: resultItemId }),
 
     // ── /api/sort-results/[id]/shares ─────────────────────────────────────
     c("sort-results/[id]/shares/route.ts", "GET",

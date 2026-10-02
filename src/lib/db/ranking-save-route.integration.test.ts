@@ -12,6 +12,7 @@ import { SortResultRepository } from "@/server/repositories/implementations/Sort
 import { SortResultItemRepository } from "@/server/repositories/implementations/SortResultItemRepository";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 import { SortResultService } from "@/server/services/SortResultService";
+import * as txMod from "@/lib/transactions";
 
 const { mockGetSession } = vi.hoisted(() => ({ mockGetSession: vi.fn() }));
 vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
@@ -65,7 +66,7 @@ describeDb("save and share (route -> service -> DB)", () => {
       .sort((x, y) => x.computedRank - y.computedRank)
       .map((r) => r.itemId);
 
-  it("saves the live order with pins: one finalized ranking, a share link, the sort closed, no draft left", async () => {
+  it("saves the live order with pins: one finalized ranking, a share link, the sort closed", async () => {
     const { db } = getTestDb();
     const s = await seedSorting();
     await SortResultService.fromDb(db).pinItem(s.collectionId, ownerId, s.a, 1);
@@ -74,13 +75,43 @@ describeDb("save and share (route -> service -> DB)", () => {
     expect(res.status).toBe(201);
     const body = (await res.json()) as { resultNumber: number; shareToken: string };
 
-    const results = await new SortResultRepository(db).findByCollection(s.collectionId);
-    expect(results).toHaveLength(1);
-    expect(results[0]).toMatchObject({ status: "finalized", name: "Spring keepers", number: body.resultNumber });
-    expect(await savedOrder(results[0].id)).toEqual([s.a, s.b, s.c]);
-    const shares = await new SortResultShareRepository(db).findByResult(results[0].id);
+    const saved = (await new SortResultRepository(db).findByCollection(s.collectionId)).filter((r) => r.status === "finalized");
+    expect(saved).toHaveLength(1);
+    expect(saved[0]).toMatchObject({ name: "Spring keepers", number: body.resultNumber });
+    expect(await savedOrder(saved[0].id)).toEqual([s.a, s.b, s.c]);
+    const shares = await new SortResultShareRepository(db).findByResult(saved[0].id);
     expect(shares.map((x) => [x.shareToken, x.status])).toEqual([[body.shareToken, "active"]]);
     expect((await new SessionRepository(db).findById(s.sessionId))!.status).toBe("completed");
+  });
+
+  // Regression (AR3): Save finalized the open draft, so every pin vanished from the live Ranking.
+  it("pins survive a save: the hand-placed piece stays put, and only it is carried", async () => {
+    const { db } = getTestDb();
+    const s = await seedSorting();
+    const service = SortResultService.fromDb(db);
+    await service.pinItem(s.collectionId, ownerId, s.a, 1);
+
+    expect((await save(saveReq({ name: "Kept", saveKey: KEY }), ctx(s.collectionId))).status).toBe(201);
+
+    expect((await service.listPins(s.collectionId, ownerId)).map((p) => [p.itemId, p.position])).toEqual([[s.a, 1]]);
+    const draft = await new SortResultRepository(db).findDraft(s.collectionId, ownerId);
+    expect((await new SortResultItemRepository(db).findByResult(draft!.id)).map((r) => r.itemId)).toEqual([s.a]);
+  });
+
+  it("a save with no pins leaves no open draft behind", async () => {
+    const { db } = getTestDb();
+    const s = await seedSorting();
+    expect((await save(saveReq({ name: "Plain", saveKey: KEY }), ctx(s.collectionId))).status).toBe(201);
+    expect(await new SortResultRepository(db).findDraft(s.collectionId, ownerId)).toBeNull();
+  });
+
+  it("takes the save-key lock inside the save transaction", async () => {
+    const s = await seedSorting();
+    // Spy WITHOUT replacing the impl — the real lock still runs against pg.
+    const lockSpy = vi.spyOn(txMod, "lockSaveKey");
+    expect((await save(saveReq({ name: "Locked", saveKey: KEY }), ctx(s.collectionId))).status).toBe(201);
+    expect(lockSpy).toHaveBeenCalledWith(expect.anything(), ownerId, KEY);
+    lockSpy.mockRestore();
   });
 
   it("a retry with the same key returns the same link and creates nothing new", async () => {
@@ -99,7 +130,9 @@ describeDb("save and share (route -> service -> DB)", () => {
     const s = await seedSorting();
     const other = await seedSorting();
     await save(saveReq({ name: "Here", saveKey: KEY }), ctx(s.collectionId));
-    expect((await save(saveReq({ name: "There", saveKey: KEY }), ctx(other.collectionId))).status).toBe(409);
+    const res = await save(saveReq({ name: "There", saveKey: KEY }), ctx(other.collectionId));
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe("save_key_conflict");
     const { db } = getTestDb();
     expect(await new SortResultRepository(db).findByCollection(other.collectionId)).toEqual([]);
     expect((await new SessionRepository(db).findById(other.sessionId))!.status).toBe("active");
@@ -107,7 +140,9 @@ describeDb("save and share (route -> service -> DB)", () => {
 
   it("409s with nothing to save and writes nothing", async () => {
     const collectionId = await seedBareCollection(ownerId);
-    expect((await save(saveReq({ name: "Empty", saveKey: KEY }), ctx(collectionId))).status).toBe(409);
+    const res = await save(saveReq({ name: "Empty", saveKey: KEY }), ctx(collectionId));
+    expect(res.status).toBe(409);
+    expect((await res.json()).code).toBe("nothing_to_save");
     expect(await new SortResultRepository(getTestDb().db).findByCollection(collectionId)).toEqual([]);
   });
 

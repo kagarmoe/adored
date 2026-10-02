@@ -48,7 +48,6 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 import { POST as recordDecision } from "@/app/api/sessions/[id]/decisions/route";
 import { POST as createResult } from "@/app/api/sort-results/route";
 import { DELETE as deleteResultRoute, PATCH as patchResultRoute } from "@/app/api/sort-results/[id]/route";
-import { DELETE as deleteResultItemRoute } from "@/app/api/sort-results/[id]/items/[rid]/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -352,13 +351,14 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     return service.createDraftResult(collectionId, ownerId, "To delete");
   }
 
-  it("DELETE /api/sort-results/[id] removes a draft and ALL its items (zero orphans)", async () => {
+  it("DELETE /api/sort-results/[id] removes a shared draft, ALL its items and its share (zero orphans)", async () => {
     const { db } = getTestDb();
     const draft = await seedPopulatedDraft();
 
-    // The draft is populated before deletion (the FK constraint makes a bare
-    // result delete fail unless children are removed first).
+    // The draft is populated and shared before deletion (neither FK cascades, so a
+    // bare result delete fails unless the children are removed first).
     expect((await new SortResultItemRepository(db).findByResult(draft.id)).length).toBeGreaterThan(0);
+    await new SortResultShareRepository(db).create({ sortResultId: draft.id, shareToken: `share-tok-${generateId("tok")}` });
 
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await deleteResultRoute(new Request(`http://localhost/api/sort-results/${draft.id}`, {
@@ -369,29 +369,20 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     // Result row gone AND no orphaned child items left behind.
     expect(await new SortResultRepository(db).findById(draft.id)).toBeNull();
     expect(await new SortResultItemRepository(db).findByResult(draft.id)).toEqual([]);
+    expect(await new SortResultShareRepository(db).findByResult(draft.id)).toEqual([]);
   });
 
-  it("deleteResult rolls back the item deletes when the result delete FK-fails (atomicity)", async () => {
-    // Un-mocked transactional-rollback proof for the DELETE path. We inject a
-    // clean FK failure: sort_result_shares.sortResultId references
-    // sort_results.id with ON DELETE no action, so a share pinned to the draft
-    // makes the result-row delete trip the FK (23503). deleteResult removes the
-    // children (items) FIRST, then the result — so the failure lands AFTER the
-    // item deletes. With withTransaction wrapping both, the whole thing rolls
-    // back and the items survive. Without it, the item deletes would have
-    // committed before the result delete failed, leaving partial state.
+  it("deleteResult rolls back the child deletes when the result delete fails (atomicity)", async () => {
+    // Un-mocked transactional-rollback proof for the DELETE path: deleteResult
+    // removes the children (shares, items) FIRST, then the result — so a failure
+    // on the result row lands AFTER the child deletes. With withTransaction
+    // wrapping all of them, the whole thing rolls back and the items survive.
     const { db } = getTestDb();
     const draft = await seedPopulatedDraft();
 
     const itemRepo = new SortResultItemRepository(db);
     const before = await itemRepo.findByResult(draft.id);
     expect(before.length).toBeGreaterThan(0);
-
-    // Pin a share to the draft → the result-row delete will FK-violate.
-    await new SortResultShareRepository(db).create({
-      sortResultId: draft.id,
-      shareToken: `share-tok-${generateId("tok")}`,
-    });
 
     const service = new SortResultService(
       new SortResultRepository(db),
@@ -400,7 +391,9 @@ describeDb("sort pipeline (route/service -> DB)", () => {
       db,
     );
 
-    await expect(service.deleteResult(draft.id)).rejects.toThrow();
+    const spy = vi.spyOn(SortResultRepository.prototype, "delete").mockRejectedValueOnce(new Error("result delete failed"));
+    await expect(service.deleteResult(draft.id)).rejects.toThrow("result delete failed");
+    spy.mockRestore();
 
     // The point: the transaction rolled back, so EVERY item row still exists
     // (the children delete ran, then the result delete FK-failed → full undo).
@@ -483,58 +476,5 @@ describeDb("sort pipeline (route/service -> DB)", () => {
 
     // The draft's name is unchanged — validation fired before any write.
     expect((await new SortResultRepository(db).findById(draft.id))!.name).toBe(originalName);
-  });
-
-  it("DELETE /api/sort-results/[id]/items/[rid] removes that one item and leaves the rest", async () => {
-    const { db } = getTestDb();
-    const draft = await seedPopulatedDraft();
-
-    const before = await new SortResultItemRepository(db).findByResult(draft.id);
-    expect(before.length).toBeGreaterThan(1);
-    const victim = before[0];
-
-    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await deleteResultItemRoute(
-      new Request(`http://localhost/api/sort-results/${draft.id}/items/${victim.id}`, {
-        method: "DELETE",
-      }) as any,
-      { params: Promise.resolve({ id: draft.id, rid: victim.id }) },
-    );
-    expect(res.status).toBe(200);
-
-    // The targeted item is gone; every other item survives (count down by exactly 1).
-    expect(await new SortResultItemRepository(db).findById(victim.id)).toBeNull();
-    const after = await new SortResultItemRepository(db).findByResult(draft.id);
-    expect(after).toHaveLength(before.length - 1);
-    expect(after.some((i) => i.id === victim.id)).toBe(false);
-  });
-
-  it("DELETE /api/sort-results/[id]/items/[rid] rejects a finalized result with 409 and leaves the item intact", async () => {
-    const { db } = getTestDb();
-    const draft = await seedPopulatedDraft();
-
-    const before = await new SortResultItemRepository(db).findByResult(draft.id);
-    expect(before.length).toBeGreaterThan(0);
-    const victim = before[0];
-
-    const service = new SortResultService(
-      new SortResultRepository(db),
-      new SortResultItemRepository(db),
-      new CollectionPreferenceItemRepository(db),
-      db,
-    );
-    await service.finalizeResult(draft.id);
-
-    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await deleteResultItemRoute(
-      new Request(`http://localhost/api/sort-results/${draft.id}/items/${victim.id}`, {
-        method: "DELETE",
-      }) as any,
-      { params: Promise.resolve({ id: draft.id, rid: victim.id }) },
-    );
-    expect(res.status).toBe(409);
-
-    // The item on a finalized result must survive the delete attempt.
-    expect(await new SortResultItemRepository(db).findById(victim.id)).not.toBeNull();
   });
 });

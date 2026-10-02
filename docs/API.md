@@ -89,7 +89,7 @@ Route-level analytics capture has been removed from the API surface; this does n
 - **Curator-scoped** — `sessions` and `sort-results` (and children) are private to the creating curator, enforced on top of collection membership.
 - **`ownerId`/`curatorId` come from the session, never the body** — create routes force them from the authenticated user.
 - **Belongs-to-parent on child routes** — see Authorization model.
-- **Soft-delete vs purge** — `archive`/`restore` are reversible; `purge` is the permanent path. `POST /api/items/[id]/purge` is now real: an **owner-only** permanent hard-delete cascade (preferences + photos + blobs, then the item) in one transaction, **`409`** if the item is in any sort result (see detail). **`POST /api/collections/[id]/purge` is now real too** — an owner-only whole-collection cascade purge with a type-the-collection-name confirm (see detail). `DELETE /api/sort-results/[id]` and `…/items/[rid]` are hard deletes restricted to **draft** results (see detail).
+- **Soft-delete vs purge** — `archive`/`restore` are reversible; `purge` is the permanent path. `POST /api/items/[id]/purge` is now real: an **owner-only** permanent hard-delete cascade (preferences + photos + blobs, then the item) in one transaction, **`409`** if the item is in any sort result (see detail). **`POST /api/collections/[id]/purge` is now real too** — an owner-only whole-collection cascade purge with a type-the-collection-name confirm (see detail). `DELETE /api/sort-results/[id]` is a hard delete restricted to **draft** results, taking the draft's shares and items with it (see detail).
 
 ## Route index
 
@@ -195,7 +195,7 @@ Route-level analytics capture has been removed from the API surface; this does n
 | GET·PATCH·DELETE | `/api/sort-results/[id]` | curator |
 | POST | `/api/sort-results/[id]/finalize` | curator |
 | POST | `/api/sort-results/[id]/supersede` | curator |
-| GET·DELETE | `/api/sort-results/[id]/items/[rid]` | curator |
+| GET | `/api/sort-results/[id]/items/[rid]` | curator |
 
 ### shares
 | Method | Path | Access |
@@ -338,15 +338,20 @@ Curator-private triage shelving (Epic C PR1). A **disposition** parks an *untria
 
 ## ranking
 
-The live Ranking's writes (UX redesign PR 2, decision 42). Curator is always the caller. Every write
-runs in one transaction holding the `(collection, curator)` advisory lock; the partial unique index
-`sort_results_open_draft_unique` (one `status = 'draft'` row per collection + curator) is the backstop.
+The live Ranking's writes (UX redesign PR 2, decision 42). Curator is always the caller. Pin, unpin
+and save — like revision, finalize, draft delete and the legacy create — run in one transaction holding
+the `(collection, curator)` advisory lock; the partial unique index `sort_results_open_draft_unique`
+(one `status = 'draft'` row per collection + curator) is the backstop. Still unlocked (tracked in
+`purses-w7ss.6`): the result rename (`PATCH /api/sort-results/[id]`) and the owner's purge-prep
+(`remove-from-sorts`).
 The API position is 1-based; `manualRank` stays 0-based and the service converts at the boundary.
 
 ### `PUT·DELETE /api/collections/[id]/ranking/pins/[itemId]`
 `requireAuth` + `requireApiCollectionAccess` (`401`/`403`/`404`) before the body. **PUT body (strict):**
 `{ position: integer 1-10000 }` — pins the piece at that 1-based slot of the loved list (Love, Like,
 Maybe); the first pin lazily creates the open draft (`name: "Still deciding"`), later pins reuse it.
+A move is the splice the list shows: pinned pieces it passes over shift one slot with it, so a fully
+pinned list (after Make a revision) never wraps.
 `404` when the piece is not this curator's Love/Like/Maybe piece in this collection (Onward,
 untriaged, foreign); `400` on a bad body. **DELETE** unpins (idempotent, opens nothing). Both `200 { ok: true }`.
 Reading the Ranking creates nothing.
@@ -355,10 +360,12 @@ Reading the Ranking creates nothing.
 `requireAuth` + `requireApiCollectionAccess` before the body. **Body (strict):** `{ name: string
 (trimmed, 1-200), saveKey: ULID (26 lowercase Crockford) }`. One transaction: reuse-or-create the open
 draft → rebuild its rows from the live ranking (pins applied, tier first, usage stamped) → finalize
-(`save_key` stored) → complete the curator's open session → create an active share. `201
-{ resultNumber, shareToken }`; a replay of the same key returns `200` and the same body, writing
-nothing. `409` when nothing is ranked yet, or when the key belongs to another collection (or its
-share was revoked). `400` on a bad body.
+(`save_key` stored) → complete the curator's open session → create an active share → carry the
+explicitly pinned pieces (only those) into a fresh open draft at their saved slots, so they stay put on
+the live Ranking. `201 { resultNumber, shareToken }`; a replay of the same key returns `200` and the
+same body, writing nothing. `409 { error, code }`: `code: "nothing_to_save"` when nothing is ranked yet,
+`code: "save_key_conflict"` when the key belongs to another collection (or its share was revoked).
+`400` on a bad body.
 
 ## items (top-level)
 
@@ -403,7 +410,7 @@ Epic P's batched decision pipeline — the client queue/flusher's only submit pa
 Curator-private results, gated by `requireApiResultAccess` (member-or-owner **and** owning curator). Children also enforce belongs-to-parent.
 
 ### `POST /api/sort-results`
-`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, name }` (`400` if either missing, or invalid JSON). `curatorId` from session, `status: "draft"`. Delegates to `SortResultService.createDraftResult`, which reads the curator's `CollectionPreferenceItem` rows for the collection and **materializes one `SortResultItem` per preference** (ranked tier first, then pair order, carrying each row's bucket) before returning. Any open draft for the curator is deleted in the same locked transaction first (one open draft per collection + curator); no UI calls this route any more. **Materialization is atomic** — the result row + all item rows are written in one `withTransaction`, so a mid-materialization failure commits nothing (`purses-nea`). `201 SortResult` (the created draft; items are fetched via `GET …/[id]/items`).
+`getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, name }` (`400` if either missing, or invalid JSON). `curatorId` from session, `status: "draft"`. Delegates to `SortResultService.createDraftResult`, which reads the curator's `CollectionPreferenceItem` rows for the collection and **materializes one `SortResultItem` per preference** (ranked tier first, then pair order, carrying each row's bucket) before returning. Any open draft for the curator is deleted in the same locked transaction first (one open draft per collection + curator); no UI calls this route any more. **Materialization is atomic** — the result row + all item rows are written in one `withTransaction`, so a mid-materialization failure commits nothing (`purses-nea`). `201 SortResult` (the created draft; one item is readable via `GET …/[id]/items/[rid]`, and a saved ranking's items render on its results page).
 
 ### `GET·PATCH·DELETE /api/sort-results/[id]`
 `requireAuth` + `requireApiResultAccess` (`401`/`403`/`404`). `GET` → `SortResult`; `PATCH` body → updated `SortResult` (`400` invalid JSON), but rejects a **finalized** result with **`409`** (`"Result is finalized"`) — a finalized result is immutable, name included (infra §11.3; `purses-gmn`, mirroring `purses-526`'s item-level guards). `DELETE` delegates to `SortResultService.deleteResult`, which **hard-deletes a draft result and its child items** (children first — the `sort_result_items → sort_results` FK has no `ON DELETE CASCADE`; **atomic** — both deletes in one `withTransaction`, a `purses-nea` follow-up): `200 { message }` when a draft was deleted; **`409`** (`"Can only delete draft results"`) if the result is finalized; **`404`** if absent.
@@ -414,8 +421,8 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 ### `POST /api/sort-results/[id]/supersede`
 `requireAuth` + `requireApiResultAccess`. Delegates to `SortResultService.supersedeResult`. When the source is **finalized**, creates a new **draft** result (`name` = `"<source name> (Revision)"`) with the source's items **cloned** (computed rank/bucket carried over) **atomically** (result + items in one transaction — `purses-nea`) → **`201`** the new draft `SortResult`. **`409`** (`"Can only supersede finalized results"`) if the source is not finalized; **`404`** if the source is absent. The revision replaces the curator's open draft, and its loved rows are pinned (`manualRank`) at their saved positions, so the live Ranking starts from the saved order.
 
-### `GET·DELETE /api/sort-results/[id]/items/[rid]`
-`requireApiResultAccess` + belongs-to-parent (`item.sortResultId !== id` → `404`). `GET` → `SortResultItem`; `DELETE` rejects a **finalized** parent result with **`409`** (finalized results are immutable — infra §11.3; `purses-526`) and otherwise removes the item via `SortResultService.deleteResultItem` → `200 { message }`. (The legacy hand-order writers — bulk `PATCH·DELETE …/items`, per-item `PATCH …/items/[rid]` and `…/items/[rid]/reset` — were removed in UX redesign PR 2; hand placement is the [ranking](#ranking) pins.)
+### `GET /api/sort-results/[id]/items/[rid]`
+`requireApiResultAccess` + belongs-to-parent (`item.sortResultId !== id` → `404`). `GET` → `SortResultItem`. (The per-item `DELETE` — the last unlocked draft writer, with no UI caller — was removed in the PR 2 final fix wave. The legacy hand-order writers — bulk `PATCH·DELETE …/items`, per-item `PATCH …/items/[rid]` and `…/items/[rid]/reset` — were removed in UX redesign PR 2; hand placement is the [ranking](#ranking) pins.)
 
 ## shares
 
@@ -471,4 +478,4 @@ Fixing `GET /file` alone would have been theater — the same bit was readable v
 - **Collection existence** still leaks, by the documented convention above — `requireApiCapability` answers `404` for an absent collection and `403` for one the caller can't touch. So the identical-`403` guarantee holds *given the collection exists*; a caller guessing a collection id still learns whether it does.
 - **Top-level `/api/items/**`** — `requireApiItemCapability` receives a bare `itemId` and *must* resolve it to learn which collection to authorize against, so it cannot use this ordering without changing its response contract. (This is a consequence of the `purses-3al` fix, not a regression of it — `purses-3al` itself is closed and was a different class: those routes were `requireAuth`-only.)
 
-Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is a real owner-only hard-delete cascade with a `409`-in-result guard, alongside owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** resolved for item purge. **`POST /api/collections/[id]/purge`** is a real owner-only whole-collection cascade purge (name-confirm + `collection.purge` audit). The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]`, `DELETE /api/sort-results/[id]/items/[rid]`, and the empty `GET …/shares` listing — are also implemented.
+Implemented (formerly no-op stubs): `POST /api/items/[id]/purge` is a real owner-only hard-delete cascade with a `409`-in-result guard, alongside owner-only `POST /api/items/[id]/remove-from-sorts` — **purses-u3p** resolved for item purge. **`POST /api/collections/[id]/purge`** is a real owner-only whole-collection cascade purge (name-confirm + `collection.purge` audit). The former sort-results no-op-success stubs — `DELETE /api/sort-results/[id]` and the empty `GET …/shares` listing — are also implemented (`DELETE …/items/[rid]` was implemented, then removed in UX redesign PR 2).

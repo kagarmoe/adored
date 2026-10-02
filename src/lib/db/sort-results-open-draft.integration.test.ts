@@ -70,7 +70,7 @@ describeDb("sort_results: one open draft per (collection, curator)", () => {
     const statements = readFileSync(join("drizzle", file), "utf8").split("--> statement-breakpoint");
     const dedupe = statements.filter((q) => q.includes("row_number()"));
     const index = statements.find((q) => q.includes('CREATE UNIQUE INDEX "sort_results_open_draft_unique"'))!;
-    expect(dedupe.length).toBeGreaterThan(0);
+    expect(dedupe).toHaveLength(3);
 
     const collectionId = await seedBareCollection(ownerId);
     const elsewhere = await seedBareCollection(ownerId);

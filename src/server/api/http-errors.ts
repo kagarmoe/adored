@@ -44,9 +44,9 @@ export class HttpError extends Error {
  *   | FinalizeStateError
  *   | CurrentSessionExistsError → 409 (error.message)
  *   | PreferenceExistsError
- *   | ItemInResultError
- *   | NothingToSaveError
- *   | SaveKeyConflictError    → 409 (error.message)
+ *   | ItemInResultError        → 409 (error.message)
+ *   NothingToSaveError
+ *   | SaveKeyConflictError    → 409 (error.message + error.code, so the client can tell them apart)
  *   PoolGroupError            → 409 if code "conflict", else 400 (error.message)
  *   HttpError
  *   | InvitationAcceptError   → error.status (error.message)
@@ -71,15 +71,16 @@ export function errorResponse(error: unknown): NextResponse {
       { status: 400 },
     );
   }
+  if (error instanceof NothingToSaveError || error instanceof SaveKeyConflictError) {
+    return NextResponse.json({ error: error.message, code: error.code }, { status: 409 });
+  }
   if (
     error instanceof DeleteResultStateError ||
     error instanceof SupersedeStateError ||
     error instanceof FinalizeStateError ||
     error instanceof CurrentSessionExistsError ||
     error instanceof PreferenceExistsError ||
-    error instanceof ItemInResultError ||
-    error instanceof NothingToSaveError ||
-    error instanceof SaveKeyConflictError
+    error instanceof ItemInResultError
   ) {
     return NextResponse.json({ error: error.message }, { status: 409 });
   }
