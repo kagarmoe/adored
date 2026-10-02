@@ -76,6 +76,10 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.primaryInk, t.primary, 4.5, "primary-ink on primary"],
     [t.primary, t.ground, 4.5, "primary text/link on ground"],
     [t.primary, t.surface, 3.0, "primary border on surface"],
+    // The sort progress line: its track edge must show the bar's extent on ground,
+    // and the fill must read against the track's inside (SC 1.4.11).
+    [t.track, t.ground, 3.0, "progress track edge on ground"],
+    [t.primary, t.contentSoft, 3.0, "progress fill (primary) on track (content-soft)"],
     // a:hover recolors live link text to primary-hover (globals.css) — a real
     // text role that had no guard (QA review, purses-9oxh.6).
     [t.primaryHover, t.ground, 4.5, "primary-hover link text on ground"],

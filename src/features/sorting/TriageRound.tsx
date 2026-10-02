@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
-import { Button, Card } from "@/components/ui";
+import { Card } from "@/components/ui";
 import { ItemCard } from "@/features/items/ItemCard";
 import { DecisionControls } from "./DecisionControls";
 import { triageDecisions, type TriageResult } from "./roundCopy";
@@ -62,16 +62,13 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
   const undoCtx = useOptionalTriageUndo();
 
   const current = entries.find((e) => !handled.has(e.item.id));
-  const round = useOptimisticRound<{ itemId: string; result: TriageResult }>({
-    curatorId,
-    sessionId,
-    collectionId,
-    decisionType: "triage",
-    fallbackBody: (decision, clientKey) => ({ type: "triage", decision, clientKey }),
-    labelFor: (itemId, decision) =>
-      triageDecisions(itemId).find((t) => t.decision.result === decision.result)?.label ?? decision.result,
-  });
+  const round = useOptimisticRound({ curatorId, sessionId, collectionId });
   const { key, revisit } = round;
+  // Mounted empty so the region exists before its text changes (SC 4.1.3).
+  const [announcement, setAnnouncement] = useState("");
+  const heading = useRef<HTMLHeadingElement>(null);
+  const backControl = useRef<HTMLButtonElement>(null);
+  const focusAfterUndo = useRef(false);
 
   // Bring back (provider's undo cleared) returns the piece to this phase.
   const lastUndoRef = useRef(undoCtx?.undo ?? null);
@@ -87,6 +84,13 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
   const revisitEntry = revisit === null ? undefined : entries.find((e) => e.item.id === revisit.itemId);
   const shown = revisitEntry ?? current;
 
+  // Undo of the only queued answer takes its control away; land on the question.
+  useEffect(() => {
+    if (!focusAfterUndo.current) return;
+    focusAfterUndo.current = false;
+    if (!backControl.current) heading.current?.focus();
+  });
+
   // Every piece has passed through: land the answers, then on to pairs (once).
   const handedOff = useRef(false);
   useEffect(() => {
@@ -95,18 +99,32 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
     void drain([key]).finally(() => router.replace(nextHref));
   }, [shown, key, nextHref, router]);
 
-  async function handleTriage(target: Item, decision: { itemId: string; result: TriageResult }) {
-    if (!(await round.submitDecision(target.id, decision))) return;
+  async function handleTriage(target: Item, decision: { itemId: string; result: TriageResult }): Promise<boolean> {
+    if (!(await round.submitDecision(target.id, decision))) return false;
     setPlaced((p) => add(p, target.id));
     setEscaped((e) => without(e, target.id));
     setHandled((h) => add(h, target.id));
+    return true;
   }
 
+  // The piece changes under the person's focus, so say which one is in front of them.
   function undo() {
-    const fresh = round.goBack();
-    if (fresh === null) return;
-    setPlaced((p) => without(p, fresh.itemId));
-    setHandled((h) => without(h, fresh.itemId));
+    const back = round.goBack();
+    if (back === null) return;
+    const name = entries.find((e) => e.item.id === back.itemId)?.item.name ?? "";
+    if (!back.fresh) {
+      setAnnouncement(`Back to ${name}. You placed this with ${back.label} — change it?`);
+      return;
+    }
+    setPlaced((p) => without(p, back.itemId));
+    setHandled((h) => without(h, back.itemId));
+    setAnnouncement(`Back to ${name}.`);
+    focusAfterUndo.current = true;
+  }
+
+  function keepGoing() {
+    round.clearRevisit();
+    if (current) setAnnouncement(`Back to ${current.item.name}.`);
   }
 
   async function handleNotYet(target: TriageRoundQueueEntry) {
@@ -141,6 +159,11 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
     setHandled((h) => add(h, target.id));
   }
 
+  // Placed so far over what this visit can still place: pieces placed before it
+  // (seed), plus this visit's active pieces, plus any piece that came back waiting
+  // and has now been placed (a waiting piece only counts once it is answered, so a
+  // second Not yet never leaves a hole), minus the active pieces that left without a
+  // feeling (Not yet / Not mine) — they are not "to place" any more this visit.
   const done = seed + placed.size;
   const total =
     seed +
@@ -151,6 +174,9 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
   return (
     <div className="space-y-6">
       <SortProgress done={done} total={total} />
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
       <PendingNotices />
       {shown === undefined ? (
         <p role="status" className="text-sm text-ink-soft">
@@ -159,14 +185,18 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
       ) : (
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl text-ink">How do you feel about this one?</h1>
-            {round.canGoBack && (
+            <h1 ref={heading} tabIndex={-1} className="text-2xl text-ink focus:outline-hidden sm:text-3xl">
+              How do you feel about this one?
+            </h1>
+            {/* One button that swaps Undo ↔ Keep going, so focus stays put (SC 2.4.3). */}
+            {(round.canGoBack || revisit !== null) && (
               <button
+                ref={backControl}
                 type="button"
-                onClick={undo}
-                className="mt-1 inline-flex h-11 items-center rounded-control text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+                onClick={revisit !== null ? keepGoing : undo}
+                className="mt-1 inline-flex h-11 items-center rounded-control text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-ground focus-visible:ring-primary"
               >
-                Undo: {round.lastLabel}
+                {revisit !== null ? "Keep going" : `Undo: ${round.lastLabel}`}
               </button>
             )}
           </div>
@@ -194,12 +224,12 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
               )}
               {/* NOT keyed per piece: a re-keyed region is never announced (SC 4.1.3). */}
               <DecisionControls
-                submit={{ kind: "local", onDecision: (d) => void handleTriage(shown.item, d) }}
+                submit={{ kind: "local", onDecision: (d) => handleTriage(shown.item, d) }}
                 type="triage"
                 decisions={triageDecisions(shown.item.id)}
                 priorAnswer={revisit?.label}
               />
-              {revisit === null ? (
+              {revisit === null && (
                 <div className="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-hairline pt-3">
                   <DeferControl submit={{ kind: "local", onDecision: () => void handleNotYet(shown) }} itemId={shown.item.id} />
                   <SetAsideButton
@@ -207,12 +237,6 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
                     itemId={shown.item.id}
                     itemName={shown.item.name}
                   />
-                </div>
-              ) : (
-                <div className="border-t border-hairline pt-3">
-                  <Button type="button" variant="ghost" onClick={round.clearRevisit}>
-                    Keep going
-                  </Button>
                 </div>
               )}
             </div>

@@ -10,10 +10,13 @@ export const REJECTED_NOTICE =
   "One piece isn't in this collection anymore, so that answer wasn't needed";
 export const QUARANTINE_NOTICE =
   "A few answers from before didn't reach us — those pieces will simply come around again";
+export const SESSION_CONFLICT_NOTICE =
+  "This sort was wrapped up somewhere else — reload to carry on from there";
 
 const NOTICE_COPY = {
   rejected_unknown_item: REJECTED_NOTICE,
   quarantined: QUARANTINE_NOTICE,
+  session_conflict: SESSION_CONFLICT_NOTICE,
 } as const;
 
 type NoticeKind = keyof typeof NOTICE_COPY;

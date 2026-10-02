@@ -16,7 +16,7 @@ import {
 } from "./decisionQueue";
 // REAL engine — these tests prove the wiring end-to-end (drain → notice → UI).
 import { drain } from "./decisionFlusher";
-import { PendingNotices, QUARANTINE_NOTICE, REJECTED_NOTICE } from "./pendingNotices";
+import { PendingNotices, QUARANTINE_NOTICE, REJECTED_NOTICE, SESSION_CONFLICT_NOTICE } from "./pendingNotices";
 import { TriageRound } from "./TriageRound";
 
 const { refresh, push, replace } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }));
@@ -85,9 +85,27 @@ beforeEach(() => {
 
 describe("PendingNotices — copy constants", () => {
   it("never uses machine-side words (TONE.md)", () => {
-    for (const copy of [REJECTED_NOTICE, QUARANTINE_NOTICE]) {
+    for (const copy of [REJECTED_NOTICE, QUARANTINE_NOTICE, SESSION_CONFLICT_NOTICE]) {
       expect(copy).not.toMatch(/error|failed|invalid/i);
     }
+  });
+});
+
+describe("PendingNotices — a sort closed elsewhere", () => {
+  it("a mid-round 409 says the sort was wrapped up elsewhere", async () => {
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    render(<PendingNotices />);
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    expect(screen.getByText(SESSION_CONFLICT_NOTICE)).toBeInTheDocument();
   });
 });
 

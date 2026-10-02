@@ -23,6 +23,8 @@ import { CompareChoice } from "@/features/sorting/CompareChoice";
 import { SortProgress } from "@/features/sorting/SortProgress";
 import { PauseControl } from "@/features/sorting/PauseControl";
 import { ResumeOnLoad } from "@/features/sorting/ResumeOnLoad";
+import { PendingNotices } from "@/features/sorting/pendingNotices";
+import { SortDoneHeading } from "@/features/sorting/SortDoneHeading";
 import { COMPARE_SUBLINE } from "@/features/sorting/roundCopy";
 import { KeepSortingButton } from "@/features/sessions/KeepSortingButton";
 
@@ -80,6 +82,11 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
     deferredOffered: phase === "pairs",
   });
 
+  // The hand-off line greets the first pair only: once a pair answer from this sort
+  // has landed, a reload of ?phase=pairs no longer says "Now…".
+  const handingOff =
+    phase === "pairs" && !curatorDecisions.some((e) => e.sessionId === open.id && e.type === "pairwise_compare");
+
   const coverIds =
     sortPhase.kind === "feelings"
       ? sortPhase.queue.map((e) => e.item.id)
@@ -121,7 +128,9 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
             {sortPhase.kind === "pairs" && (
               <div className="space-y-6">
                 <SortProgress done={sortPhase.progress.done} total={sortPhase.progress.total} />
+                <PendingNotices />
                 <div>
+                  {handingOff && <p className="mb-2 text-ink-soft">Now, between these two…</p>}
                   <h1 className="text-2xl text-ink sm:text-3xl">Which would you reach for first?</h1>
                   <p className="mt-2 text-ink-soft">{COMPARE_SUBLINE}</p>
                 </div>
@@ -131,13 +140,12 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
                   itemB={sortPhase.pair[1]}
                   heroA={coverUrl(sortPhase.pair[0].id)}
                   heroB={coverUrl(sortPhase.pair[1].id)}
-                  intro={phase === "pairs" ? "Now, between these two…" : undefined}
                 />
               </div>
             )}
             {sortPhase.kind === "done" ? (
               <section className="space-y-4 text-center">
-                <h1 className="font-display text-3xl text-ink">That&rsquo;s everything for now</h1>
+                <SortDoneHeading>That&rsquo;s everything for now</SortDoneHeading>
                 <Link href={`${base}/results`} className={buttonVariants({ size: "lg" })}>
                   See your ranking
                 </Link>

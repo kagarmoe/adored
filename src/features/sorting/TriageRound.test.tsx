@@ -178,7 +178,7 @@ describe("feelings phase: Undo (spec §4 — 'Undo: Love')", () => {
     await screen.findByRole("img", { name: "Bag B" });
     const [first] = readQueue(KEY);
     await user.click(screen.getByRole("button", { name: "Undo: Love" }));
-    expect(await screen.findByText(/you placed this with love — change it\?/i)).toBeInTheDocument();
+    expect(await screen.findByText("You placed this with Love — change it?")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Love", exact: true })).toHaveAttribute("aria-pressed", "true");
     await user.click(screen.getByRole("button", { name: "Maybe", exact: true }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
@@ -198,6 +198,32 @@ describe("feelings phase: Undo (spec §4 — 'Undo: Love')", () => {
     await user.click(await screen.findByRole("button", { name: /keep going/i }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
     expect(readQueue(KEY)).toHaveLength(1);
+  });
+
+  it("Undo swaps to Keep going in place: focus stays on the control and the revisit is announced", async () => {
+    flusher.awaitAck.mockImplementation(() => Promise.resolve({ status: "created" }));
+    const user = userEvent.setup();
+    renderRound();
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
+    await screen.findByRole("img", { name: "Bag B" });
+    await user.click(screen.getByRole("button", { name: "Undo: Love" }));
+    const keep = await screen.findByRole("button", { name: "Keep going" });
+    expect(keep).toHaveFocus();
+    expect(screen.getByText("Back to Bag A. You placed this with Love — change it?")).toBeInTheDocument();
+    await user.click(keep);
+    expect(screen.getByRole("button", { name: "Undo: Love" })).toHaveFocus();
+    expect(screen.getByText("Back to Bag B.")).toBeInTheDocument();
+  });
+
+  it("undoing the only queued answer hands focus to the question, never to the page", async () => {
+    const user = userEvent.setup();
+    renderRound();
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
+    await screen.findByRole("img", { name: "Bag B" });
+    await user.click(screen.getByRole("button", { name: "Undo: Love" }));
+    expect(await screen.findByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "How do you feel about this one?" })).toHaveFocus();
+    expect(screen.getByText("Back to Bag A.")).toBeInTheDocument();
   });
 
   it("a rejected answer has nothing to undo", async () => {
@@ -221,6 +247,18 @@ describe("feelings phase: numberless progress", () => {
     await user.click(screen.getByRole("button", { name: /^not yet/i }));
     expect(await screen.findByText("2 of 2 placed")).toBeInTheDocument();
     expect(screen.queryByText(/decided so far/)).not.toBeInTheDocument();
+    // One voice per tap: the answer is announced, the count is read on demand.
+    expect(screen.getByText("2 of 2 placed")).not.toHaveAttribute("aria-live");
+  });
+
+  it("a piece that came back waiting joins the count once it is placed", async () => {
+    const user = userEvent.setup();
+    renderRound({ queue: [entry("item_a", "Bag A"), entry("item_b", "Bag B", true)] });
+    expect(screen.getByText("0 of 1 placed")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Love", exact: true }));
+    expect(await screen.findByText("1 of 1 placed")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Like", exact: true }));
+    expect(await screen.findByText("2 of 2 placed")).toBeInTheDocument();
   });
 });
 
@@ -249,5 +287,7 @@ describe("feelings phase: storage fallback (F18)", () => {
     await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     expect(await screen.findByText(/give it another try in a moment/i)).toBeInTheDocument();
     expect(screen.getByRole("img", { name: "Bag A" })).toBeInTheDocument();
+    // Announced only once the answer is safe — this one is not.
+    expect(screen.queryByText("Love — saved.")).not.toBeInTheDocument();
   });
 });

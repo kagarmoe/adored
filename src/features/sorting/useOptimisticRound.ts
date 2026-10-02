@@ -1,64 +1,56 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { enqueue, newClientKey, removeQueued, type PendingEntry, type QueueKey } from "./decisionQueue";
+import { enqueue, newClientKey, removeQueued, type QueueKey } from "./decisionQueue";
 import { awaitAck, isInFlight, triggerFlush, useDecisionFlusher, type AckOutcome } from "./decisionFlusher";
+import { triageDecisions, type TriageResult } from "./roundCopy";
 
 // TONE register — a gentle stumble, never "error"/"failed".
 export const STUMBLE_LINE = "That didn't go through — give it another try in a moment.";
 
-type DecisionType = Extract<PendingEntry, { kind: "decision" }>["type"];
+type TriageDecision = { itemId: string; result: TriageResult };
 
 interface RevisitState {
   itemId: string;
-  clientKey: string;
   label: string;
 }
 
-/** Undo of a still-queued answer: the caller un-advances and un-counts this piece. */
-interface RepresentFresh {
-  itemId: string;
-}
-
-export interface UseOptimisticRoundOptions<D extends Record<string, unknown>> {
-  curatorId: string;
-  sessionId: string;
-  /** ULID collection.id — the queue key (never the slug). */
-  collectionId: string;
-  decisionType: DecisionType;
-  /** The single-route POST body when localStorage is unavailable (F18). */
-  fallbackBody: (decision: D, clientKey: string) => Record<string, unknown>;
-  /** The person's word for the answer, shown on Undo ("Love"). */
-  labelFor: (itemId: string, decision: D) => string;
-}
-
-export interface OptimisticRound<D extends Record<string, unknown>> {
+export interface OptimisticRound {
   key: QueueKey;
   stumble: boolean;
   /** Persist-before-advance: resolves true once the answer is safe, false to stay put. */
-  submitDecision: (itemId: string, decision: D) => Promise<boolean>;
+  submitDecision: (itemId: string, decision: TriageDecision) => Promise<boolean>;
   revisit: RevisitState | null;
   canGoBack: boolean;
   /** The last answer's label for "Undo: …"; null when there is none. */
   lastLabel: string | null;
-  goBack: () => RepresentFresh | null;
+  /**
+   * Undo the last answer: a still-queued one is removed (`fresh` — show the piece
+   * as new); one already sent is re-presented (`revisit`). null when nothing moved.
+   */
+  goBack: () => { itemId: string; label: string; fresh: boolean } | null;
   clearRevisit: () => void;
 }
 
+const labelFor = (decision: TriageDecision) =>
+  triageDecisions(decision.itemId).find((t) => t.decision.result === decision.result)?.label ?? decision.result;
+
 /**
- * The feelings phase's answer engine (Epic P pipeline, kept): flusher wiring,
- * persist-before-advance with the storage fallback, and Undo. A still-queued
- * answer is removed outright; one already sent is re-presented with its choice
- * selected, and the next tap supersedes it (the log is append-only, latest wins).
+ * The feelings phase's answer engine: flusher wiring, persist-before-advance with
+ * the storage fallback, and Undo. A still-queued answer is removed outright; one
+ * already sent is re-presented with its choice selected, and the next tap
+ * supersedes it (the log is append-only, latest wins).
  */
-export function useOptimisticRound<D extends Record<string, unknown>>({
+export function useOptimisticRound({
   curatorId,
   sessionId,
   collectionId,
-  decisionType,
-  fallbackBody,
-  labelFor,
-}: UseOptimisticRoundOptions<D>): OptimisticRound<D> {
+}: {
+  curatorId: string;
+  sessionId: string;
+  /** ULID collection.id — the queue key (never the slug). */
+  collectionId: string;
+}): OptimisticRound {
   const key = useMemo<QueueKey>(() => ({ curatorId, sessionId, collectionId }), [curatorId, sessionId, collectionId]);
   useDecisionFlusher(key);
   const [answers, setAnswers] = useState<Array<{ clientKey: string; itemId: string; label: string }>>([]);
@@ -68,7 +60,7 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
   const [stumble, setStumble] = useState(false);
   const busyRef = useRef(false);
 
-  async function submitDecision(itemId: string, decision: D): Promise<boolean> {
+  async function submitDecision(itemId: string, decision: TriageDecision): Promise<boolean> {
     if (busyRef.current) return false;
     busyRef.current = true;
     try {
@@ -76,7 +68,7 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
       const clientKey = newClientKey();
       const persisted = await enqueue(
         key,
-        { kind: "decision", clientKey, type: decisionType, decision, enqueuedAt: new Date().toISOString() },
+        { kind: "decision", clientKey, type: "triage", decision, enqueuedAt: new Date().toISOString() },
         () => triggerFlush(key), // quota → shrink the queue, retry once (F18)
       );
       if (persisted === "needs_fallback") {
@@ -85,7 +77,7 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
           const res = await fetch(`/api/sessions/${sessionId}/decisions`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(fallbackBody(decision, clientKey)),
+            body: JSON.stringify({ type: "triage", decision, clientKey }),
           });
           landed = res.ok;
         } catch {
@@ -99,7 +91,7 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
       } else {
         void awaitAck(key, clientKey).then((o) => outcomesRef.current.set(clientKey, o));
       }
-      setAnswers((prev) => [...prev, { clientKey, itemId, label: labelFor(itemId, decision) }]);
+      setAnswers((prev) => [...prev, { clientKey, itemId, label: labelFor(decision) }]);
       setRevisit(null);
       return true;
     } finally {
@@ -107,7 +99,7 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
     }
   }
 
-  function goBack(): RepresentFresh | null {
+  function goBack(): { itemId: string; label: string; fresh: boolean } | null {
     if (revisit !== null) return null;
     const last = answers[answers.length - 1];
     if (last === undefined) return null;
@@ -115,10 +107,10 @@ export function useOptimisticRound<D extends Record<string, unknown>>({
     if (outcome?.status === "rejected") return null;
     if (outcome === undefined && !isInFlight(key, last.clientKey) && removeQueued(key, last.clientKey)) {
       setAnswers((prev) => prev.slice(0, -1));
-      return { itemId: last.itemId };
+      return { itemId: last.itemId, label: last.label, fresh: true };
     }
-    setRevisit({ itemId: last.itemId, clientKey: last.clientKey, label: last.label });
-    return null;
+    setRevisit({ itemId: last.itemId, label: last.label });
+    return { itemId: last.itemId, label: last.label, fresh: false };
   }
 
   const last = answers[answers.length - 1];

@@ -228,6 +228,48 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
 
     await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    // Nothing stood, so there is nothing to undo or to announce as chosen.
+    expect(screen.queryByRole("button", { name: /^undo/i })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeEmptyDOMElement();
+  });
+
+  it("a sort closed elsewhere (409) never leaves the 'it's safe' line standing", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })));
+    renderChoice();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Choose Bag A" }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(COMPARE_ACK_BOUND_MS);
+    });
+    expect(screen.queryByText(COMPARE_SLOW_SAVE_LINE)).not.toBeInTheDocument();
+    expect(screen.queryByText("Saving…")).not.toBeInTheDocument();
+  });
+
+  it("while an answer saves, focus stays on the tapped card and every control holds still (aria-disabled, never disabled)", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderChoice();
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    rerender(
+      <CompareChoice
+        submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
+        itemA={item(ITEM_C, "Bag C") as any}
+        itemB={item(ITEM_D, "Bag D") as any}
+      />,
+    );
+    vi.stubGlobal("fetch", vi.fn(() => new Promise(() => {})));
+    const card = screen.getByRole("button", { name: "Choose Bag C" });
+    await user.click(card);
+    expect(card).toHaveFocus();
+    expect(card).toBeEnabled();
+    expect(card).toHaveAttribute("aria-disabled", "true");
+    await user.click(screen.getByRole("button", { name: "Tie" }));
+    await user.click(screen.getByRole("button", { name: "Undo: Bag A" }));
+    expect(screen.queryByText(/you chose/i)).not.toBeInTheDocument();
+    expect(vi.mocked(queue.enqueue)).toHaveBeenCalledTimes(2);
   });
 
   it("an ack delayed past the bound shows the gentle retry line, keeps the entry queued, and a late ack recovers silently (advances)", async () => {
@@ -474,14 +516,6 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     const revisitY = sent.find((d) => d.decision.itemAId === ITEM_C);
     expect(revisitY?.decision).toEqual({ itemAId: ITEM_C, itemBId: ITEM_D, result: "item_a" });
     expect(revisitY?.clientKey).not.toBe(pairXKey);
-  });
-
-  it("shows the transition line until the first answer lands", async () => {
-    const user = userEvent.setup();
-    renderChoice({ intro: "Now, between these two…" });
-    expect(screen.getByText("Now, between these two…")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
-    await waitFor(() => expect(screen.queryByText("Now, between these two…")).not.toBeInTheDocument());
   });
 });
 

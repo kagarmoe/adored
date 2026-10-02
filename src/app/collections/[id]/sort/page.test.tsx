@@ -109,10 +109,24 @@ describe("the one Sort screen", () => {
     expect(screen.getByTestId("pair")).toHaveTextContent(/^(a\|b|b\|a)$/);
   });
 
+  it("the hand-off line sits above the question, and only until a pair answer of this sort has landed", async () => {
+    h.prefs.mockResolvedValue([pref("a", "top"), pref("b", "high"), pref("c", "low")]);
+    await visit("pairs");
+    const intro = screen.getByText("Now, between these two…");
+    const question = screen.getByRole("heading", { name: "Which would you reach for first?" });
+    expect(intro.compareDocumentPosition(question) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    h.decisions.mockResolvedValue([{ id: "e1", sessionId: "sess_1", type: "pairwise_compare", decision: {}, createdAt: new Date() }]);
+    document.body.innerHTML = "";
+    await visit("pairs");
+    expect(screen.queryByText("Now, between these two…")).not.toBeInTheDocument();
+  });
+
   it("once nothing is left to ask, ends quietly with the way to the ranking", async () => {
     h.prefs.mockResolvedValue([pref("a", "top"), pref("b", "medium"), pref("c", "low")]);
     await visit();
-    expect(screen.getByRole("heading", { name: "That’s everything for now" })).toBeInTheDocument();
+    // The last pair's controls are gone; focus lands on the ending, not on <body>.
+    expect(screen.getByRole("heading", { name: "That’s everything for now" })).toHaveFocus();
     expect(screen.getByRole("link", { name: "See your ranking" })).toHaveAttribute("href", "/collections/bags/results");
     expect(screen.queryByTestId("pair")).not.toBeInTheDocument();
   });

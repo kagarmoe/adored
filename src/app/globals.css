@@ -15,6 +15,7 @@
   --color-surface-raised: var(--color-surface-raised);
 
   --color-hairline: var(--color-hairline);
+  --color-track: var(--color-track);
 
   --color-content-soft: var(--color-content-soft);
   --color-content-mid: var(--color-content-mid);
@@ -101,6 +102,8 @@
   --color-surface: #e5eef0;
   --color-surface-raised: #ffffff;
   --color-hairline: #c7dade;
+  /* track = the edge of a progress line's empty track: >= 3:1 on ground (SC 1.4.11) */
+  --color-track: #4f7da0;
   --color-ink: #16242b;
   --color-ink-soft: #434f57;
 
@@ -200,6 +203,7 @@
   --color-surface: #103f4a;
   --color-surface-raised: #123a4e;
   --color-hairline: #3f7fa0;
+  --color-track: #3f7fa0;
   --color-ink: #ecf2f4;
   --color-ink-soft: #b0c6cb;
 

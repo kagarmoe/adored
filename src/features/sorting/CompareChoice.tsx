@@ -1,17 +1,17 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
 import { enqueue, newClientKey, readQueue, type QueueKey } from "./decisionQueue";
-import { awaitAck, isInFlight, triggerFlush } from "./decisionFlusher";
+import { awaitAck, isInFlight, subscribeNotices, triggerFlush, type AckOutcome } from "./decisionFlusher";
 
 type Result = "item_a" | "item_b" | "tie" | "skip";
 
-export type CompareSubmit =
-  | { kind: "session"; sessionId: string; curatorId: string; collectionId?: string }
+type CompareSubmit =
+  | { kind: "session"; sessionId: string; curatorId: string; collectionId: string }
   | { kind: "local"; onDecision: (result: Result) => void };
 
 // The pairs screen does NOT wait out the flusher's 60 s backoff cap: after this
@@ -31,7 +31,7 @@ interface Answered extends Pair {
 }
 
 /** The person's word for a pair answer, as Undo shows it (spec §4). */
-export function answerLabel({ itemA, itemB, result }: Answered): string {
+function answerLabel({ itemA, itemB, result }: Answered): string {
   if (result === "tie") return "Tie";
   if (result === "skip") return "Skip";
   return itemDisplayName(result === "item_a" ? itemA : itemB);
@@ -39,13 +39,27 @@ export function answerLabel({ itemA, itemB, result }: Answered): string {
 
 interface CompareChoiceProps extends Pair {
   submit: CompareSubmit;
-  /** A one-line transition shown until the first answer lands ("Now, between these two…"). */
-  intro?: string;
 }
 
-export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: CompareChoiceProps) {
+export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareChoiceProps) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
+  // The tap guard. Controls stay enabled while an answer saves (aria-disabled):
+  // disabling the focused card would drop focus to <body> on every answer.
+  const pendingRef = useRef(false);
+  // A sort closed elsewhere (409): the answer will never land here, so the
+  // "it's safe" line must not stand; PendingNotices says what happened.
+  const [closedElsewhere, setClosedElsewhere] = useState(false);
+  useEffect(
+    () =>
+      subscribeNotices((notice) => {
+        if (notice.kind !== "session_conflict") return;
+        pendingRef.current = false;
+        setPending(null);
+        setClosedElsewhere(true);
+      }),
+    [],
+  );
   const [error, setError] = useState<string | null>(null);
   // One idempotency key per in-flight tap, reused if that same tap is retried so the
   // server dedupes the retry; cleared on ack. The slot names the PAIR as well as the
@@ -61,11 +75,20 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
   const shown: Pair = revisit ?? { itemA, itemB, heroA, heroB };
   const mode = revisit ? "revisit" : "pair";
 
-  function settle(clientKey: string, keySlot: string, answered: Answered) {
-    if (submit.kind !== "session" || settled.current.has(clientKey)) return;
+  function settle(clientKey: string, keySlot: string, answered: Answered, outcome?: AckOutcome) {
+    if (settled.current.has(clientKey)) return;
     settled.current.add(clientKey);
     delete clientKeys.current[keySlot];
     setError(null);
+    pendingRef.current = false;
+    // A rejected answer never stood: advance, but offer no Undo and claim no choice.
+    if (outcome?.status === "rejected") {
+      setLast(null);
+      setRevisit(null);
+      setPending(null);
+      router.refresh();
+      return;
+    }
     const a = itemDisplayName(answered.itemA);
     const b = itemDisplayName(answered.itemB);
     setAnnouncement(
@@ -100,6 +123,8 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
       submit.onDecision(result); // walkthrough: no keys, no pending, no refresh
       return;
     }
+    if (pendingRef.current) return;
+    pendingRef.current = true;
     const pair = shown;
     const slot = `${mode}:${tapped}`;
     const keySlot = `${pair.itemA.id}:${pair.itemB.id}:${tapped}`;
@@ -131,6 +156,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
         }
         if (!landed) {
           setError(FALLBACK_RETRY_LINE);
+          pendingRef.current = false;
           setPending(null);
           return;
         }
@@ -148,18 +174,20 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
       }),
     ]);
     if (outcome === "slow") {
+      pendingRef.current = false;
       setPending(null);
       setError(COMPARE_SLOW_SAVE_LINE);
-      void ack.then(() => settle(clientKey, keySlot, { ...pair, result }));
+      void ack.then((late) => settle(clientKey, keySlot, { ...pair, result }, late));
       return;
     }
-    settle(clientKey, keySlot, { ...pair, result });
+    settle(clientKey, keySlot, { ...pair, result }, outcome);
   }
 
-  const busy = pending !== null;
+  const busy = pending !== null || undefined;
   const prior = revisit?.result;
   const pressed = (result: Result) => (prior === undefined ? undefined : prior === result);
-  const ring = (result: Result) => (prior === result ? " ring-2 ring-primary ring-offset-2" : "");
+  const ring = (result: Result) => (prior === result ? " ring-2 ring-primary ring-offset-2 ring-offset-ground" : "");
+  const held = " aria-disabled:cursor-not-allowed aria-disabled:opacity-60";
   const choices = [
     { item: shown.itemA, hero: shown.heroA, result: "item_a" as const, key: "a" },
     { item: shown.itemB, hero: shown.heroB, result: "item_b" as const, key: "b" },
@@ -170,7 +198,6 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
       <p role="status" aria-live="polite" className="sr-only">
         {announcement}
       </p>
-      {intro && last === null && <p className="text-ink-soft">{intro}</p>}
       {revisit && <p className="text-sm text-ink-soft">You chose {answerLabel(revisit)} — change it?</p>}
 
       {/* Tapping a card IS the choice (tap-first). Always two-up. */}
@@ -179,11 +206,11 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
           <button
             key={key}
             type="button"
-            disabled={busy}
+            aria-disabled={busy}
             aria-label={`Choose ${itemDisplayName(item)}`}
             aria-pressed={pressed(result)}
             onClick={() => choose(result, key)}
-            className={`group flex min-h-11 flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60${ring(result)}`}
+            className={`group flex min-h-11 flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ground${held}${ring(result)}`}
           >
             <div className="relative flex aspect-4/3 items-center justify-center overflow-hidden bg-content-soft">
               <CardImage
@@ -206,13 +233,13 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
 
       {/* Escape hatches, deliberately quiet. */}
       <div className="flex items-center justify-center gap-2">
-        <Button type="button" variant="ghost" size="sm" className={`min-h-11${ring("tie")}`} disabled={busy} aria-pressed={pressed("tie")} onClick={() => choose("tie", "tie")}>
+        <Button type="button" variant="ghost" size="sm" className={`min-h-11${held}${ring("tie")}`} aria-disabled={busy} aria-pressed={pressed("tie")} onClick={() => choose("tie", "tie")}>
           {pending === `${mode}:tie` ? "Saving…" : "Tie"}
         </Button>
         <span className="text-hairline" aria-hidden>
           &middot;
         </span>
-        <Button type="button" variant="ghost" size="sm" className={`min-h-11${ring("skip")}`} disabled={busy} aria-pressed={pressed("skip")} onClick={() => choose("skip", "skip")}>
+        <Button type="button" variant="ghost" size="sm" className={`min-h-11${held}${ring("skip")}`} aria-disabled={busy} aria-pressed={pressed("skip")} onClick={() => choose("skip", "skip")}>
           {pending === `${mode}:skip` ? "Saving…" : "Skip"}
         </Button>
       </div>
@@ -222,15 +249,19 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB, intro }: Com
         <div className="flex justify-center">
           <button
             type="button"
-            disabled={busy}
-            onClick={() => (revisit ? keepGoing() : undo(last))}
-            className="inline-flex h-11 items-center rounded-control px-2 text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary"
+            aria-disabled={busy}
+            onClick={() => {
+              if (pendingRef.current) return;
+              if (revisit) keepGoing();
+              else undo(last);
+            }}
+            className={`inline-flex h-11 items-center rounded-control px-2 text-sm text-ink-soft transition-colors hover:text-ink focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-ground focus-visible:ring-primary${held}`}
           >
             {revisit ? "Keep going" : `Undo: ${answerLabel(last)}`}
           </button>
         </div>
       )}
-      {error && <p className="text-center text-sm text-ink-soft">{error}</p>}
+      {error && !closedElsewhere && <p className="text-center text-sm text-ink-soft">{error}</p>}
     </div>
   );
 }
