@@ -22,6 +22,7 @@ handoff kept current.
 
 ## Status log (newest first)
 
+- 2026-10-02 (PR 3, session 4): **plan committed** (36f4cab4c, 8 tasks) to `docs/superpowers/plans/2026-10-02-ux-redesign-pr3-lists-home.md`; purses-w7ss.3 claimed. Owner-veto items in the plan: `/collections/[id]/items` → 308 to the home; collection Archive/Bring back surfaced in the UI (All no longer lists archived). Next: adversarial-review of the plan's spec-silent decisions (UX + Architect + Graphic), fold findings, task beads, SDD.
 - 2026-10-02 (session 3 end, usage limit): **state for the next session**
   1. **Prod health check (swamp) is red** at `adored-health` → job `prod` → step `alias`: `GET /v4/aliases` 403. Diagnosis: vault `secrets` key `VERCEL_TOKEN` is a stale static copy of the Vercel CLI login token (the CLI's `~/Library/Application Support/com.vercel.cli/auth.json` has `token`/`refreshToken`/`expiresAt` and rotates); `adored-deployments get` 403s the same way. The agent cannot write secrets (auto-mode classifier), so the OWNER runs this once in a terminal, then `swamp workflow run adored-health` (needs Docker) should go fully green:
      ```
