@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const push = vi.fn();
@@ -58,5 +58,19 @@ describe("KeepSortingButton (spec §4.1)", () => {
     await userEvent.click(screen.getByRole("button", { name: "Start sorting" }));
     expect(await screen.findByRole("status")).toHaveTextContent("That didn't go through — give it another try in a moment.");
     expect(push).not.toHaveBeenCalled();
+  });
+
+  it("while it opens, a double tap sends one request and the busy state is announced", async () => {
+    let finish: (r: unknown) => void = () => {};
+    fetchMock.mockImplementation(() => new Promise((resolve) => { finish = resolve; }));
+    renderButton(null);
+    const button = screen.getByRole("button", { name: "Start sorting" });
+    fireEvent.click(button);
+    fireEvent.click(button);
+    const busy = await screen.findByRole("button", { name: "Just a moment…" });
+    expect(busy).toHaveAttribute("aria-busy", "true");
+    finish({ ok: true, status: 201, json: async () => ({ id: "sess_new" }) });
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/bags/sort"));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

@@ -32,6 +32,27 @@ describe("PauseControl (spec §4.2: Pause returns home, session paused)", () => 
     const button = screen.getByRole("button", { name: /^pause/i });
     fireEvent.click(button);
     fireEvent.click(button);
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/bags"));
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("while pausing, the busy label is what a screen reader hears", async () => {
+    let finish: (r: { ok: boolean }) => void = () => {};
+    global.fetch = vi.fn(() => new Promise((resolve) => { finish = resolve; })) as unknown as typeof fetch;
+    render(<PauseControl curatorId="u1" sessionId="sess_1" collectionHref="/collections/bags" />);
+    fireEvent.click(screen.getByRole("button", { name: /^pause/i }));
+    const busy = await screen.findByRole("button", { name: "Just a moment…" });
+    expect(busy).toHaveAttribute("aria-busy", "true");
+    finish({ ok: true });
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/bags"));
+  });
+
+  it("a pause that doesn't go through says so gently, stays put, and can be tried again", async () => {
+    global.fetch = vi.fn().mockRejectedValue(new TypeError("offline")) as unknown as typeof fetch;
+    render(<PauseControl curatorId="u1" sessionId="sess_1" collectionHref="/collections/bags" />);
+    fireEvent.click(screen.getByRole("button", { name: /^pause/i }));
+    expect(await screen.findByRole("status")).toHaveTextContent("That didn't go through — give it another try in a moment.");
+    expect(push).not.toHaveBeenCalled();
+    expect(screen.getByRole("button", { name: /^pause/i })).toBeEnabled();
   });
 });

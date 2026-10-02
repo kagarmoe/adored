@@ -62,7 +62,9 @@ export function AsyncActionButton({
         onClick={run}
         disabled={busy}
         title={title}
-        aria-label={ariaLabel}
+        aria-busy={busy}
+        // While busy the busy label is the accessible name, so it is announced.
+        aria-label={busy ? undefined : ariaLabel}
       >
         {busy ? busyLabel : label}
       </Button>
