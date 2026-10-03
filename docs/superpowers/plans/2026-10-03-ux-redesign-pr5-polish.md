@@ -64,12 +64,15 @@ exercise them. The test that pins each one is added in the task named.
    is wider than a 390px two-column card. Expected: the label fits inside the pill, and the pill
    fits inside the card. Pinned in Task 3 (the e2e holds the restore request open and measures the
    busy pill).
-3. **A 401 mid-round.** Today nothing renders, because the sign-in line exists only inside the
-   recovery gate. Expected: one quiet "sign in again" line with a Sign in link, never two. Pinned in
-   Task 5 (a PendingNotices unit test, plus the gate test's single `getByText`, which throws on
-   duplicates).
+3. **A 401 mid-round, and a 401 during recovery.** Today nothing renders mid-round, because the
+   sign-in line exists only inside the recovery gate; and a notice raised before a surface mounts
+   is lost. Expected: one quiet "sign in again" line with a Sign in link that returns to the round,
+   never two, and never lost on a remount. Pinned in Task 5 (the engine's sticky-notice test, a
+   PendingNotices unit test, and the gate test whose children include a real `<PendingNotices/>`
+   and which counts `getAllByText(...)` = 1 after reveal, and again after a second 401).
 4. **A tap after the sort was closed elsewhere.** Expected: the cards, Tie, Skip and Undo hold still
-   (`aria-disabled`), and nothing new is queued. Pinned in Task 5.
+   (`aria-disabled`), and nothing new is queued, including an Undo tap on an answer that settled
+   before the 409. Pinned in Task 5.
 5. **Storage blocked (private mode) after the fallback refactor.** Expected: the same request each
    island sent before (same route, method and body), a network throw read as "did not land", and
    the island's own gentle line. Pinned in Task 7 (`directSubmit` unit table, plus the existing
@@ -108,8 +111,8 @@ costs more than the check is worth.
 6. **`PoolActionBar` is not `ActionBar`.** `ActionBar` turns into an inline row from `md` up, but
    the pool's selection bar must stay fixed on tablet: the person selects tiles anywhere in a long
    grid, and the actions must follow them. So the pool bar takes `ActionBar`'s surface (z-30,
-   blur-md, shadow-lift, hairline top edge, `mb-0` against a `space-y` parent, static on a short
-   viewport). It drops the dead safe-area padding (the viewport is not `viewportFit: cover`, so the
+   blur-md, shadow-lift, hairline top edge, static on a short viewport). No `mb-0`: the bar is the
+   last child of `PoolPhotoGrid`'s `space-y-4`, which only margins following siblings. It drops the dead safe-area padding (the viewport is not `viewportFit: cover`, so the
    inset is always 0; see `ActionBar`'s comment). It replaces the in-grid `h-20` spacer, which never
    covered the footer and is shorter than the phone bar, with a `globals.css` reserve keyed on
    `data-selection-bar`: 14rem below `sm`, 9rem from `sm`, none on a short viewport, applied to the
@@ -117,19 +120,25 @@ costs more than the check is worth.
 7. **Archived item card:** Bring back becomes a **secondary pill** at natural width
    (`AsyncActionButton` gains `variant="secondary"`). Its visible edge then lines up with the name
    column at the card's `p-3`, with no negative margin and nothing clipped past `overflow-hidden`.
-   The busy label becomes the house default "Just a moment…". "Bringing it back…" does not fit a
-   147px phone card column. `ArchivedNotice`'s own "Bringing it back…" sits in a full-width notice,
-   so it is unchanged.
-8. **PR 2 residuals:** the phone ordinal stays visible at `text-xs`/`w-5`. The phone Unpin glyph
-   becomes a pin with a slash ("pin-off"), so it reads as the action, not the state. After a 409 the
-   compare controls hold (`aria-disabled`, taps ignored). `PendingNotices` keeps one always-mounted
-   `role="status"` region and voices `auth_required` with a Sign in link. That copy moves from the
-   gate's `GATE_SIGNIN_LINE` to `pendingNotices.tsx` as `AUTH_REQUIRED_NOTICE` (same words), and
-   the gate stops rendering its own copy, so the line is never doubled.
-9. **CI filter paths must exist.** `scripts/ci-e2e-map.test.ts` gains a check that every literal
-   prefix in the `changes` job's path filters exists. It flags four dead paths:
-   `src/lib/pairwise-selection.ts` (the bead's), `tailwind.config.ts` (×2; Tailwind 4 has none)
-   and `src/hooks/**` (no such directory). All four are removed in the same task.
+   The busy label becomes "One moment…" (controller ruling: "Bringing it back…" does not fit a
+   147px phone card column, and "Just a moment…" is expected to be too close to fit on one line).
+   `ArchivedNotice`'s own "Bringing it back…" sits in a full-width notice, so it is unchanged.
+8. **PR 2 residuals:** the phone ordinal stays visible at `text-xs`/`w-5`. The phone Unpin control
+   shows the word **Unpin** at every width (spec §4 "a small Unpin"); the glyph goes. After a 409
+   the compare controls hold (`aria-disabled`, taps ignored). Notices become **sticky in the
+   engine** (see Rulings): `PendingNotices` reads the current set on mount, keeps one
+   always-mounted `role="status"` region, and voices `auth_required` (not dismissible; a Sign in
+   link back to the current path) and `session_conflict` (a Reload button). The sign-in copy moves
+   from the gate's `GATE_SIGNIN_LINE` to `pendingNotices.tsx` as `AUTH_REQUIRED_NOTICE` (same
+   words). The gate renders its own `PendingNotices` only until reveal; after reveal the page's
+   single one speaks, so the line is never doubled by construction.
+9. **CI filter paths must exist.** `scripts/ci-e2e-map.test.ts` gains a check that every pattern
+   in the `changes` job's path filters matches at least one path (`fs.globSync`). It flags four
+   dead patterns: `src/lib/pairwise-selection.ts` (the bead's), `tailwind.config.ts` (×2; Tailwind 4
+   has none) and `src/hooks/**` (no such directory). All four are removed in the same task. One
+   exemption: root-level extension catch-alls (`*.js` under `code:`) are deliberate "any future
+   root config" guards for the CI gate itself; `*.js` matches nothing today, and deleting it would
+   let a new root `.js` file skip CI.
 10. **Dead `session` arms are deleted, not kept "for later".** Every shipped caller of
     `DecisionControls`, `DeferControl` and `SetAsideButton` passes `kind: "local"` (`TriageRound`,
     `WelcomeTriage`). So the prop collapses to `onDecision`. `DecisionControls`' never-varied
@@ -159,13 +168,46 @@ costs more than the check is worth.
   and the Most-loved fallback initial are solid ink-soft (stronger than before).
 - **Theme toggle hover:** a full `content-soft` fill instead of 40%.
 - **Pool selection bar:** a stronger blur, a shadow, a hairline top edge instead of the white rim,
-  and room reserved below the page. On a short (zoomed) viewport the bar scrolls with the page.
+  and room reserved below the page. On a short (zoomed) viewport the bar scrolls with the page. Its
+  stacking moves to `z-30` (under the header; cosmetic).
 - **Archived item card:** Bring back is a bordered secondary pill (it was a borderless ghost), and
-  its busy text is "Just a moment…".
-- **Ranking on phone:** a small position number shows on every row, and the phone Unpin glyph is a
-  struck-through pin.
-- **Mid-round sign-out:** a new quiet line, "Sign in again and your answers will finish saving on
-  their own", with a Sign in link.
+  its busy text is "One moment…" (copy change; was "Bringing it back…").
+- **Ranking on phone:** a small position number shows on every row, and the phone Unpin control
+  shows the word "Unpin" (it was a pin glyph alone).
+- **Mid-round sign-out:** the sign-in line moves into the notices region with a Sign in link that
+  returns to the round: "Sign in again and your answers will finish saving on their own". It has no
+  Okay (signing in is the way to clear it).
+- **Sort closed elsewhere:** after a sort is closed elsewhere the compare cards dim and hold, and
+  Reload is offered (in place of Okay) beside "This sort was wrapped up somewhere else…".
+
+## Rulings (controller)
+
+1. **Task 5 sticky notices.** The notice engine (`decisionFlusher.ts`, `subscribeNotices`) keeps
+   the current notice set. A new subscriber receives it on subscribe. `dismissNotice(kind)` clears an
+   entry, and so does resolution: `auth_required` clears on the next 2xx; a reload clears all.
+   `session_conflict` carries its `sessionId`, and `CompareChoice` / `PendingNotices` ignore
+   another session's conflict, so a sticky conflict from an earlier sort can never hold (or
+   mislabel) a new sort in the same tab. (Plan-time addition: without the scoping, sticky replay
+   would deadlock a new sort's compare after a client-side navigation.)
+   `PendingNotices` reads the set on mount, so a remount loses nothing. `PendingDecisionsGate`
+   renders its `PendingNotices` only until reveal, in one fixed tree shape; after reveal the page's
+   single `PendingNotices` shows everything. "Never two" is structural.
+2. **Unpin word over glyph** on phone (spec §4 "a small Unpin").
+3. **"One moment…"** is the archived card's busy label.
+4. **Danger rim via the existing `error` token.** No new token.
+
+## Rejected review findings
+
+- **A separate `useOptimisticRound.submitDecision` fallback test.** Already pinned through the
+  real hook by `TriageRound.test.tsx:280` ("a fallback that does not land keeps the piece in place
+  with a gentle line": setItem throws → `needs_fallback`, fetch `ok: false` → stumble line, "Love —
+  saved." never announced). A second test would be a near-twin.
+- **A `deferred` row in the `directSubmit` table.** Same branch as the `set_aside` row (the
+  disposition is passed through), so it can't catch anything new. The other option the review
+  offered, a `TriageRound` Not-yet fallback test that pins the caller, is added instead (Task 7).
+- **`globSync` > 0 for literally every filter pattern.** Applied with one exemption: root-level
+  extension catch-alls (`*.js` under `code:`) match nothing today by design. They make sure a
+  future root config still triggers CI, so deleting them would weaken the gate.
 
 ---
 
@@ -177,16 +219,18 @@ costs more than the check is worth.
 | 2 | `.13` | — | `src/features/pool/PoolActionBar.tsx`, `src/features/pool/PoolPhotoGrid.tsx`, `src/components/layout/AppLayout.tsx`, `src/app/globals.css`, `e2e/lists-and-home.spec.ts`, `e2e/screenshots/capture.ts` | — |
 | 3 | `.17` | — | `src/features/sorting/AsyncActionButton.tsx`, `src/features/items/BringBackButton.tsx`, `e2e/lists-and-home.spec.ts` | — |
 | 4 | `.11` (A) | — | `src/features/results/RankingList.tsx`, `e2e/sort-journey.spec.ts`, `src/lib/db/ranking-save-route.integration.test.ts`, `scripts/ci-e2e-map.test.ts`, `.github/workflows/ci.yml`, `e2e/screenshots/capture.ts` | — |
-| 5 | `.11` (B) | — | `src/features/sorting/CompareChoice.tsx`, `src/features/sorting/CompareChoice.test.tsx`, `src/features/sorting/pendingNotices.tsx`, `src/features/sorting/pendingNotices.test.tsx`, `src/features/sorting/PendingDecisionsGate.tsx`, `src/features/sorting/PendingDecisionsGate.test.tsx` | — |
-| 6 | `.9` (A) | — | `src/features/sorting/DecisionControls.tsx` (+ test), `src/features/sorting/DeferControl.tsx` (+ test), `src/features/sorting/SetAsideButton.tsx`, `src/features/sorting/SetAsideUndo.test.tsx`, `src/features/sorting/TriageUndoProvider.tsx`, `src/features/sorting/TriageRound.tsx`, `src/features/onboarding/WelcomeTriage.tsx`, `src/server/services/SortResultService.ts` | — |
-| 7 | `.9` (B) | `src/features/sorting/directSubmit.ts`, `src/features/sorting/directSubmit.test.ts` | `CompareChoice.tsx`, `useOptimisticRound.ts`, `TriageRound.tsx`, `TriageUndoProvider.tsx`, `decisionFlusher.ts` (header comment) | — |
+| 5a / 5b | `.11` (B) | — | `src/features/sorting/decisionFlusher.ts`, `src/features/sorting/decisionFlusher.test.ts`, `src/features/sorting/CompareChoice.tsx`, `src/features/sorting/CompareChoice.test.tsx`, `src/features/sorting/pendingNotices.tsx`, `src/features/sorting/pendingNotices.test.tsx`, `src/features/sorting/PendingDecisionsGate.tsx`, `src/features/sorting/PendingDecisionsGate.test.tsx`, `src/features/sorting/TriageRound.tsx`, `src/features/sorting/TriageRound.test.tsx`, `src/app/collections/[id]/results/page.tsx`, `src/app/collections/[id]/sort/page.tsx` | — |
+| 6 | `.9` (A) | — | `src/features/sorting/DecisionControls.tsx` (+ test), `src/features/sorting/DeferControl.tsx` (+ test), `src/features/sorting/SetAsideButton.tsx`, `src/features/sorting/SetAsideUndo.test.tsx`, `src/features/sorting/TriageUndoProvider.tsx`, `src/features/sorting/TriageRound.tsx`, `src/features/onboarding/WelcomeTriage.tsx`, `src/server/services/SortResultService.ts`, `src/features/sorting/localMode.guard.test.ts` (header comment) | — |
+| 7 | `.9` (B) | `src/features/sorting/directSubmit.ts`, `src/features/sorting/directSubmit.test.ts` | `CompareChoice.tsx`, `useOptimisticRound.ts`, `TriageRound.tsx`, `TriageRound.test.tsx`, `TriageUndoProvider.tsx`, `decisionFlusher.ts` (header comment) | — |
 | 8 | `.15` | — | `.github/workflows/ci.yml` | — |
-| 9 | `ejvl` | — | `package.json`, `package-lock.json` | — |
+| 9 | `ejvl` | — | `package.json`, `package-lock.json`, `src/features/onboarding/WalkthroughShell.tsx` (one disable comment) | — |
 | 10 | all | — | `DESIGN.md`, `docs/ARCHITECTURE.md`, `graphify-out/` | — |
 
 Order: the tasks run in sequence. Tasks 4 and 8 both edit `ci.yml` (different lines). Task 7 depends
 on Task 6 (`TriageUndoProvider.defer` must be gone first). Task 5 and Task 7 both touch
-`CompareChoice.tsx` (different blocks).
+`CompareChoice.tsx` (different blocks) and `decisionFlusher.ts` (Task 5 the notice state, Task 7
+the header comment). Task 5 runs as two commits/reviews: **5a** engine + gate (Steps 1–4 and 6–7's
+engine/gate parts) and **5b** the notice copy, links and Reload (Step 5's rendering).
 
 ---
 
@@ -206,10 +250,11 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 // Spec §5 / DESIGN.md §2: "Per-component inline tints are banned — use the tokens."
-// A Tailwind opacity modifier on a colour utility (bg-x/30, ring-ink/10, hover:bg-y/40)
-// is exactly that. Fractions like w-1/2 or translate-y-1/2 are not colour utilities.
+// A Tailwind opacity modifier on a colour utility (bg-x/30, bg-x/[.3], bg-x/(--a), ring-ink/10,
+// hover:bg-y/40) is exactly that, and so is an arbitrary colour (bg-[#fff], text-[rgb(…)]).
+// Fractions like w-1/2 or translate-y-1/2 are not colour utilities.
 const TINT =
-  /\b(?:bg|text|border|ring|outline|fill|stroke|divide|from|via|to|shadow|decoration|placeholder|caret|accent)-[a-z]+(?:-[a-z]+)*\/\d{1,3}\b/g;
+  /\b(?:bg|text|border|ring|outline|fill|stroke|divide|from|via|to|shadow|decoration|placeholder|caret|accent)-(?:[a-z]+(?:-[a-z]+)*\/(?:\d{1,3}|\[[^\]]+\]|\([^)]+\))|\[(?:#|rgb|hsl))/g;
 
 const root = new URL("../../", import.meta.url).pathname; // src/
 function sources(dir: string): string[] {
@@ -241,7 +286,8 @@ describe("no inline alpha tints", () => {
   ×2 and `bg-ink-soft/70`, `PhotoViewControl.tsx: ring-ink/10`,
   `ThemeToggle.tsx: hover:bg-content-soft/40` (shown as `bg-content-soft/40`),
   `MostLovedHero.tsx: text-ink-soft/70`, and `CollectionCard.tsx` / `PhotoPoolPreview.tsx:
-  text-ink-soft/50`. If the list differs, stop and re-read Decision 2 before going on.
+  text-ink-soft/50`. (Checked at plan time: the widened regex finds the same 10 on this branch and
+  no arbitrary-colour hits.) If the list differs, stop and re-read Decision 2 before going on.
 
 - [ ] **Step 3: Add the contrast row** for the danger rim in `pairings()` in
   `src/lib/design/contrast.test.ts`, after the `primary link on card` row:
@@ -423,13 +469,13 @@ test("pool: the selection bar is pinned at phone and tablet widths and never hid
 ```tsx
       {/* The PR 3 bottom-bar surface (ActionBar): glass-strong + blur + lift + hairline edge,
           z-30 under the z-40 header. Fixed at every width (a selection follows the person
-          through a long grid); static on a short viewport. mb-0 beats a space-y parent's
-          margin (memory fixed-bar-in-space-y-stack). No safe-area padding: the root viewport
+          through a long grid); static on a short viewport. No mb-0: it is the last child of
+          PoolPhotoGrid's space-y-4, which gets no margin. No safe-area padding: the root viewport
           is not viewportFit "cover", so the inset is always 0. globals.css reserves its
           height via data-selection-bar. */}
       <div
         data-selection-bar
-        className="fixed inset-x-0 bottom-0 z-30 mb-0 border-t border-hairline bg-glass-strong px-4 py-3 shadow-lift backdrop-blur-md [@media(max-height:500px)]:static"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-hairline bg-glass-strong px-4 py-3 shadow-lift backdrop-blur-md [@media(max-height:500px)]:static"
         role="region"
         aria-label="Grouping actions"
       >
@@ -507,22 +553,29 @@ test("phone: an archived card's Bring back lines up with the name and fits the c
     expect(Math.abs(box.x - name.x)).toBeLessThanOrEqual(1); // the pill's edge is the name's edge
     expect(box.x + box.width).toBeLessThanOrEqual(cardBox.x + cardBox.width - 12); // inside p-3
     expect(box.height).toBeGreaterThanOrEqual(44);
-    expect(await pill.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true); // label never spills
+    // The label never spills sideways or downward, and stays on one line.
+    expect(
+      await pill.evaluate((el) => {
+        const line = document.createRange();
+        line.selectNodeContents(el);
+        return el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight && line.getClientRects().length === 1;
+      }),
+    ).toBe(true);
   };
   await fits(/^Bring back$/);
   // Hold the restore open so the busy label can be measured.
   await page.route("**/api/items/*/restore", () => {});
   await tile.getByRole("button", { name: /^Bring back$/ }).click();
-  await fits(/just a moment/i);
+  await fits(/^One moment…$/);
 });
 ```
 
 - [ ] **Step 2: Run it and see it fail.**
   `npx playwright test e2e/lists-and-home.spec.ts -g "archived card's Bring back" --project=tablet`.
-  Expected: FAIL. The busy button is named "Bringing it back…" (no match for `/just a moment/i`), and
-  its label spills (`scrollWidth > clientWidth`). If the idle `x` assertion also fails (it
-  shouldn't: the ghost button's box already starts at the name's edge; only its text is inset),
-  note it in the ledger.
+  Expected: FAIL at the busy step. The busy button is named "Bringing it back…", so
+  `getByRole("button", { name: /^One moment…$/ })` finds nothing and `boundingBox()` times out
+  (the `!` then throws). The idle step should pass (the ghost button's box already starts at the
+  name's edge; only its text is inset); if it fails, note which assertion in the ledger.
 
 - [ ] **Step 3: Implement.** In `src/features/sorting/AsyncActionButton.tsx`, widen the prop:
 
@@ -536,10 +589,11 @@ test("phone: an archived card's Bring back lines up with the name and fits the c
 export function BringBackButton({ itemId }: { itemId: string }) {
   const router = useRouter();
   // A bordered secondary pill: its visible edge lines up with the card's name column (p-3)
-  // where a ghost's text sat 16px inset; the house busy label fits a 390px two-column card.
+  // where a ghost's text sat 16px inset; "One moment…" fits a 390px two-column card on one line.
   return (
     <AsyncActionButton
       label="Bring back"
+      busyLabel="One moment…"
       variant="secondary"
       action={async () => {
         const res = await fetch(`/api/items/${itemId}/restore`, { method: "POST" });
@@ -553,8 +607,8 @@ export function BringBackButton({ itemId }: { itemId: string }) {
 
 - [ ] **Step 4: Run and see it pass.** Run the Step 2 command again and expect PASS. Then run
   `npx vitest run src/features/sorting/AsyncActionButton.test.tsx src/features/items` and expect
-  PASS. If "Just a moment…" still spills at 390px, change only `BringBackButton`'s
-  `busyLabel="One moment…"`, re-run, and log the change as an owner-veto copy item.
+  PASS. "One moment…" is a controller ruling and already on the owner-veto list. If even it spills
+  at 390px, stop and report the measured widths; do not shrink the type.
 
 - [ ] **Step 5: Commit.**
 
@@ -605,21 +659,17 @@ git commit -m "fix(items): archived card's Bring back is a secondary pill that f
     `<span className="hidden w-6 shrink-0 text-center text-sm text-ink-soft sm:block">{i + 1}</span>`
     with `<span className="w-5 shrink-0 text-center text-xs text-ink-soft sm:w-6 sm:text-sm">{i + 1}</span>`.
     Update the comment above the grip to: `{/* Phone: the grip gives way (drag is a tablet nicety); a small ordinal stays. */}`.
-  - Phone Unpin glyph: replace the comment and `<svg>` inside the Unpin button with:
-
-```tsx
-                {/* Phone: a struck-through pin — the action (unpin), not the state (pinned).
-                    The accessible name stays "Unpin …". */}
-                <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5 sm:hidden">
-                  <path d="M9 4h6l-1 6 3 3H7l3-3-1-6zM12 13v7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  <path d="M4 4l16 16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-                </svg>
-```
+  - Phone Unpin: the word at every width (spec §4 "a small Unpin"; controller ruling). In the
+    Unpin button, change the className's `min-w-11 … sm:px-3` padding to `min-w-11 px-2 … sm:px-3`
+    (it already has `text-sm`), delete the comment and the `<svg>`, and replace
+    `<span className="hidden sm:inline">Unpin</span>` with plain `Unpin`. The accessible name stays
+    `Unpin ${row.name}`. The e2e's name-width floor (`clientWidth > 80`) is what proves the word
+    leaves the name room on a 390px row; keep it.
 
 - [ ] **Step 4: Run and see it pass.** Run the Step 2 command again and expect PASS; then
-  `npx vitest run src/features/results/RankingList.test.tsx` and expect PASS. The glyph has no unit
-  test: asserting an SVG path string would restate the code. The phone `ranking` screenshot is its
-  check (Step 9, Task 10).
+  `npx vitest run src/features/results/RankingList.test.tsx` and expect PASS. The word needs no
+  unit test (its accessible name is already pinned); the phone `ranking` screenshot shows it
+  (Task 10, Step 8).
 
 - [ ] **Step 5: The replay DB test seeds a pin.** In
   `src/lib/db/ranking-save-route.integration.test.ts`, replace the test "a retry with the same key
@@ -648,30 +698,32 @@ git commit -m "fix(items): archived card's Bring back is a secondary pill that f
   If it fails, that is a real replay bug: stop and use `superpowers:systematic-debugging` before
   touching `SortResultService.saveAndShare`.
 
-- [ ] **Step 6: Failing CI-path test.** Append to `scripts/ci-e2e-map.test.ts`. Change the first
-  import to `import { existsSync, readFileSync, readdirSync } from "node:fs";`, then add:
+- [ ] **Step 6: Failing CI-path test.** Append to `scripts/ci-e2e-map.test.ts`. Add `globSync`
+  to the existing `node:fs` import (Node ≥ 22 has `fs.globSync`; CI and `engines` are Node 24),
+  then add:
 
 ```ts
 describe("ci.yml changes filters", () => {
-  // A filter path that no longer exists silently selects nothing (e.g. a renamed lib file
-  // drops its e2e area). Check each pattern's literal prefix (up to the first '*').
+  // A filter pattern that matches nothing silently selects nothing (e.g. a renamed lib file
+  // drops its e2e area). Every pattern must match at least one path in the repo.
+  const repoRoot = new URL("../", import.meta.url).pathname;
   const filters = ci.slice(ci.indexOf("filters: |"), ci.indexOf("\n  e2e:"));
   const paths = [...filters.matchAll(/^\s+- '([^']+)'$/gm)].map((m) => m[1]);
   it("finds the filter list", () => {
     expect(paths.length).toBeGreaterThan(20);
   });
-  it("every literal path prefix exists on disk", () => {
-    const missing = paths.filter((p) => {
-      const prefix = p.split("*")[0];
-      return prefix !== "" && !existsSync(new URL(`../${prefix}`, import.meta.url));
-    });
+  it("every pattern matches at least one path", () => {
+    // Root extension catch-alls ('*.js' under code:) guard future root configs; they may match nothing.
+    const rootCatchAll = /^\*\.[a-z]+$/;
+    const missing = paths.filter((p) => !rootCatchAll.test(p) && globSync(p, { cwd: repoRoot }).length === 0);
     expect(missing).toEqual([]);
   });
 });
 ```
 
   Run `npx vitest run scripts/ci-e2e-map.test.ts`. Expected: FAIL with
-  `["src/hooks/**", "tailwind.config.ts", "tailwind.config.ts", "src/lib/pairwise-selection.ts"]`.
+  `["src/hooks/**", "tailwind.config.ts", "tailwind.config.ts", "src/lib/pairwise-selection.ts"]`
+  (checked at plan time; without the exemption `*.js` would be a fifth).
 
 - [ ] **Step 7: Drop the dead paths** from `.github/workflows/ci.yml`: the `'src/hooks/**'` line
   (under `ui:`), both `'tailwind.config.ts'` lines (under `ui:` and `broad:`), and
@@ -683,7 +735,7 @@ describe("ci.yml changes filters", () => {
 ```ts
   const sorted = await seedSortScenario(ownerId);
   ({ slug, finalizedResultNumber } = sorted);
-  // UX redesign PR 5: one hand-placed piece, so the ranking shot shows Unpin (and its phone glyph).
+  // UX redesign PR 5: one hand-placed piece, so the ranking shot shows Unpin (the word, at phone width too).
   await SortResultService.fromDb(getTestDb().db).pinItem(sorted.collectionId, ownerId, sorted.itemIds[1], 1);
 ```
 
@@ -705,21 +757,52 @@ describe("ci.yml changes filters", () => {
 ```bash
 git add src/features/results/RankingList.tsx e2e/sort-journey.spec.ts src/lib/db/ranking-save-route.integration.test.ts \
   scripts/ci-e2e-map.test.ts .github/workflows/ci.yml e2e/screenshots/capture.ts
-git commit -m "fix(sort): phone ordinal and pin-off glyph, replay keeps pins, dead CI filter paths (purses-w7ss.11)"
+git commit -m "fix(sort): phone ordinal and Unpin word, replay keeps pins, dead CI filter paths (purses-w7ss.11)"
 ```
 
 ---
 
-## Task 5: PR 2 residuals B — hold after 409; one live notice region; sign-in mid-round (`purses-w7ss.11`)
+## Task 5: PR 2 residuals B — sticky notices, hold after 409, sign-in mid-round (`purses-w7ss.11`)
 
-**Files:** `src/features/sorting/CompareChoice.tsx` (+ test), `src/features/sorting/pendingNotices.tsx`
-(+ test), `src/features/sorting/PendingDecisionsGate.tsx` (+ test).
+Run as two commits, each with its own review: **5a** (engine + gate + hold: Steps 1–8) and **5b**
+(Sign in / Reload, the always-mounted region, per-session filtering: Steps 9–11). 5b depends on 5a.
+
+**Files:** `src/features/sorting/decisionFlusher.ts` (+ test), `src/features/sorting/CompareChoice.tsx`
+(+ test), `src/features/sorting/pendingNotices.tsx` (+ test), `src/features/sorting/PendingDecisionsGate.tsx`
+(+ test), `src/features/sorting/TriageRound.tsx` (+ test), `src/app/collections/[id]/results/page.tsx`,
+`src/app/collections/[id]/sort/page.tsx` (passes `sessionId`; adds a `PendingNotices` only to a
+gated phase that lacks one).
 
 **Interfaces:**
-- Produces: `export const AUTH_REQUIRED_NOTICE = "Sign in again and your answers will finish saving on their own";`
-  in `pendingNotices.tsx`. `GATE_SIGNIN_LINE` is removed from `PendingDecisionsGate.tsx`.
+- Produces (5a): the `session_conflict` variant of `FlushNotice` gains `sessionId: string`.
+  `subscribeNotices(fn)` replays the engine's current notices to `fn` on subscribe, then streams new
+  ones. `export function dismissNotice(kind: FlushNotice["kind"]): void`.
+- Produces (5a): `export const AUTH_REQUIRED_NOTICE = "Sign in again and your answers will finish saving on their own";`
+  in `pendingNotices.tsx` (the gate's words, moved), voiced by `PendingNotices`. `GATE_SIGNIN_LINE`
+  is removed from `PendingDecisionsGate.tsx`.
+- Produces (5b): `PendingNotices({ sessionId?: string })`; the Sign in link, Reload, and the
+  always-mounted region.
 
-- [ ] **Step 1: Failing test, hold after 409.** Add to `CompareChoice.test.tsx` after "a sort closed
+### 5a — engine, gate, hold
+
+- [ ] **Step 1: Failing engine test** in `decisionFlusher.test.ts` (it already `vi.resetModules()`s
+  per test, so engine state starts empty):
+
+```ts
+describe("notices are sticky (a surface that mounts later still hears them)", () => {
+  it("a late subscriber receives the current notice; dismissNotice clears it; a later 2xx clears auth_required", async () => {
+    // 401 on the first drain → auth_required stands.
+    // subscribe AFTER the drain → the subscriber receives { kind: "auth_required" } once.
+    // dismissNotice("auth_required") → a fresh subscriber receives nothing.
+    // Re-raise with another 401, then a drain that acks 2xx → a fresh subscriber receives nothing.
+  });
+});
+```
+
+  Write the body with the file's existing enqueue/drain/`jsonRes` helpers; the comments are the
+  assertions.
+
+- [ ] **Step 2: Failing tests, hold after 409** in `CompareChoice.test.tsx`, after "a sort closed
   elsewhere (409) never leaves the 'it's safe' line standing":
 
 ```ts
@@ -744,31 +827,137 @@ git commit -m "fix(sort): phone ordinal and pin-off glyph, replay keeps pins, de
     });
     expect(vi.mocked(queue.enqueue)).not.toHaveBeenCalled();
   });
+
+  it("an answer that settled before the 409 cannot be undone once the sort is closed elsewhere", async () => {
+    // Tap A → 2xx ack (Undo: … appears). Re-render with the next pair, tap → 409.
+    // Tap "Undo: …" → the pair is NOT re-presented (no "Keep going"), nothing is enqueued.
+  });
 ```
 
-- [ ] **Step 2: Failing tests, notices.** In `pendingNotices.test.tsx`, add `AUTH_REQUIRED_NOTICE`
-  to the import from `./pendingNotices` and to the TONE loop's array. Then add:
+  Fill the second body from the existing "Undo names the last answer…" test's ack setup plus the
+  409 stub above.
+
+- [ ] **Step 3: Gate test** in `PendingDecisionsGate.test.tsx`. Add `usePathname: () => "/collections/c1/sort"`
+  to the `next/navigation` mock. Change `gate()` so the children include a real `<PendingNotices />`
+  (as the sort page and `TriageRound` do):
+  `<PendingNotices /><div data-testid="content">the surface</div>`. Import `PendingNotices` and
+  `AUTH_REQUIRED_NOTICE` from `./pendingNotices` (dropping `GATE_SIGNIN_LINE`) and `dismissNotice`
+  from `./decisionFlusher`, and in `afterEach` call `dismissNotice` for every kind (engine state is
+  module-level here; without this a 401 test leaks a sticky `auth_required` into the next test).
+  Rewrite the 401 test's assertions:
 
 ```ts
-describe("PendingNotices — one live region", () => {
-  it("the status region exists, empty, before any notice arrives (SC 4.1.3)", async () => {
-    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    await waitFor(() => expect(screen.getByTestId("content")).toBeInTheDocument());
+    expect(screen.getAllByText(AUTH_REQUIRED_NOTICE)).toHaveLength(1);
+    // A second 401 after reveal still shows ONE line.
+    await act(async () => {
+      await triggerFlush(key);
+    });
+    expect(screen.getAllByText(AUTH_REQUIRED_NOTICE)).toHaveLength(1);
+    expect(readQueue(key)).toHaveLength(1); // preserved across re-login
+    expect(refresh).not.toHaveBeenCalled();
+```
+
+  (Drop its `href="/login"` assertion here; 5b pins the link in `pendingNotices.test.tsx`.)
+
+- [ ] **Step 4: Run and see them fail.**
+  `npx vitest run src/features/sorting/decisionFlusher.test.ts src/features/sorting/CompareChoice.test.tsx src/features/sorting/PendingDecisionsGate.test.tsx`.
+  Expected: FAIL. The late subscriber hears nothing (`dismissNotice` is not exported); the hold
+  tests (`aria-disabled` absent, `enqueue` called, Undo re-presents the pair); the gate test cannot
+  import `AUTH_REQUIRED_NOTICE` yet (and, once it can, a non-sticky engine shows the line zero
+  times after reveal).
+
+- [ ] **Step 5: Implement the engine** in `decisionFlusher.ts`:
+  - Keep `const currentNotices = new Map<FlushNotice["kind"], FlushNotice>();`. `emitNotice` sets
+    `currentNotices.set(notice.kind, notice)` before the fan-out.
+  - `subscribeNotices(fn)`: add `fn`, then call `fn(n)` for each current notice; return the same
+    unsubscribe.
+  - `export function dismissNotice(kind) { currentNotices.delete(kind); }`.
+  - Resolution: on any 2xx batch/disposition response (`res.ok` at the decision and disposition
+    paths), `currentNotices.delete("auth_required")`.
+  - The 409 emit becomes `emitNotice({ kind: "session_conflict", sessionId: key.sessionId })`.
+  - Header comment: notices are sticky per tab until dismissed or resolved; a reload clears them.
+
+- [ ] **Step 6: Implement the hold** in `CompareChoice.tsx`:
+  - In the `subscribeNotices` callback, ignore another session's conflict:
+    `if (notice.kind !== "session_conflict" || (submit.kind === "session" && notice.sessionId !== submit.sessionId)) return;`
+    (a sticky conflict from an earlier sort in the same tab must never hold a new one).
+  - `const busy = pending !== null || undefined;` → `const busy = pending !== null || closedElsewhere || undefined;`
+  - In `choose`, `if (pendingRef.current) return;` →
+    `if (pendingRef.current || closedElsewhere) return; // closed elsewhere: nothing more can land`
+  - In the Undo/Keep going `onClick`, `if (pendingRef.current) return;` →
+    `if (pendingRef.current || closedElsewhere) return;`
+
+- [ ] **Step 7: The gate's notices stop at reveal; one tree shape.** In `PendingDecisionsGate.tsx`,
+  delete the `GATE_SIGNIN_LINE` export and the `{authRequired && (<p …>)}` block. In
+  `pendingNotices.tsx`, add `AUTH_REQUIRED_NOTICE` (same words) after `SESSION_CONFLICT_NOTICE`
+  and `auth_required: AUTH_REQUIRED_NOTICE` to `NOTICE_COPY` (5b adds its Sign in link). Replace the
+  gate's two returns with one fixed shape:
+
+```tsx
+  return (
+    <>
+      {recovering && (
+        <div className="mx-auto max-w-xl space-y-2 empty:hidden">
+          {/* Before reveal the gate is the only voice; after it, the surface's own single
+              PendingNotices speaks (it reads the engine's sticky notices on mount), so the
+              line can never be doubled. */}
+          {!revealed && <PendingNotices />}
+          {revealed && !drained && (
+            <p role="status" className="rounded-control bg-content-soft px-4 py-3 text-sm text-ink-soft">
+              {GATE_CATCHUP_LINE}
+            </p>
+          )}
+        </div>
+      )}
+      {revealed ? children : (
+        <p role="status" className="mx-auto max-w-xl text-sm text-ink-soft">
+          {GATE_WAITING_LINE}
+        </p>
+      )}
+    </>
+  );
+```
+
+  Keep the `authRequired` state (it drives `revealed` and skips the refresh). Remove the `Link`
+  import if unused. Every surface the gate reveals must render exactly one `PendingNotices`: the
+  sort page's pairs phase and `TriageRound` already do; add one at the top of the results page's
+  gate children (`src/app/collections/[id]/results/page.tsx`); check the sort page's other phases
+  and add one only where a phase has none.
+
+- [ ] **Step 8: Run, see 5a pass, commit.** Run the Step 4 command, then
+  `npx vitest run src/features/sorting src/app/collections`, and expect PASS. Commit 5a:
+
+```bash
+git add src/features/sorting/decisionFlusher.ts src/features/sorting/decisionFlusher.test.ts \
+  src/features/sorting/CompareChoice.tsx src/features/sorting/CompareChoice.test.tsx \
+  src/features/sorting/pendingNotices.tsx src/features/sorting/PendingDecisionsGate.tsx \
+  src/features/sorting/PendingDecisionsGate.test.tsx "src/app/collections/[id]/results/page.tsx"
+git commit -m "fix(sort): sticky notices; the gate voices them only until reveal; hold compare after a 409 (purses-w7ss.11)"
+```
+
+### 5b — copy, Sign in, Reload, one live region
+
+- [ ] **Step 9: Failing tests** in `pendingNotices.test.tsx`. Add `usePathname: () => "/collections/c1/sort"`
+  to the `next/navigation` mock; add `AUTH_REQUIRED_NOTICE` to the import and to the TONE loop.
+  Fold the live-region assertions into the existing "a mid-round 409 says the sort was wrapped up
+  elsewhere" test (no near-twin):
+
+```ts
     render(<PendingNotices />);
     const region = screen.getByRole("status");
-    expect(region).toBeEmptyDOMElement();
-    await enqueue(key, {
-      kind: "decision", clientKey: newClientKey(), type: "triage",
-      decision: { itemId: realItemId(), result: "top" }, enqueuedAt: new Date().toISOString(),
-    });
-    await act(async () => {
-      await drain([key]);
-    });
+    expect(region).toBeEmptyDOMElement(); // mounted empty BEFORE the notice (SC 4.1.3)
+    // …enqueue + drain as today…
     expect(region).toHaveTextContent(SESSION_CONFLICT_NOTICE); // the same node, now with text
-  });
-});
+    expect(screen.getByRole("button", { name: "Reload" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Okay" })).not.toBeInTheDocument();
+```
 
+  Add:
+
+```ts
 describe("PendingNotices — signed out mid-round", () => {
-  it("a 401 says to sign in again, with a Sign in link", async () => {
+  it("a 401 says to sign in again, with a Sign in link back to this page, and no Okay", async () => {
     global.fetch = vi.fn(async () => ({ ok: false, status: 401, json: async () => ({}) })) as unknown as typeof fetch;
     render(<PendingNotices />);
     await enqueue(key, {
@@ -779,91 +968,73 @@ describe("PendingNotices — signed out mid-round", () => {
       await drain([key]);
     });
     expect(screen.getByText(AUTH_REQUIRED_NOTICE)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      `/login?callbackUrl=${encodeURIComponent("/collections/c1/sort")}`,
+    );
+    expect(screen.queryByRole("button", { name: "Okay" })).not.toBeInTheDocument(); // signing in is the action
   });
 });
 ```
 
-  In `PendingDecisionsGate.test.tsx`, change the import `GATE_SIGNIN_LINE` → `AUTH_REQUIRED_NOTICE`
-  from `./pendingNotices`, and in the 401 test use
-  `expect(screen.getByText(AUTH_REQUIRED_NOTICE)).toBeInTheDocument();`. `getByText` throws on two
-  matches, so this test now guards against a doubled line.
+  Add `dismissNotice` for every kind to the file's `beforeEach` (sticky engine state). In
+  `TriageRound.test.tsx:89` and `:92`, scope both
+  `getByRole("status")` queries to the answer announcer (e.g. `within(<the DecisionControls
+  container>)`): `TriageRound` now has two `status` regions (its `PendingNotices` is always
+  mounted).
 
-- [ ] **Step 3: Run them and see them fail.**
-  `npx vitest run src/features/sorting/CompareChoice.test.tsx src/features/sorting/pendingNotices.test.tsx src/features/sorting/PendingDecisionsGate.test.tsx`.
-  Expected: FAIL for three reasons. The hold test (`aria-disabled` is absent, and `enqueue` is
-  called). `getByRole("status")` (no region while empty). `AUTH_REQUIRED_NOTICE` (not exported).
-
-- [ ] **Step 4: Implement the hold** in `CompareChoice.tsx`:
-  - `const busy = pending !== null || undefined;` → `const busy = pending !== null || closedElsewhere || undefined;`
-  - In `choose`, change `if (pendingRef.current) return;` to
-    `if (pendingRef.current || closedElsewhere) return; // closed elsewhere: nothing more can land`
-  - In the Undo/Keep going `onClick`, change `if (pendingRef.current) return;` to
-    `if (pendingRef.current || closedElsewhere) return;`
-
-- [ ] **Step 5: Implement the notices** in `pendingNotices.tsx`:
-  - Add `import Link from "next/link";`.
-  - Add the constant after `SESSION_CONFLICT_NOTICE`:
-    `export const AUTH_REQUIRED_NOTICE = "Sign in again and your answers will finish saving on their own";`
-  - `NOTICE_COPY` gains `auth_required: AUTH_REQUIRED_NOTICE,`.
-  - Replace everything from `const visible = …` to the end of the component with:
+- [ ] **Step 10: Implement** in `pendingNotices.tsx`:
+  - `import Link from "next/link"; import { usePathname } from "next/navigation";`
+    `import { quietLink } from "@/lib/design/quiet-link";`
+    and `dismissNotice` from `./decisionFlusher`.
+  - `PendingNotices({ sessionId }: { sessionId?: string } = {})`: the subscriber skips a
+    `session_conflict` whose `sessionId` differs from a given `sessionId` (the sort page and
+    `TriageRound` pass theirs).
+  - Okay → `dismissNotice(kind)` plus the local hide. Render:
 
 ```tsx
-  const visible = [...active].filter((kind) => !dismissed.has(kind));
-
-  // ONE region, mounted empty, so a line that lands is announced (a live region that
-  // appears together with its text is not). The lines inside carry no role of their own.
+  // ONE region, mounted empty, so a line that lands is announced (a live region that appears
+  // with its text is not). aria-atomic=false: only the new line is read, not the whole set.
   return (
-    <div role="status" aria-live="polite" className="space-y-2">
+    <div role="status" aria-live="polite" aria-atomic="false" className="space-y-2 empty:mb-0">
       {visible.map((kind) => (
-        <p
-          key={kind}
-          className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-control bg-content-soft px-4 py-3 text-sm text-ink-soft"
-        >
+        <p key={kind} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-control bg-content-soft px-4 py-2 text-sm text-ink-soft">
           <span>{NOTICE_COPY[kind]}</span>
-          {kind === "auth_required" && (
-            <Link
-              href="/login"
-              className="font-medium text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-xs"
-            >
+          {kind === "auth_required" ? (
+            <Link href={`/login?callbackUrl=${encodeURIComponent(pathname ?? "/")}`} className={quietLink}>
               Sign in
             </Link>
+          ) : kind === "session_conflict" ? (
+            <button type="button" onClick={() => location.reload()} className={quietLink}>
+              Reload
+            </button>
+          ) : (
+            <button type="button" onClick={() => dismiss(kind)} className={quietLink}>
+              Okay
+            </button>
           )}
-          <button
-            type="button"
-            onClick={() => setDismissed((prev) => new Set(prev).add(kind))}
-            className="font-medium text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-xs"
-          >
-            Okay
-          </button>
         </p>
       ))}
     </div>
   );
 ```
 
-  - Update the doc comment's first line to: "The quiet person-side notice slot (one always-mounted
-    live region): …", and note that it voices `auth_required` with a Sign in link.
+  (`callbackUrl` follows `src/proxy.ts`, which sets the pathname. All three actions use
+  `quietLink`, which carries `min-h-11`, so each target is ≥ 44px; `Button size="sm"` is only h-9.)
+  - Doc comment, first line: "The quiet person-side notice slot (one always-mounted live region),
+    fed by the engine's sticky notices: …". Note `auth_required` (Sign in, not dismissible) and
+    `session_conflict` (Reload).
+  - Pass `sessionId` to the `PendingNotices` in `TriageRound.tsx` and the sort page's pairs phase.
 
-- [ ] **Step 6: Gate stops voicing it.** In `PendingDecisionsGate.tsx`, delete the
-  `GATE_SIGNIN_LINE` export and the `{authRequired && (<p role="status" …>…</p>)}` block in
-  `noticeSlot`, so the `PendingNotices` in the same slot voices it. Keep the `authRequired` state
-  (it still drives `revealed` and skips the refresh). If `Link` is now unused, remove its import.
-  Update the comment above `noticeSlot`: "…the same slot the round surfaces use, including the
-  sign-in line…".
-
-- [ ] **Step 7: Run and see them pass.** Run the Step 3 command again and expect PASS. Then run
-  `npx vitest run src/features/sorting src/app/collections` and expect PASS. If another test now
-  hits two `role="status"` nodes through `getByRole("status")`, change only that query to
-  `getByText(<its copy>)`, and list each one in the commit body.
-
-- [ ] **Step 8: Commit.**
+- [ ] **Step 11: Run, see it pass, commit.** `npx vitest run src/features/sorting src/app/collections`
+  → PASS. If another test now hits two `status` nodes through a bare `getByRole("status")`, scope
+  that query and list it in the commit body.
 
 ```bash
-git add src/features/sorting/CompareChoice.tsx src/features/sorting/CompareChoice.test.tsx \
-  src/features/sorting/pendingNotices.tsx src/features/sorting/pendingNotices.test.tsx \
-  src/features/sorting/PendingDecisionsGate.tsx src/features/sorting/PendingDecisionsGate.test.tsx
-git commit -m "fix(sort): hold compare after a 409; one live notice region that also voices sign-in (purses-w7ss.11)"
+git add src/features/sorting/pendingNotices.tsx src/features/sorting/pendingNotices.test.tsx \
+  src/features/sorting/TriageRound.tsx src/features/sorting/TriageRound.test.tsx \
+  "src/app/collections/[id]/sort/page.tsx"
+git commit -m "fix(sort): one live notice region; Sign in back to the round; Reload after a sort closed elsewhere (purses-w7ss.11)"
 ```
 
 ---
@@ -909,10 +1080,12 @@ git commit -m "fix(sort): hold compare after a 409; one live notice region that 
 ```
 
   - `DeferControl.test.tsx`: delete the session `describe`, `SessionHarness`, the flusher/queue
-    mocks, `installStorage`, `beforeEach` and the provider import. Keep the two local tests,
-    rewritten to `<DeferControl onDecision={onDecision} />`. Remove the "renders the same visual
-    button … as session mode" comparison and keep its title/aria-label assertions as
-    "conveys 'Keeps it for later' for hover and assistive tech".
+    mocks, `installStorage`, `beforeEach` and the provider import. Keep two tests, rendered as
+    `<DeferControl onDecision={onDecision} />`: "a tap calls onDecision once" (only that assert;
+    the old no-fetch / empty-queue / enabled / label asserts can no longer fail once the component
+    has no fetch or queue code, so they go), and the title/aria-label assertions from "renders the
+    same visual button … as session mode", retitled "conveys 'Keeps it for later' for hover and
+    assistive tech".
   - `SetAsideUndo.test.tsx`: replace the `SetAsideButton` import with
     `import { useTriageUndo } from "./TriageUndoProvider";` (merge it into the existing provider
     import). Add the consumer below the imports:
@@ -926,20 +1099,9 @@ function NotMineTap({ itemId, itemName }: { itemId: string; itemName: string | n
 ```
 
     In `Harness`, use `{item && <NotMineTap itemId={itemId} itemName={itemName} />}`. Delete the
-    test "local mode renders WITHOUT a TriageUndoProvider…" (that case is now just a plain
-    `onDecision` button, covered by a new test in `DeferControl.test.tsx`'s style). Add this to
-    `DeferControl.test.tsx` instead:
-
-```ts
-it("Not mine (SetAsideButton) is one quiet tap that calls onDecision — no provider needed", async () => {
-  const onDecision = vi.fn();
-  render(<SetAsideButton onDecision={onDecision} />);
-  await userEvent.click(screen.getByRole("button", { name: "Not mine — sets it aside" }));
-  expect(onDecision).toHaveBeenCalledTimes(1);
-});
-```
-
-    with `import { SetAsideButton } from "./SetAsideButton";`.
+    test "local mode renders WITHOUT a TriageUndoProvider…" with no replacement: `SetAsideButton`
+    is now a plain `onDecision` button, and `TriageRound.test.tsx`'s "Not yet and Not mine" tests
+    already tap it through the real round.
 
 - [ ] **Step 3: Run and see them fail.**
   `npx vitest run src/features/sorting/DecisionControls.test.tsx src/features/sorting/DeferControl.test.tsx src/features/sorting/SetAsideUndo.test.tsx`.
@@ -1045,11 +1207,21 @@ export function SetAsideButton({ onDecision }: { onDecision: () => void }) {
 }
 ```
 
-    Delete the `useState` and `useOptionalTriageUndo` imports.
+    Delete the `useState` and `useOptionalTriageUndo` imports. Rewrite the first paragraph's
+    "records … via the provider, which then refreshes so the next item comes forward" to "a tap
+    calls `onDecision` (the round's Not mine, which sets it aside through the provider, or the
+    walkthrough's demo step)". Keep the un-keyed focus paragraph but replace its
+    "survives router.refresh()" reason with "survives the optimistic advance to the next piece"
+    (the tap path no longer refreshes).
   - `TriageUndoProvider.tsx`: delete `defer` (the function, its comment, `defer` in the context
     value, and `defer` in the `TriageUndoContextValue` type). Update the comment at line ~57 that
     says the walkthrough renders `SetAsideButton` in "local" mode to: "The walkthrough's buttons
-    take a plain onDecision and never touch this provider."
+    take a plain onDecision and never touch this provider." Refresh the header too: line 14's "The
+    BUTTON (SetAsideButton) lives inside the triage decision sub-row" → "Not mine (TriageRound's
+    `handleNotMine`, via `SetAsideButton`) lives inside…", and line 21's "setAside/defer enqueue" →
+    "setAside enqueues".
+  - `localMode.guard.test.ts` header: "The sorting components carry a `{ kind: "local" }` submit
+    arm" → "`CompareChoice` carries a `{ kind: "local" }` submit arm" (the only one left).
   - Callers: in `TriageRound.tsx`, change `submit={{ kind: "local", onDecision: (d) => handleTriage(shown.item, d) }}`
     to `onDecision={(d) => handleTriage(shown.item, d)}` and drop `type="triage"`; use
     `<DeferControl onDecision={() => void handleNotYet(shown)} />` and
@@ -1063,9 +1235,10 @@ export function SetAsideButton({ onDecision }: { onDecision: () => void }) {
 - [ ] **Step 5: Run and see them pass.** Run the Step 3 command again and expect PASS. Then:
   `npx vitest run src/features/sorting src/features/onboarding src/app/collections src/server`
   → PASS; `npx tsc --noEmit` → no errors; and
-  `grep -rn 'kind: "local"' src --include='*.tsx' | grep -v CompareChoice` → only
-  `CompareChoice`-related lines (its `submit` keeps both arms: the walkthrough's compare is local
-  and the sort page's is session).
+  `grep -rn 'kind: "local"' src --include='*.tsx' | grep -v '\.test\.'` → exactly two lines:
+  `CompareChoice.tsx` (the `submit` type, which keeps both arms: the walkthrough's compare is
+  local and the sort page's is session) and `WelcomeCompare.tsx` (its caller). (The old
+  `grep -v CompareChoice` filter hid the first and passed the second, so it proved nothing.)
 
 - [ ] **Step 6: Commit.**
 
@@ -1073,7 +1246,7 @@ export function SetAsideButton({ onDecision }: { onDecision: () => void }) {
 git add src/features/sorting/DecisionControls.tsx src/features/sorting/DecisionControls.test.tsx \
   src/features/sorting/DeferControl.tsx src/features/sorting/DeferControl.test.tsx src/features/sorting/SetAsideButton.tsx \
   src/features/sorting/SetAsideUndo.test.tsx src/features/sorting/TriageUndoProvider.tsx src/features/sorting/TriageRound.tsx \
-  src/features/onboarding/WelcomeTriage.tsx src/server/services/SortResultService.ts
+  src/features/onboarding/WelcomeTriage.tsx src/server/services/SortResultService.ts src/features/sorting/localMode.guard.test.ts
 git commit -m "refactor(sort): delete the dead session arms, TriageUndoProvider.defer and getDraftResult (purses-w7ss.9)"
 ```
 
@@ -1111,7 +1284,7 @@ describe("directSubmit — the storage-unavailable fallback, one request per ent
       { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "triage", decision: { itemId: "i1", result: "top" }, clientKey: "k1" }) },
     ],
     [
-      "set_aside / deferred POST the collection's dispositions",
+      "a set-aside POSTs the collection's dispositions route with the disposition",
       { kind: "disposition", clientKey: "k2", itemId: "i2", disposition: "set_aside", enqueuedAt: at },
       "/api/collections/col_1/dispositions",
       { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ itemId: "i2", disposition: "set_aside" }) },
@@ -1150,8 +1323,9 @@ describe("directSubmit — the storage-unavailable fallback, one request per ent
 import type { PendingEntry } from "./decisionQueue";
 
 // The storage-unavailable fallback (spec §3.1, F18): when enqueue() cannot persist even after
-// a flush, the island sends this ONE entry directly and awaits it. Same routes and bodies the
-// flusher uses; a network throw reads as "not landed" so each island shows its own gentle line.
+// a flush, the island sends this ONE entry directly and awaits it. A decision goes to the
+// single-decision route (the flusher batches decisions; this never does); a disposition uses the
+// flusher's routes. A network throw reads as "not landed", so each island shows its own line.
 export async function directSubmit(
   route: { sessionId: string; collectionId: string },
   entry: PendingEntry,
@@ -1215,7 +1389,27 @@ export async function directSubmit(
 ```
 
   - `TriageRound.tsx` (`handleNotYet`): build the `deferred` entry as a `const entry`, then use
-    `if (persisted === "needs_fallback") await directSubmit({ sessionId, collectionId }, entry); // best-effort: the piece still waits at the end and returns next visit`
+    `if (persisted === "needs_fallback") await directSubmit({ sessionId, collectionId }, entry); // best-effort: the piece still waits at the end and returns next visit`.
+    Pin this caller first (it has no fallback test today): add to `TriageRound.test.tsx`'s
+    "storage fallback (F18)" describe, before the edit:
+
+```ts
+  it("Not yet degrades to ONE POST of a deferred disposition and still moves the piece on", async () => {
+    store.setItem = () => {
+      throw new Error("quota");
+    };
+    const user = userEvent.setup();
+    renderRound();
+    await user.click(screen.getByRole("button", { name: /^not yet/i }));
+    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const [url, init] = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe("/api/collections/coll_1/dispositions");
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({ itemId: "item_a", disposition: "deferred" });
+  });
+```
+
+    It should pass against today's inline fetch (it pins behaviour the refactor must keep).
   - `TriageUndoProvider.tsx` `setAside`: replace the fallback `fetch` + `if (!res.ok) throw` with
     `if (!(await directSubmit({ sessionId, collectionId }, entry))) throw new Error("set aside failed");`
     and keep the existing `setUndo({ itemId, name, clientKey: null }); return;`. In `bringBack`,
@@ -1234,14 +1428,17 @@ export async function directSubmit(
   TriageUndoProvider ×2), each an `if (persisted === "needs_fallback")` with no `fetch` near it. `grep -rn "fetch(" src/features/sorting/{CompareChoice,TriageRound,TriageUndoProvider}.tsx src/features/sorting/useOptimisticRound.ts`
   should print nothing. Then run `npx vitest run src/features/sorting` and expect PASS (the existing
   fallback tests in `CompareChoice.test.tsx:504`, `SetAsideUndo.test.tsx` "storage-unavailable
-  fallback (F18)" and `TriageRound.test.tsx` all stay green unchanged).
+  fallback (F18)" and `TriageRound.test.tsx` all stay green unchanged). `useOptimisticRound`'s
+  fallback is already pinned through the real hook by `TriageRound.test.tsx` "a fallback that does
+  not land keeps the piece in place with a gentle line" (setItem throws → needs_fallback; fetch
+  `ok: false` → the stumble line; "Love — saved." never announced), so it gets no separate test.
 
 - [ ] **Step 7: Commit.**
 
 ```bash
 git add src/features/sorting/directSubmit.ts src/features/sorting/directSubmit.test.ts src/features/sorting/CompareChoice.tsx \
-  src/features/sorting/useOptimisticRound.ts src/features/sorting/TriageRound.tsx src/features/sorting/TriageUndoProvider.tsx \
-  src/features/sorting/decisionFlusher.ts
+  src/features/sorting/useOptimisticRound.ts src/features/sorting/TriageRound.tsx src/features/sorting/TriageRound.test.tsx \
+  src/features/sorting/TriageUndoProvider.tsx src/features/sorting/decisionFlusher.ts
 git commit -m "refactor(sort): one directSubmit for the storage-unavailable fallback (purses-w7ss.9)"
 ```
 
@@ -1275,21 +1472,32 @@ git commit -m "ci(e2e): sort-area changes also run lists-and-home (purses-w7ss.1
 
 ## Task 9: Align `eslint-config-next` with `next` (`purses-ejvl`)
 
-**Files:** `package.json`, `package-lock.json`.
+**Files:** `package.json`, `package-lock.json`, `src/features/onboarding/WalkthroughShell.tsx`
+(one disable comment).
 
 - [ ] **Step 1:** `npm install -D eslint-config-next@^16.3.8`.
 - [ ] **Step 2:** Verify:
   `grep -n '"eslint-config-next"' package.json` → `"^16.3.8"`;
   `grep -n '"node_modules/eslint-config-next"' -A1 package-lock.json` → `"version": "16.3.8"`;
   `git diff --stat` → only `package.json` and `package-lock.json`.
-- [ ] **Step 3:** Run `npm run lint`; expect it clean. If the new config raises findings, fix
-  them in place only when the fix is mechanical and behaviour-free. Otherwise stop and report the
-  rule names (do not disable rules). Then run `npm run build` and expect success. The
+- [ ] **Step 3:** The upgraded config flags `WalkthroughShell.tsx:74`
+  (`window.location.assign("/collections")`), which is deliberate. Add, directly above it
+  (precedent: the `eslint-disable-next-line` at `PoolPhotoGrid.tsx:187`):
+
+```tsx
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- deliberate full navigation so the server re-runs the /welcome gate (purses-etv0)
+```
+
+  If lint does not flag that line, do not add the comment (an unused directive is itself a
+  warning). Run `npm run lint` and expect exactly today's baseline: **0 errors, 1 warning** (the
+  pre-existing `@next/next/no-img-element` in `src/__mocks__/next-image.tsx`). Any other new
+  finding: fix it in place only when the fix is mechanical and behaviour-free; otherwise stop and
+  report the rule names (no other disables). Then run `npm run build` and expect success. The
   `osv-scanner.toml` `braces` entry stays (Decision 12).
 - [ ] **Step 4: Commit.**
 
 ```bash
-git add package.json package-lock.json
+git add package.json package-lock.json src/features/onboarding/WalkthroughShell.tsx
 git commit -m "chore(deps): eslint-config-next ^16.3.8 to match next (purses-ejvl)"
 ```
 
@@ -1352,8 +1560,8 @@ git commit -m "chore(deps): eslint-config-next ^16.3.8 to match next (purses-ejv
   `ux-redesign-pr1-lessons`). Check that the pool bar has the hairline edge and shadow, and does not
   cover the last tile in the viewport shot. On the archived card, the Bring back pill's edge must
   meet the name's edge and stay inside the card. The danger rim should read as sober, not loud, in
-  both themes. On the phone ranking, a small ordinal shows, and the pin-off glyph reads as
-  "unpin". The dots show one wider current dot. The placeholder glyphs on the collections and pool
+  both themes. On the phone ranking, a small ordinal shows, and "Unpin" fits beside a readable
+  name. On the archived card, the busy pill reads "One moment…" on one line. The dots show one wider current dot. The placeholder glyphs on the collections and pool
   previews must not shout in dark mode. A full-page phone shot paints the fixed bar at the fold
   (memory `phone-fullpage-capture-fixed-bar-artifact`); judge the bar from `pool-selected` (a
   viewport shot). There is no dialog scrim to capture (Decision 1).
@@ -1367,22 +1575,25 @@ git commit -m "chore(deps): eslint-config-next ^16.3.8 to match next (purses-ejv
 ## Self-review
 
 **Bead coverage.** `.4` → Task 1 (all ten tints; there is no scrim to tokenise, see Decision 1).
-`.13` → Task 2 (z-30, blur-md, shadow-lift, hairline edge, static when short, `mb-0`; it
+`.13` → Task 2 (z-30, blur-md, shadow-lift, hairline edge, static when short; no `mb-0`, as the bar is
+the `space-y` stack's last child; it
 doesn't reuse `ActionBar`, per Decision 6, and the phone + tablet geometry runs in CI). `.17` →
-Task 3. `.11` → Task 4 (UX4 `scrollWidth`, phone ordinal, Unpin glyph, replay seeds pins, dead
-`ci.yml` path) + Task 5 (hold after 409, `auth_required` mid-round, `PendingNotices` live region):
+Task 3. `.11` → Task 4 (UX4 `scrollWidth`, phone ordinal, Unpin word, replay seeds pins, dead
+`ci.yml` path) + Task 5a/5b (sticky notices, hold after 409, `auth_required` mid-round with Sign in, Reload,
+`PendingNotices` live region):
 all eight items. `.9` → Task 6 (dead `session` arms, `getDraftResult`; `updateResultName` skipped
 per the bead note) + Task 7 (the `needs_fallback` copies → `directSubmit`). `.15` → Task 8.
 `purses-ejvl` → Task 9. Docs/gates/screenshots → Task 10.
 
 **Placeholder scan.** No TBD. Every code step carries its code. The two conditional branches
-(Task 3 Step 4's busy-label fallback; Task 5 Step 7's `getByRole("status")` ambiguity) name the
-exact edit to make.
+(Task 9 Step 3's disable comment only if lint flags the line; Task 5 Step 11's
+`getByRole("status")` ambiguity) name the exact edit to make.
 
 **Type consistency.** `Card variant "danger"` (Task 1) is used by both delete sections.
 `AsyncActionButton variant "secondary"` (Task 3) is used by `BringBackButton`.
-`AUTH_REQUIRED_NOTICE` (Task 5) is imported by `pendingNotices.test.tsx` and
-`PendingDecisionsGate.test.tsx`. `DecisionControls({ onDecision, decisions, priorAnswer })`,
+`AUTH_REQUIRED_NOTICE` (Task 5a) is imported by `pendingNotices.test.tsx` and
+`PendingDecisionsGate.test.tsx`; `dismissNotice` and the `session_conflict` `sessionId` (5a) are
+used by `pendingNotices.tsx`, `CompareChoice.tsx` and both notice tests. `DecisionControls({ onDecision, decisions, priorAnswer })`,
 `DeferControl({ onDecision })` and `SetAsideButton({ onDecision })` (Task 6) match every caller
 edited in Task 6. `directSubmit({ sessionId, collectionId }, entry)` (Task 7) runs after Task 6
 deletes `defer`, so it replaces exactly five copies (four awaited, plus `TriageRound`'s
