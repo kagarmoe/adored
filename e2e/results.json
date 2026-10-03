@@ -18,24 +18,24 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2e015fc97507b3b5e8324aa15620528cd15ae404",
-        "commitHash": "2e015fc97507b3b5e8324aa15620528cd15ae404",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/36992250837"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/6d7eeb1f78999b91059140dac3867b57a1cefca0",
+        "commitHash": "6d7eeb1f78999b91059140dac3867b57a1cefca0",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37097670994"
       },
       "gitCommit": {
-        "shortHash": "2e015fc",
-        "hash": "2e015fc97507b3b5e8324aa15620528cd15ae404",
-        "subject": "feat(sort): one sort path, live Ranking with pins, atomic Save and share (UX redesign PR 2) (#370)",
-        "body": "feat(sort): one sort path, live Ranking with pins, atomic Save and share (UX redesign PR 2) (#370)\n\n* docs: PR 2 sort plan; handoff after PR 1 merge\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): compare and rank over Love + Like; ranking orders by tier first\n\nselectComparableItems now returns live Love/Like (top/high) pieces, shared by\nselectNextPair and deriveOrderRanks so pair selection and order derivation\nagree. selectNextPair drops dispositionByItemId (disposed <=> untriaged, so a\ndisposed piece is never comparable). rankPreferencesToItems sorts tier first,\nthen orderRank (nulls last), then itemId.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* docs: fold pre-flight rulings into the PR 2 plan\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): phase chooser — feelings then pairs, numberless progress counts\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(ranking): pins hold their slot; one ranking builder for page and save\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(ranking): pins open the one draft lazily; every draft writer holds the curator lock\n\nPUT|DELETE /api/collections/[id]/ranking/pins/[itemId] hand-place a piece in\nthe caller's one open draft. Pin, unpin, the legacy create and revision all\nrun in one transaction under the (collection, curator) advisory lock; the\nprior draft is reaped inside that transaction before the insert.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(db): one open draft per collection and curator; save key for idempotent save\n\nMigration 0003 adds sort_results.save_key and two partial unique indexes\n(sort_results_open_draft_unique, sort_results_save_key_unique). A reviewed\ndata step (amends spec §6) keeps only the newest open draft per\n(collection, curator) so the open-draft index builds on production data.\nHash pinned in scripts/migration-hashes.test.ts. DB tests that seeded two\ndrafts for one (collection, curator) now seed a finalized row or a second\ncurator instead.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* fix(db): 0003 data step also removes shares of the dropped duplicate drafts\n\nsort_result_shares has no ON DELETE CASCADE, so a share on a doomed draft\nwould fail the DELETE and block the deploy. Shares go first, same\npartition as items and results; the surviving draft's shares stay.\nHash re-pinned.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(ranking): save and share in one idempotent transaction\n\nPOST /api/collections/[id]/ranking/save rebuilds the caller's open draft\nfrom the live ranking, finalizes it, closes the open session and creates\nthe share link in one transaction under the curator lock. Idempotent on\nsaveKey: a replay returns 200 with the same link; a key reused in another\ncollection is 409, as is an empty ranking.\n\nAlso: legacy finalize/delete hold the curator lock (delete re-asserts\ndraft status under it); reaping drafts removes their shares first;\nfindDraft orders like findDraftForUpdate and the 0003 tie-break;\nPinTargetError copy no longer implies the piece is unranked.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): Start/Keep sorting and Pause\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* fix(ranking): save key lock, revoked-link replay test, conflict copy\n\nsaveAndShare takes a (curator, saveKey) advisory lock first so the same\nkey in two collections serializes to a 409 instead of a 500. Adds a unit\ntest for the revoked-link replay 409 and asserts the cross-collection 409\nwrites nothing. SaveKeyConflictError copy fits both triggers.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* docs: handoff — PR 2 state at session end\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): one Sort screen — feelings then pairs; retire the round pages, timer and hub\n\nThe Sort page now resolves the curator's open sort and shows one phase at a\ntime via chooseSortPhase: feelings (TriageRound, persist-before-advance, Undo\nnames the last answer, numberless SortProgress), then pairs over Love + Like\n(?phase=pairs hand-off after the queue drains), then a quiet end. The round\npages, StartSessionForm, the hub and the timer/what-moved stack are retired;\nold links guard-then-308 to /sort (set-aside to /results).\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* chore(design): drop the round-timer ring tokens\n\nThe timer ring is gone with the round pages, so its sweep/track tokens, their\ncontrast pin and the DESIGN.md bullet go too. The ink-on-surface-raised pair\nstays, relabelled for what it is.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* test(sort): say what the disposed-piece DB test proves; drop a duplicate bucket test\n\nDisposition is no longer on the compare path: a disposed piece is untriaged and\nso outside Love + Like. The DB test is renamed and retitled to say so and reads\nthe Sort screen's curator-wide decisions. The bucket filter is asserted once, in\ncompare-selection.test.ts.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* fix(sort): Keep sorting guards double taps; busy state is announced\n\nKeepSortingButton reuses AsyncActionButton (ref in-flight guard, busy\nlabel, gentle notice). AsyncActionButton sets aria-busy and drops the\nstatic aria-label while busy so \"Just a moment…\" is what is announced.\nPauseControl tests now prove one PATCH per double tap and cover a\nrejected pause.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(sort): Resume a paused sort on load; remount feelings on a new queue; refresh on Start sorting\n\n- ResumeOnLoad client island PATCHes a paused session active on mount\n  (never during the server render, where a prefetch would un-pause it).\n- The page keys TriageRound by the server queue so a resurfacing piece\n  after the hand-off is shown instead of stranding on \"Just a moment…\".\n- KeepSortingButton refreshes after push: Start sorting lives on /sort itself.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(sort): pairs — transition line and Undo\n\nUndo re-presents the last pair with its answer selected (aria-pressed);\na new tap supersedes it with a fresh clientKey, Keep going leaves it.\n\"Now, between these two…\" shows until the first answer lands. The\ncomparison count is gone; a skip is \"skipped for now\".\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(sort): pair-scoped clientKeys; Undo/Keep going keep focus and announce\n\nA revisit could reuse another pair's unacked clientKey (the slot named only\nthe choice), so the server would drop the new answer; the key slot now names\nthe pair. Undo and Keep going are one button that swaps, so focus stays put,\nand the pair change is announced. The Undo test uses distinct ids for the\nnext pair so it fails if the revisit decision came from current props.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(ranking): the live Ranking — hand moves, Still deciding, Set aside, Save and share\n\nThe results page is now the live Ranking: read-only on view, hand moves pin\none piece through the pins API, Still deciding and a collapsed Set aside row\n(Bring back), and one quiet Save and share. A draft result redirects to it; a\nsaved result offers Make a revision. Set aside and Finalize pages become\nguarded permanent redirects; Rerank/Finalize/standing are retired.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* test(sort): a revisit never reuses another pair's unacked clientKey\n\nDrives the reachable path un-mocked: pair X's revisit answer is left unacked\n(slow ack), pair Y lands via the not-persisted fallback POST, then a\nsame-choice revisit of Y must POST Y's decision under a fresh key.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(ranking): visible move failures, focus kept on moves, usage notes, page test\n\n- RankingList shows the gentle failure on screen (not only to screen\n  readers); move buttons stay enabled (a ref guards double taps) and focus\n  returns to the moved piece's button after the list reorders. Unpin dims\n  when disabled.\n- Onward and Still deciding cards keep the quiet usage note.\n- SaveAndShare: a 409 says the earlier link is no longer active and mints a\n  fresh key, so the next Save can succeed.\n- A render-level test for the live Ranking page carries the DATA-6 guard.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* refactor(results): retire the legacy hand-order writers\n\nThe live Ranking's pins are the only hand order now. The bulk re-rank and\nper-item manual-override routes (items PATCH/DELETE, items/[rid] PATCH,\nitems/[rid]/reset) wrote manualRank outside the curator lock and could\noverwrite a pin; their only UI (RerankPanel) is gone. Remove them with the\nservice methods, errors and repository helper only they used, and their\ntests and authz-enumeration rows. Reading result items (GET) and removing\none from a draft (DELETE items/[rid]) stay.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(ranking): failure notice is a standing live region; Unpin keeps focus\n\nThe visible notice is always mounted (empty when idle), so screen readers\nannounce a failed move or unpin when the text lands. Unpin no longer\ndisables itself mid-request (the in-flight ref guards it); after the\nrefresh removes it, focus lands on that piece's move button.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(home): one Start / Keep sorting action; retire the session panel\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(onboarding): teach the two phases; remove the timers tutorial\n\nThe walkthrough now runs purpose -> feelings -> pairs (Love + Like only)\n-> ranking -> hand-off, matching the real Sort. The usage, round-standing\nand refine beats, the /tutorials/timers route, and rerank-copy are gone;\nROUND_COPY narrows to triage + compare and TutorialSlug to three slugs.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — PR 2 Tasks 7–12 complete, T13 in flight\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* test(e2e): sort journey replaces fourteen specs; CI map and screenshots follow\n\nOne un-mocked journey (start → feelings with Undo / Not yet twice / Not mine →\npairs with Undo → end → ranking with Still deciding, Set aside + Bring back, a\npinned move surviving reload → save and share → the link opens signed out)\nreplaces the fourteen specs that drove retired screens. a11y, sort-images and\nthe welcome walk point at the shipped surfaces; ci.yml maps sort/results/auth\nchanges to the journey; capture.ts shoots the new sort and ranking states.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: ranking API and decision 42; sync docs for PR 2\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(ranking): moves splice dense pins; pins survive a save; drop the unlocked item delete\n\n- placePin: a hand move rewrites the pins it passes, so a fully pinned list\n  (after Make a revision) shifts instead of wrapping (AR1)\n- saveAndShare carries only the explicit pins into a fresh open draft in the\n  same transaction (AR3); 409 bodies carry a code (nothing_to_save /\n  save_key_conflict) for the client (AR5 server side)\n- deleteResult takes the draft's shares first (DP1); the per-item DELETE\n  route and deleteResultItem are gone (SEC1); lock-coverage wording narrowed\n  in schema.ts, API.md, DATABASE.md, ARCHITECTURE.md (AR6, SEC2)\n- applyPins is generic (no dead lookup), loved entries typed LovedBucket,\n  savedOrderPositions 0-based, inCuratorTx reuses allocateWithRetry\n  (CR2, CR3, CR6 OPEN_DRAFT_NAME, CR8)\n- tests: placePin acceptance cases, wrap-around, dense-move and pins-survive\n  DB tests, lockSaveKey taken, ZodError assertions, dedupe toHaveLength(3)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(results): save keeps focus and pins, phone-width rows, named Bring back\n\n- SaveAndShare lands queued answers first (AR4), refreshes after a save so\n  carried pins show (AR3), tells nothing-to-save from link-gone by the 409\n  code (AR5/QA5), and moves focus with each step: Name on open, the opener on\n  Not now, the Saved heading after; the status region is always mounted (UX3)\n- RankingList: grip and ordinal give way below sm, smaller thumbnail, Unpin\n  icon-only on phone so a pinned name never truncates to an ellipsis (UX4);\n  tests for the double-tap guard, drag-drop and a failed Unpin (QA4)\n- Bring back names its piece and hands focus to the next row, or the\n  Ranking heading when it was the last (UX8)\n- Set aside summary gets the rotating chevron (GD3); the empty Ranking says\n  Keep sorting while a sort is open; home shows See your ranking only after a\n  placed piece or a finished sort (UX9) and a paused-sort case (QA9)\n- Keep sorting is full width on phone again (GD2); one BUCKET_LABELS map\n  (CR7)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(sort): focus and voice stay with the person; visible progress track\n\n- Feelings: Undo and Keep going are one control that swaps in place, the\n  revisit is announced, and undoing the only queued answer lands on the\n  question (UX1); \"saved\" is announced only once the answer holds and the\n  progress count is no longer a second live region (UX6)\n- Pairs: controls stay enabled while an answer saves (aria-disabled + a tap\n  guard) so focus never drops (UX2); PendingNotices is mounted; a rejected\n  ack offers no Undo and claims no choice; a sort closed elsewhere (409)\n  clears the slow line and says so (AR2); the hand-off line sits above the\n  question and stops once a pair answer landed (UX7); the ending heading\n  takes focus (UX5)\n- Progress track gets a track-token edge (>= 3:1 on ground) with contrast\n  rows and a DESIGN.md line (GD1); selected rings offset on ground, not\n  white (GD4); both phase questions share text-2xl sm:text-3xl (GD5)\n- useOptimisticRound is triage-only (CR4); CompareChoice drops dead exports,\n  the session guard and the optional collectionId (CR6); WHY comment on the\n  progress denominator, deferred-piece and 409 tests (QA8)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* refactor: one deriveOrder for the next pair; dead code and stale comments out\n\n- chooseSortPhase takes order and next pair from one deriveOrder call;\n  pairwise-selection.ts is gone, its two distinct tests live in\n  sort-phase.test.ts and the disposed-piece DB test drives chooseSortPhase (CR1)\n- selectTriageItem and its tests, ROUND_COPY names, the redundant finalized\n  check on a saved ranking go (CR6); stale comments fixed in roundCopy, the\n  Welcome beats, AppLayout, triage-selection, derive-usage and\n  SortResultRepository (CR5)\n- tautology tests deleted (compare sub-line, explainer verbatim, compare pair)\n- ARCHITECTURE.md names chooseSortPhase where selectNextPair was\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* test(e2e): port crash-reload and pagehide recovery to the Sort screen; journey checks the saved order\n\n- e2e/decision-recovery.spec.ts: queued answers survive a crash (the gate\n  drains them in order before the screen renders) and a pagehide delivers a\n  queued answer, both un-mocked on /collections/[id]/sort; in the CI sort\n  area map (QA1)\n- sort-journey: the shared page leads with the piece moved to the top (QA2);\n  the photo check waits for the token-scoped request instead of asserting a\n  stubbed 200 (QA3); the pin survives Save (AR3); a pinned row's name wraps,\n  never clips, at phone width (UX4)\n- RankingList names wrap to two lines instead of truncating\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* chore(graph): refresh the knowledge graph for PR 2\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — PR 2 open as #370\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — #370 CI green, merge awaits owner\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n---------\n\nCo-authored-by: Claude Fable 5.1 <noreply@anthropic.com>",
+        "shortHash": "6d7eeb1",
+        "hash": "6d7eeb1f78999b91059140dac3867b57a1cefca0",
+        "subject": "feat(lists): collections grid, home-as-grid, phone action bar (UX redesign PR 3) (#371)",
+        "body": "feat(lists): collections grid, home-as-grid, phone action bar (UX redesign PR 3) (#371)\n\n* docs: handoff — PR 2 merged, PR 3 started\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — session 3 end: swamp prod fix + PR 3 resume steps\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* chore(skills): /adored-revamp — the redesign's charter and resume protocol\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: PR 3 lists-and-home plan\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 plan committed\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: PR 3 plan — fold plan-review findings\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 plan reviewed and folded\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* refactor(ui): FilterPills primitive with the shared CheckIcon; item pills take the list path\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(collections): list rules — All (not archived)/Archived views, plain-text search, gentle empty states\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(collections): owner ··· on cards (settings, members, archive, bring back); ArchivedNotice builds its own restore URL\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* refactor(ui): viewHref moves to a pure module; collectionsList no longer imports a .tsx\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(collections): searchable cover-card grid with All/Archived pills and a phone action bar\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(items): ArchivedNotice renders nothing for a non-id — defense in depth behind each page's check\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(home): the collection home is the items grid — Start sorting with Add photos beside it\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* refactor(items): drop the unused listItems limit option; release the action-bar reserve on short viewports\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(home): access denied reads neither preferences nor covers\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(items): retire the items list — 308 home with view and query; links and crumbs follow\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 tasks 1–6 landed\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(e2e): lists-and-home journey with the phone bar; CI map follows\n\nReplaces adaptive-collection-workspace.spec.ts: the collections grid\n(search, Archive with Undo, Archived, Bring back), the home as the items\ngrid with its three primaries, the phone bar's geometry at iPhone width,\nkeyboard order, and the two wayfinding tests carried over verbatim.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(e2e): neighbours and screenshot surfaces follow the items list into the home\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(layout): the fixed phone action bar ignores its stack's bottom margin\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: action bar, lists and home (decision 43)\n\nDESIGN §5 gains the Action bar; cards and wayfinding follow PR 3.\nARCHITECTURE: decision 23 superseded in part; decision 43 appended.\nFEATURES: the item undo lands on the collection home.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(db): pin item createdAt in decision-batch case 4 (orderRank tie was a coin flip)\n\nRoot cause: orderRank comes from the insertion engine's canonical sequence\n(compareByCreatedAtThenId), not from score. seedSession creates items in a\nfast loop with JS ms createdAt, so \"top\" and \"high\" could share a millisecond\nand fall back to ULID's random suffix, placing rank 0 on a different bucket in\nthe two compared collections. Pre-existing flake (reproduced 1/12 with the\nfile alone), not a branch regression. Seed distinct createdAt values instead.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(lists): newest-first list order, trimmed query, focus after Undo, quieter empty lists\n\n- findByOwnerOrMember orders by created_at desc, id asc (deterministic grid)\n- queryFrom trims and caps ?q= on both lists and the retired items redirect\n- search and pills hide until there is anything to list\n- Undo/Done hand focus to the page h1; notices get a visible focus ring\n- archived item name wraps to two lines; bar top edge is hairline\n- phone scroll padding media query in rem; margin reset scoped to tall viewports\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(lists): real geometry over class pins, primary-text contrast, focused Brought back\n\n- drop AppLayout/ActionBar class-string pins; e2e checks the short-viewport static bar\n- e2e asserts the Brought back line is visible and focused\n- contrast: primary text on surface at 4.5\n- settings menu asserts /edit; drop can't-fail and duplicate lines; stale comments\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: hairline bar edge; decision 43 covers ?restored= and the cover read\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 fix wave landed\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* chore(graph): refresh after PR 3\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 open as #371\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(home): hide See your ranking on phone so the first card row stays above the bar\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 ready for review; CI blocked on osv advisory (owner call)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* chore(ci): ignore GHSA-vfj7-8cjw-p6xm (braces, dev-only lint tooling, no fix yet) until 2026-11-02\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n---------\n\nCo-authored-by: Claude Fable 5.1 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1790934725000
+          "time": 1791002804000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1790934725000
+          "time": 1791002804000
         },
         "branch": "main"
       },
@@ -49,24 +49,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2e015fc97507b3b5e8324aa15620528cd15ae404",
-            "commitHash": "2e015fc97507b3b5e8324aa15620528cd15ae404",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/36992250837"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/6d7eeb1f78999b91059140dac3867b57a1cefca0",
+            "commitHash": "6d7eeb1f78999b91059140dac3867b57a1cefca0",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37097670994"
           },
           "gitCommit": {
-            "shortHash": "2e015fc",
-            "hash": "2e015fc97507b3b5e8324aa15620528cd15ae404",
-            "subject": "feat(sort): one sort path, live Ranking with pins, atomic Save and share (UX redesign PR 2) (#370)",
-            "body": "feat(sort): one sort path, live Ranking with pins, atomic Save and share (UX redesign PR 2) (#370)\n\n* docs: PR 2 sort plan; handoff after PR 1 merge\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): compare and rank over Love + Like; ranking orders by tier first\n\nselectComparableItems now returns live Love/Like (top/high) pieces, shared by\nselectNextPair and deriveOrderRanks so pair selection and order derivation\nagree. selectNextPair drops dispositionByItemId (disposed <=> untriaged, so a\ndisposed piece is never comparable). rankPreferencesToItems sorts tier first,\nthen orderRank (nulls last), then itemId.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* docs: fold pre-flight rulings into the PR 2 plan\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): phase chooser — feelings then pairs, numberless progress counts\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(ranking): pins hold their slot; one ranking builder for page and save\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(ranking): pins open the one draft lazily; every draft writer holds the curator lock\n\nPUT|DELETE /api/collections/[id]/ranking/pins/[itemId] hand-place a piece in\nthe caller's one open draft. Pin, unpin, the legacy create and revision all\nrun in one transaction under the (collection, curator) advisory lock; the\nprior draft is reaped inside that transaction before the insert.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(db): one open draft per collection and curator; save key for idempotent save\n\nMigration 0003 adds sort_results.save_key and two partial unique indexes\n(sort_results_open_draft_unique, sort_results_save_key_unique). A reviewed\ndata step (amends spec §6) keeps only the newest open draft per\n(collection, curator) so the open-draft index builds on production data.\nHash pinned in scripts/migration-hashes.test.ts. DB tests that seeded two\ndrafts for one (collection, curator) now seed a finalized row or a second\ncurator instead.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* fix(db): 0003 data step also removes shares of the dropped duplicate drafts\n\nsort_result_shares has no ON DELETE CASCADE, so a share on a doomed draft\nwould fail the DELETE and block the deploy. Shares go first, same\npartition as items and results; the surviving draft's shares stay.\nHash re-pinned.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(ranking): save and share in one idempotent transaction\n\nPOST /api/collections/[id]/ranking/save rebuilds the caller's open draft\nfrom the live ranking, finalizes it, closes the open session and creates\nthe share link in one transaction under the curator lock. Idempotent on\nsaveKey: a replay returns 200 with the same link; a key reused in another\ncollection is 409, as is an empty ranking.\n\nAlso: legacy finalize/delete hold the curator lock (delete re-asserts\ndraft status under it); reaping drafts removes their shares first;\nfindDraft orders like findDraftForUpdate and the 0003 tie-break;\nPinTargetError copy no longer implies the piece is unranked.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): Start/Keep sorting and Pause\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* fix(ranking): save key lock, revoked-link replay test, conflict copy\n\nsaveAndShare takes a (curator, saveKey) advisory lock first so the same\nkey in two collections serializes to a 409 instead of a 500. Adds a unit\ntest for the revoked-link replay 409 and asserts the cross-collection 409\nwrites nothing. SaveKeyConflictError copy fits both triggers.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* docs: handoff — PR 2 state at session end\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): one Sort screen — feelings then pairs; retire the round pages, timer and hub\n\nThe Sort page now resolves the curator's open sort and shows one phase at a\ntime via chooseSortPhase: feelings (TriageRound, persist-before-advance, Undo\nnames the last answer, numberless SortProgress), then pairs over Love + Like\n(?phase=pairs hand-off after the queue drains), then a quiet end. The round\npages, StartSessionForm, the hub and the timer/what-moved stack are retired;\nold links guard-then-308 to /sort (set-aside to /results).\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* chore(design): drop the round-timer ring tokens\n\nThe timer ring is gone with the round pages, so its sweep/track tokens, their\ncontrast pin and the DESIGN.md bullet go too. The ink-on-surface-raised pair\nstays, relabelled for what it is.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* test(sort): say what the disposed-piece DB test proves; drop a duplicate bucket test\n\nDisposition is no longer on the compare path: a disposed piece is untriaged and\nso outside Love + Like. The DB test is renamed and retitled to say so and reads\nthe Sort screen's curator-wide decisions. The bucket filter is asserted once, in\ncompare-selection.test.ts.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* fix(sort): Keep sorting guards double taps; busy state is announced\n\nKeepSortingButton reuses AsyncActionButton (ref in-flight guard, busy\nlabel, gentle notice). AsyncActionButton sets aria-busy and drops the\nstatic aria-label while busy so \"Just a moment…\" is what is announced.\nPauseControl tests now prove one PATCH per double tap and cover a\nrejected pause.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(sort): Resume a paused sort on load; remount feelings on a new queue; refresh on Start sorting\n\n- ResumeOnLoad client island PATCHes a paused session active on mount\n  (never during the server render, where a prefetch would un-pause it).\n- The page keys TriageRound by the server queue so a resurfacing piece\n  after the hand-off is shown instead of stranding on \"Just a moment…\".\n- KeepSortingButton refreshes after push: Start sorting lives on /sort itself.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(sort): pairs — transition line and Undo\n\nUndo re-presents the last pair with its answer selected (aria-pressed);\na new tap supersedes it with a fresh clientKey, Keep going leaves it.\n\"Now, between these two…\" shows until the first answer lands. The\ncomparison count is gone; a skip is \"skipped for now\".\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(sort): pair-scoped clientKeys; Undo/Keep going keep focus and announce\n\nA revisit could reuse another pair's unacked clientKey (the slot named only\nthe choice), so the server would drop the new answer; the key slot now names\nthe pair. Undo and Keep going are one button that swaps, so focus stays put,\nand the pair change is announced. The Undo test uses distinct ids for the\nnext pair so it fails if the revisit decision came from current props.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(ranking): the live Ranking — hand moves, Still deciding, Set aside, Save and share\n\nThe results page is now the live Ranking: read-only on view, hand moves pin\none piece through the pins API, Still deciding and a collapsed Set aside row\n(Bring back), and one quiet Save and share. A draft result redirects to it; a\nsaved result offers Make a revision. Set aside and Finalize pages become\nguarded permanent redirects; Rerank/Finalize/standing are retired.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* test(sort): a revisit never reuses another pair's unacked clientKey\n\nDrives the reachable path un-mocked: pair X's revisit answer is left unacked\n(slow ack), pair Y lands via the not-persisted fallback POST, then a\nsame-choice revisit of Y must POST Y's decision under a fresh key.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(ranking): visible move failures, focus kept on moves, usage notes, page test\n\n- RankingList shows the gentle failure on screen (not only to screen\n  readers); move buttons stay enabled (a ref guards double taps) and focus\n  returns to the moved piece's button after the list reorders. Unpin dims\n  when disabled.\n- Onward and Still deciding cards keep the quiet usage note.\n- SaveAndShare: a 409 says the earlier link is no longer active and mints a\n  fresh key, so the next Save can succeed.\n- A render-level test for the live Ranking page carries the DATA-6 guard.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* refactor(results): retire the legacy hand-order writers\n\nThe live Ranking's pins are the only hand order now. The bulk re-rank and\nper-item manual-override routes (items PATCH/DELETE, items/[rid] PATCH,\nitems/[rid]/reset) wrote manualRank outside the curator lock and could\noverwrite a pin; their only UI (RerankPanel) is gone. Remove them with the\nservice methods, errors and repository helper only they used, and their\ntests and authz-enumeration rows. Reading result items (GET) and removing\none from a draft (DELETE items/[rid]) stay.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(ranking): failure notice is a standing live region; Unpin keeps focus\n\nThe visible notice is always mounted (empty when idle), so screen readers\nannounce a failed move or unpin when the text lands. Unpin no longer\ndisables itself mid-request (the in-flight ref guards it); after the\nrefresh removes it, focus lands on that piece's move button.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(home): one Start / Keep sorting action; retire the session panel\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(onboarding): teach the two phases; remove the timers tutorial\n\nThe walkthrough now runs purpose -> feelings -> pairs (Love + Like only)\n-> ranking -> hand-off, matching the real Sort. The usage, round-standing\nand refine beats, the /tutorials/timers route, and rerank-copy are gone;\nROUND_COPY narrows to triage + compare and TutorialSlug to three slugs.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — PR 2 Tasks 7–12 complete, T13 in flight\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* test(e2e): sort journey replaces fourteen specs; CI map and screenshots follow\n\nOne un-mocked journey (start → feelings with Undo / Not yet twice / Not mine →\npairs with Undo → end → ranking with Still deciding, Set aside + Bring back, a\npinned move surviving reload → save and share → the link opens signed out)\nreplaces the fourteen specs that drove retired screens. a11y, sort-images and\nthe welcome walk point at the shipped surfaces; ci.yml maps sort/results/auth\nchanges to the journey; capture.ts shoots the new sort and ranking states.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: ranking API and decision 42; sync docs for PR 2\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(ranking): moves splice dense pins; pins survive a save; drop the unlocked item delete\n\n- placePin: a hand move rewrites the pins it passes, so a fully pinned list\n  (after Make a revision) shifts instead of wrapping (AR1)\n- saveAndShare carries only the explicit pins into a fresh open draft in the\n  same transaction (AR3); 409 bodies carry a code (nothing_to_save /\n  save_key_conflict) for the client (AR5 server side)\n- deleteResult takes the draft's shares first (DP1); the per-item DELETE\n  route and deleteResultItem are gone (SEC1); lock-coverage wording narrowed\n  in schema.ts, API.md, DATABASE.md, ARCHITECTURE.md (AR6, SEC2)\n- applyPins is generic (no dead lookup), loved entries typed LovedBucket,\n  savedOrderPositions 0-based, inCuratorTx reuses allocateWithRetry\n  (CR2, CR3, CR6 OPEN_DRAFT_NAME, CR8)\n- tests: placePin acceptance cases, wrap-around, dense-move and pins-survive\n  DB tests, lockSaveKey taken, ZodError assertions, dedupe toHaveLength(3)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(results): save keeps focus and pins, phone-width rows, named Bring back\n\n- SaveAndShare lands queued answers first (AR4), refreshes after a save so\n  carried pins show (AR3), tells nothing-to-save from link-gone by the 409\n  code (AR5/QA5), and moves focus with each step: Name on open, the opener on\n  Not now, the Saved heading after; the status region is always mounted (UX3)\n- RankingList: grip and ordinal give way below sm, smaller thumbnail, Unpin\n  icon-only on phone so a pinned name never truncates to an ellipsis (UX4);\n  tests for the double-tap guard, drag-drop and a failed Unpin (QA4)\n- Bring back names its piece and hands focus to the next row, or the\n  Ranking heading when it was the last (UX8)\n- Set aside summary gets the rotating chevron (GD3); the empty Ranking says\n  Keep sorting while a sort is open; home shows See your ranking only after a\n  placed piece or a finished sort (UX9) and a paused-sort case (QA9)\n- Keep sorting is full width on phone again (GD2); one BUCKET_LABELS map\n  (CR7)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(sort): focus and voice stay with the person; visible progress track\n\n- Feelings: Undo and Keep going are one control that swaps in place, the\n  revisit is announced, and undoing the only queued answer lands on the\n  question (UX1); \"saved\" is announced only once the answer holds and the\n  progress count is no longer a second live region (UX6)\n- Pairs: controls stay enabled while an answer saves (aria-disabled + a tap\n  guard) so focus never drops (UX2); PendingNotices is mounted; a rejected\n  ack offers no Undo and claims no choice; a sort closed elsewhere (409)\n  clears the slow line and says so (AR2); the hand-off line sits above the\n  question and stops once a pair answer landed (UX7); the ending heading\n  takes focus (UX5)\n- Progress track gets a track-token edge (>= 3:1 on ground) with contrast\n  rows and a DESIGN.md line (GD1); selected rings offset on ground, not\n  white (GD4); both phase questions share text-2xl sm:text-3xl (GD5)\n- useOptimisticRound is triage-only (CR4); CompareChoice drops dead exports,\n  the session guard and the optional collectionId (CR6); WHY comment on the\n  progress denominator, deferred-piece and 409 tests (QA8)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* refactor: one deriveOrder for the next pair; dead code and stale comments out\n\n- chooseSortPhase takes order and next pair from one deriveOrder call;\n  pairwise-selection.ts is gone, its two distinct tests live in\n  sort-phase.test.ts and the disposed-piece DB test drives chooseSortPhase (CR1)\n- selectTriageItem and its tests, ROUND_COPY names, the redundant finalized\n  check on a saved ranking go (CR6); stale comments fixed in roundCopy, the\n  Welcome beats, AppLayout, triage-selection, derive-usage and\n  SortResultRepository (CR5)\n- tautology tests deleted (compare sub-line, explainer verbatim, compare pair)\n- ARCHITECTURE.md names chooseSortPhase where selectNextPair was\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* test(e2e): port crash-reload and pagehide recovery to the Sort screen; journey checks the saved order\n\n- e2e/decision-recovery.spec.ts: queued answers survive a crash (the gate\n  drains them in order before the screen renders) and a pagehide delivers a\n  queued answer, both un-mocked on /collections/[id]/sort; in the CI sort\n  area map (QA1)\n- sort-journey: the shared page leads with the piece moved to the top (QA2);\n  the photo check waits for the token-scoped request instead of asserting a\n  stubbed 200 (QA3); the pin survives Save (AR3); a pinned row's name wraps,\n  never clips, at phone width (UX4)\n- RankingList names wrap to two lines instead of truncating\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* chore(graph): refresh the knowledge graph for PR 2\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — PR 2 open as #370\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — #370 CI green, merge awaits owner\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n---------\n\nCo-authored-by: Claude Fable 5.1 <noreply@anthropic.com>",
+            "shortHash": "6d7eeb1",
+            "hash": "6d7eeb1f78999b91059140dac3867b57a1cefca0",
+            "subject": "feat(lists): collections grid, home-as-grid, phone action bar (UX redesign PR 3) (#371)",
+            "body": "feat(lists): collections grid, home-as-grid, phone action bar (UX redesign PR 3) (#371)\n\n* docs: handoff — PR 2 merged, PR 3 started\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — session 3 end: swamp prod fix + PR 3 resume steps\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* chore(skills): /adored-revamp — the redesign's charter and resume protocol\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: PR 3 lists-and-home plan\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 plan committed\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: PR 3 plan — fold plan-review findings\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 plan reviewed and folded\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* refactor(ui): FilterPills primitive with the shared CheckIcon; item pills take the list path\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(collections): list rules — All (not archived)/Archived views, plain-text search, gentle empty states\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(collections): owner ··· on cards (settings, members, archive, bring back); ArchivedNotice builds its own restore URL\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* refactor(ui): viewHref moves to a pure module; collectionsList no longer imports a .tsx\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(collections): searchable cover-card grid with All/Archived pills and a phone action bar\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(items): ArchivedNotice renders nothing for a non-id — defense in depth behind each page's check\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(home): the collection home is the items grid — Start sorting with Add photos beside it\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* refactor(items): drop the unused listItems limit option; release the action-bar reserve on short viewports\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(home): access denied reads neither preferences nor covers\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(items): retire the items list — 308 home with view and query; links and crumbs follow\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 tasks 1–6 landed\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(e2e): lists-and-home journey with the phone bar; CI map follows\n\nReplaces adaptive-collection-workspace.spec.ts: the collections grid\n(search, Archive with Undo, Archived, Bring back), the home as the items\ngrid with its three primaries, the phone bar's geometry at iPhone width,\nkeyboard order, and the two wayfinding tests carried over verbatim.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(e2e): neighbours and screenshot surfaces follow the items list into the home\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(layout): the fixed phone action bar ignores its stack's bottom margin\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: action bar, lists and home (decision 43)\n\nDESIGN §5 gains the Action bar; cards and wayfinding follow PR 3.\nARCHITECTURE: decision 23 superseded in part; decision 43 appended.\nFEATURES: the item undo lands on the collection home.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(db): pin item createdAt in decision-batch case 4 (orderRank tie was a coin flip)\n\nRoot cause: orderRank comes from the insertion engine's canonical sequence\n(compareByCreatedAtThenId), not from score. seedSession creates items in a\nfast loop with JS ms createdAt, so \"top\" and \"high\" could share a millisecond\nand fall back to ULID's random suffix, placing rank 0 on a different bucket in\nthe two compared collections. Pre-existing flake (reproduced 1/12 with the\nfile alone), not a branch regression. Seed distinct createdAt values instead.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(lists): newest-first list order, trimmed query, focus after Undo, quieter empty lists\n\n- findByOwnerOrMember orders by created_at desc, id asc (deterministic grid)\n- queryFrom trims and caps ?q= on both lists and the retired items redirect\n- search and pills hide until there is anything to list\n- Undo/Done hand focus to the page h1; notices get a visible focus ring\n- archived item name wraps to two lines; bar top edge is hairline\n- phone scroll padding media query in rem; margin reset scoped to tall viewports\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(lists): real geometry over class pins, primary-text contrast, focused Brought back\n\n- drop AppLayout/ActionBar class-string pins; e2e checks the short-viewport static bar\n- e2e asserts the Brought back line is visible and focused\n- contrast: primary text on surface at 4.5\n- settings menu asserts /edit; drop can't-fail and duplicate lines; stale comments\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: hairline bar edge; decision 43 covers ?restored= and the cover read\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 fix wave landed\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* chore(graph): refresh after PR 3\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 open as #371\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(home): hide See your ranking on phone so the first card row stays above the bar\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 ready for review; CI blocked on osv advisory (owner call)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* chore(ci): ignore GHSA-vfj7-8cjw-p6xm (braces, dev-only lint tooling, no fix yet) until 2026-11-02\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n---------\n\nCo-authored-by: Claude Fable 5.1 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1790934725000
+              "time": 1791002804000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1790934725000
+              "time": 1791002804000
             },
             "branch": "main"
           },
@@ -87,24 +87,24 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/2e015fc97507b3b5e8324aa15620528cd15ae404",
-            "commitHash": "2e015fc97507b3b5e8324aa15620528cd15ae404",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/36992250837"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/6d7eeb1f78999b91059140dac3867b57a1cefca0",
+            "commitHash": "6d7eeb1f78999b91059140dac3867b57a1cefca0",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37097670994"
           },
           "gitCommit": {
-            "shortHash": "2e015fc",
-            "hash": "2e015fc97507b3b5e8324aa15620528cd15ae404",
-            "subject": "feat(sort): one sort path, live Ranking with pins, atomic Save and share (UX redesign PR 2) (#370)",
-            "body": "feat(sort): one sort path, live Ranking with pins, atomic Save and share (UX redesign PR 2) (#370)\n\n* docs: PR 2 sort plan; handoff after PR 1 merge\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): compare and rank over Love + Like; ranking orders by tier first\n\nselectComparableItems now returns live Love/Like (top/high) pieces, shared by\nselectNextPair and deriveOrderRanks so pair selection and order derivation\nagree. selectNextPair drops dispositionByItemId (disposed <=> untriaged, so a\ndisposed piece is never comparable). rankPreferencesToItems sorts tier first,\nthen orderRank (nulls last), then itemId.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* docs: fold pre-flight rulings into the PR 2 plan\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): phase chooser — feelings then pairs, numberless progress counts\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(ranking): pins hold their slot; one ranking builder for page and save\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(ranking): pins open the one draft lazily; every draft writer holds the curator lock\n\nPUT|DELETE /api/collections/[id]/ranking/pins/[itemId] hand-place a piece in\nthe caller's one open draft. Pin, unpin, the legacy create and revision all\nrun in one transaction under the (collection, curator) advisory lock; the\nprior draft is reaped inside that transaction before the insert.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(db): one open draft per collection and curator; save key for idempotent save\n\nMigration 0003 adds sort_results.save_key and two partial unique indexes\n(sort_results_open_draft_unique, sort_results_save_key_unique). A reviewed\ndata step (amends spec §6) keeps only the newest open draft per\n(collection, curator) so the open-draft index builds on production data.\nHash pinned in scripts/migration-hashes.test.ts. DB tests that seeded two\ndrafts for one (collection, curator) now seed a finalized row or a second\ncurator instead.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* fix(db): 0003 data step also removes shares of the dropped duplicate drafts\n\nsort_result_shares has no ON DELETE CASCADE, so a share on a doomed draft\nwould fail the DELETE and block the deploy. Shares go first, same\npartition as items and results; the surviving draft's shares stay.\nHash re-pinned.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(ranking): save and share in one idempotent transaction\n\nPOST /api/collections/[id]/ranking/save rebuilds the caller's open draft\nfrom the live ranking, finalizes it, closes the open session and creates\nthe share link in one transaction under the curator lock. Idempotent on\nsaveKey: a replay returns 200 with the same link; a key reused in another\ncollection is 409, as is an empty ranking.\n\nAlso: legacy finalize/delete hold the curator lock (delete re-asserts\ndraft status under it); reaping drafts removes their shares first;\nfindDraft orders like findDraftForUpdate and the 0003 tie-break;\nPinTargetError copy no longer implies the piece is unranked.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): Start/Keep sorting and Pause\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* fix(ranking): save key lock, revoked-link replay test, conflict copy\n\nsaveAndShare takes a (curator, saveKey) advisory lock first so the same\nkey in two collections serializes to a 409 instead of a 500. Adds a unit\ntest for the revoked-link replay 409 and asserts the cross-collection 409\nwrites nothing. SaveKeyConflictError copy fits both triggers.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* docs: handoff — PR 2 state at session end\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* feat(sort): one Sort screen — feelings then pairs; retire the round pages, timer and hub\n\nThe Sort page now resolves the curator's open sort and shows one phase at a\ntime via chooseSortPhase: feelings (TriageRound, persist-before-advance, Undo\nnames the last answer, numberless SortProgress), then pairs over Love + Like\n(?phase=pairs hand-off after the queue drains), then a quiet end. The round\npages, StartSessionForm, the hub and the timer/what-moved stack are retired;\nold links guard-then-308 to /sort (set-aside to /results).\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* chore(design): drop the round-timer ring tokens\n\nThe timer ring is gone with the round pages, so its sweep/track tokens, their\ncontrast pin and the DESIGN.md bullet go too. The ink-on-surface-raised pair\nstays, relabelled for what it is.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* test(sort): say what the disposed-piece DB test proves; drop a duplicate bucket test\n\nDisposition is no longer on the compare path: a disposed piece is untriaged and\nso outside Love + Like. The DB test is renamed and retitled to say so and reads\nthe Sort screen's curator-wide decisions. The bucket filter is asserted once, in\ncompare-selection.test.ts.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01JZV3waBvAR91kiWyuH38ks\n\n* fix(sort): Keep sorting guards double taps; busy state is announced\n\nKeepSortingButton reuses AsyncActionButton (ref in-flight guard, busy\nlabel, gentle notice). AsyncActionButton sets aria-busy and drops the\nstatic aria-label while busy so \"Just a moment…\" is what is announced.\nPauseControl tests now prove one PATCH per double tap and cover a\nrejected pause.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(sort): Resume a paused sort on load; remount feelings on a new queue; refresh on Start sorting\n\n- ResumeOnLoad client island PATCHes a paused session active on mount\n  (never during the server render, where a prefetch would un-pause it).\n- The page keys TriageRound by the server queue so a resurfacing piece\n  after the hand-off is shown instead of stranding on \"Just a moment…\".\n- KeepSortingButton refreshes after push: Start sorting lives on /sort itself.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(sort): pairs — transition line and Undo\n\nUndo re-presents the last pair with its answer selected (aria-pressed);\na new tap supersedes it with a fresh clientKey, Keep going leaves it.\n\"Now, between these two…\" shows until the first answer lands. The\ncomparison count is gone; a skip is \"skipped for now\".\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(sort): pair-scoped clientKeys; Undo/Keep going keep focus and announce\n\nA revisit could reuse another pair's unacked clientKey (the slot named only\nthe choice), so the server would drop the new answer; the key slot now names\nthe pair. Undo and Keep going are one button that swaps, so focus stays put,\nand the pair change is announced. The Undo test uses distinct ids for the\nnext pair so it fails if the revisit decision came from current props.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(ranking): the live Ranking — hand moves, Still deciding, Set aside, Save and share\n\nThe results page is now the live Ranking: read-only on view, hand moves pin\none piece through the pins API, Still deciding and a collapsed Set aside row\n(Bring back), and one quiet Save and share. A draft result redirects to it; a\nsaved result offers Make a revision. Set aside and Finalize pages become\nguarded permanent redirects; Rerank/Finalize/standing are retired.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* test(sort): a revisit never reuses another pair's unacked clientKey\n\nDrives the reachable path un-mocked: pair X's revisit answer is left unacked\n(slow ack), pair Y lands via the not-persisted fallback POST, then a\nsame-choice revisit of Y must POST Y's decision under a fresh key.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(ranking): visible move failures, focus kept on moves, usage notes, page test\n\n- RankingList shows the gentle failure on screen (not only to screen\n  readers); move buttons stay enabled (a ref guards double taps) and focus\n  returns to the moved piece's button after the list reorders. Unpin dims\n  when disabled.\n- Onward and Still deciding cards keep the quiet usage note.\n- SaveAndShare: a 409 says the earlier link is no longer active and mints a\n  fresh key, so the next Save can succeed.\n- A render-level test for the live Ranking page carries the DATA-6 guard.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* refactor(results): retire the legacy hand-order writers\n\nThe live Ranking's pins are the only hand order now. The bulk re-rank and\nper-item manual-override routes (items PATCH/DELETE, items/[rid] PATCH,\nitems/[rid]/reset) wrote manualRank outside the curator lock and could\noverwrite a pin; their only UI (RerankPanel) is gone. Remove them with the\nservice methods, errors and repository helper only they used, and their\ntests and authz-enumeration rows. Reading result items (GET) and removing\none from a draft (DELETE items/[rid]) stay.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(ranking): failure notice is a standing live region; Unpin keeps focus\n\nThe visible notice is always mounted (empty when idle), so screen readers\nannounce a failed move or unpin when the text lands. Unpin no longer\ndisables itself mid-request (the in-flight ref guards it); after the\nrefresh removes it, focus lands on that piece's move button.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(home): one Start / Keep sorting action; retire the session panel\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* feat(onboarding): teach the two phases; remove the timers tutorial\n\nThe walkthrough now runs purpose -> feelings -> pairs (Love + Like only)\n-> ranking -> hand-off, matching the real Sort. The usage, round-standing\nand refine beats, the /tutorials/timers route, and rerank-copy are gone;\nROUND_COPY narrows to triage + compare and TutorialSlug to three slugs.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — PR 2 Tasks 7–12 complete, T13 in flight\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* test(e2e): sort journey replaces fourteen specs; CI map and screenshots follow\n\nOne un-mocked journey (start → feelings with Undo / Not yet twice / Not mine →\npairs with Undo → end → ranking with Still deciding, Set aside + Bring back, a\npinned move surviving reload → save and share → the link opens signed out)\nreplaces the fourteen specs that drove retired screens. a11y, sort-images and\nthe welcome walk point at the shipped surfaces; ci.yml maps sort/results/auth\nchanges to the journey; capture.ts shoots the new sort and ranking states.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: ranking API and decision 42; sync docs for PR 2\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(ranking): moves splice dense pins; pins survive a save; drop the unlocked item delete\n\n- placePin: a hand move rewrites the pins it passes, so a fully pinned list\n  (after Make a revision) shifts instead of wrapping (AR1)\n- saveAndShare carries only the explicit pins into a fresh open draft in the\n  same transaction (AR3); 409 bodies carry a code (nothing_to_save /\n  save_key_conflict) for the client (AR5 server side)\n- deleteResult takes the draft's shares first (DP1); the per-item DELETE\n  route and deleteResultItem are gone (SEC1); lock-coverage wording narrowed\n  in schema.ts, API.md, DATABASE.md, ARCHITECTURE.md (AR6, SEC2)\n- applyPins is generic (no dead lookup), loved entries typed LovedBucket,\n  savedOrderPositions 0-based, inCuratorTx reuses allocateWithRetry\n  (CR2, CR3, CR6 OPEN_DRAFT_NAME, CR8)\n- tests: placePin acceptance cases, wrap-around, dense-move and pins-survive\n  DB tests, lockSaveKey taken, ZodError assertions, dedupe toHaveLength(3)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(results): save keeps focus and pins, phone-width rows, named Bring back\n\n- SaveAndShare lands queued answers first (AR4), refreshes after a save so\n  carried pins show (AR3), tells nothing-to-save from link-gone by the 409\n  code (AR5/QA5), and moves focus with each step: Name on open, the opener on\n  Not now, the Saved heading after; the status region is always mounted (UX3)\n- RankingList: grip and ordinal give way below sm, smaller thumbnail, Unpin\n  icon-only on phone so a pinned name never truncates to an ellipsis (UX4);\n  tests for the double-tap guard, drag-drop and a failed Unpin (QA4)\n- Bring back names its piece and hands focus to the next row, or the\n  Ranking heading when it was the last (UX8)\n- Set aside summary gets the rotating chevron (GD3); the empty Ranking says\n  Keep sorting while a sort is open; home shows See your ranking only after a\n  placed piece or a finished sort (UX9) and a paused-sort case (QA9)\n- Keep sorting is full width on phone again (GD2); one BUCKET_LABELS map\n  (CR7)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* fix(sort): focus and voice stay with the person; visible progress track\n\n- Feelings: Undo and Keep going are one control that swaps in place, the\n  revisit is announced, and undoing the only queued answer lands on the\n  question (UX1); \"saved\" is announced only once the answer holds and the\n  progress count is no longer a second live region (UX6)\n- Pairs: controls stay enabled while an answer saves (aria-disabled + a tap\n  guard) so focus never drops (UX2); PendingNotices is mounted; a rejected\n  ack offers no Undo and claims no choice; a sort closed elsewhere (409)\n  clears the slow line and says so (AR2); the hand-off line sits above the\n  question and stops once a pair answer landed (UX7); the ending heading\n  takes focus (UX5)\n- Progress track gets a track-token edge (>= 3:1 on ground) with contrast\n  rows and a DESIGN.md line (GD1); selected rings offset on ground, not\n  white (GD4); both phase questions share text-2xl sm:text-3xl (GD5)\n- useOptimisticRound is triage-only (CR4); CompareChoice drops dead exports,\n  the session guard and the optional collectionId (CR6); WHY comment on the\n  progress denominator, deferred-piece and 409 tests (QA8)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* refactor: one deriveOrder for the next pair; dead code and stale comments out\n\n- chooseSortPhase takes order and next pair from one deriveOrder call;\n  pairwise-selection.ts is gone, its two distinct tests live in\n  sort-phase.test.ts and the disposed-piece DB test drives chooseSortPhase (CR1)\n- selectTriageItem and its tests, ROUND_COPY names, the redundant finalized\n  check on a saved ranking go (CR6); stale comments fixed in roundCopy, the\n  Welcome beats, AppLayout, triage-selection, derive-usage and\n  SortResultRepository (CR5)\n- tautology tests deleted (compare sub-line, explainer verbatim, compare pair)\n- ARCHITECTURE.md names chooseSortPhase where selectNextPair was\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* test(e2e): port crash-reload and pagehide recovery to the Sort screen; journey checks the saved order\n\n- e2e/decision-recovery.spec.ts: queued answers survive a crash (the gate\n  drains them in order before the screen renders) and a pagehide delivers a\n  queued answer, both un-mocked on /collections/[id]/sort; in the CI sort\n  area map (QA1)\n- sort-journey: the shared page leads with the piece moved to the top (QA2);\n  the photo check waits for the token-scoped request instead of asserting a\n  stubbed 200 (QA3); the pin survives Save (AR3); a pinned row's name wraps,\n  never clips, at phone width (UX4)\n- RankingList names wrap to two lines instead of truncating\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* chore(graph): refresh the knowledge graph for PR 2\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — PR 2 open as #370\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — #370 CI green, merge awaits owner\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n---------\n\nCo-authored-by: Claude Fable 5.1 <noreply@anthropic.com>",
+            "shortHash": "6d7eeb1",
+            "hash": "6d7eeb1f78999b91059140dac3867b57a1cefca0",
+            "subject": "feat(lists): collections grid, home-as-grid, phone action bar (UX redesign PR 3) (#371)",
+            "body": "feat(lists): collections grid, home-as-grid, phone action bar (UX redesign PR 3) (#371)\n\n* docs: handoff — PR 2 merged, PR 3 started\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: handoff — session 3 end: swamp prod fix + PR 3 resume steps\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* chore(skills): /adored-revamp — the redesign's charter and resume protocol\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01CgmBjK4MVyxTPGqto1yZv5\n\n* docs: PR 3 lists-and-home plan\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 plan committed\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: PR 3 plan — fold plan-review findings\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 plan reviewed and folded\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* refactor(ui): FilterPills primitive with the shared CheckIcon; item pills take the list path\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(collections): list rules — All (not archived)/Archived views, plain-text search, gentle empty states\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(collections): owner ··· on cards (settings, members, archive, bring back); ArchivedNotice builds its own restore URL\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* refactor(ui): viewHref moves to a pure module; collectionsList no longer imports a .tsx\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(collections): searchable cover-card grid with All/Archived pills and a phone action bar\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(items): ArchivedNotice renders nothing for a non-id — defense in depth behind each page's check\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(home): the collection home is the items grid — Start sorting with Add photos beside it\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* refactor(items): drop the unused listItems limit option; release the action-bar reserve on short viewports\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(home): access denied reads neither preferences nor covers\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* feat(items): retire the items list — 308 home with view and query; links and crumbs follow\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 tasks 1–6 landed\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(e2e): lists-and-home journey with the phone bar; CI map follows\n\nReplaces adaptive-collection-workspace.spec.ts: the collections grid\n(search, Archive with Undo, Archived, Bring back), the home as the items\ngrid with its three primaries, the phone bar's geometry at iPhone width,\nkeyboard order, and the two wayfinding tests carried over verbatim.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(e2e): neighbours and screenshot surfaces follow the items list into the home\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(layout): the fixed phone action bar ignores its stack's bottom margin\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: action bar, lists and home (decision 43)\n\nDESIGN §5 gains the Action bar; cards and wayfinding follow PR 3.\nARCHITECTURE: decision 23 superseded in part; decision 43 appended.\nFEATURES: the item undo lands on the collection home.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(db): pin item createdAt in decision-batch case 4 (orderRank tie was a coin flip)\n\nRoot cause: orderRank comes from the insertion engine's canonical sequence\n(compareByCreatedAtThenId), not from score. seedSession creates items in a\nfast loop with JS ms createdAt, so \"top\" and \"high\" could share a millisecond\nand fall back to ULID's random suffix, placing rank 0 on a different bucket in\nthe two compared collections. Pre-existing flake (reproduced 1/12 with the\nfile alone), not a branch regression. Seed distinct createdAt values instead.\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(lists): newest-first list order, trimmed query, focus after Undo, quieter empty lists\n\n- findByOwnerOrMember orders by created_at desc, id asc (deterministic grid)\n- queryFrom trims and caps ?q= on both lists and the retired items redirect\n- search and pills hide until there is anything to list\n- Undo/Done hand focus to the page h1; notices get a visible focus ring\n- archived item name wraps to two lines; bar top edge is hairline\n- phone scroll padding media query in rem; margin reset scoped to tall viewports\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* test(lists): real geometry over class pins, primary-text contrast, focused Brought back\n\n- drop AppLayout/ActionBar class-string pins; e2e checks the short-viewport static bar\n- e2e asserts the Brought back line is visible and focused\n- contrast: primary text on surface at 4.5\n- settings menu asserts /edit; drop can't-fail and duplicate lines; stale comments\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: hairline bar edge; decision 43 covers ?restored= and the cover read\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 fix wave landed\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* chore(graph): refresh after PR 3\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 open as #371\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* fix(home): hide See your ranking on phone so the first card row stays above the bar\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* docs: handoff — PR 3 ready for review; CI blocked on osv advisory (owner call)\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n* chore(ci): ignore GHSA-vfj7-8cjw-p6xm (braces, dev-only lint tooling, no fix yet) until 2026-11-02\n\nCo-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01WAtBGazBQeJkBnTg7sj4t9\n\n---------\n\nCo-authored-by: Claude Fable 5.1 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1790934725000
+              "time": 1791002804000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1790934725000
+              "time": 1791002804000
             },
             "branch": "main"
           },
@@ -187,12 +187,12 @@
                   "workerIndex": 0,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 292,
+                  "duration": 271,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:54:37.502Z",
+                  "startTime": "2026-10-03T04:48:28.330Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -229,20 +229,20 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 21719,
+                  "duration": 17711,
                   "errors": [],
                   "stdout": [
                     {
-                      "text": "[a11y] collections/light: 21 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] collections/light: 26 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] collection-workspace/light: 24 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] collection-workspace/light: 27 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] items/light: 27 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] home-archived/light: 25 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] items-archived/light: 25 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] collections-archived/light: 25 checks passed, 0 violation(s)\n"
                     },
                     {
                       "text": "[a11y] item-detail/light: 27 checks passed, 0 violation(s)\n"
@@ -265,7 +265,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:54:38.447Z",
+                  "startTime": "2026-10-03T04:48:29.221Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -294,20 +294,20 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 15194,
+                  "duration": 14698,
                   "errors": [],
                   "stdout": [
                     {
-                      "text": "[a11y] collections/dark: 21 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] collections/dark: 26 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] collection-workspace/dark: 24 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] collection-workspace/dark: 27 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] items/dark: 27 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] home-archived/dark: 25 checks passed, 0 violation(s)\n"
                     },
                     {
-                      "text": "[a11y] items-archived/dark: 25 checks passed, 0 violation(s)\n"
+                      "text": "[a11y] collections-archived/dark: 25 checks passed, 0 violation(s)\n"
                     },
                     {
                       "text": "[a11y] item-detail/dark: 27 checks passed, 0 violation(s)\n"
@@ -330,7 +330,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:55:01.257Z",
+                  "startTime": "2026-10-03T04:48:47.746Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -359,7 +359,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2652,
+                  "duration": 3637,
                   "errors": [],
                   "stdout": [
                     {
@@ -368,7 +368,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:55:16.473Z",
+                  "startTime": "2026-10-03T04:49:02.460Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -397,7 +397,7 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2650,
+                  "duration": 1953,
                   "errors": [],
                   "stdout": [
                     {
@@ -406,7 +406,7 @@
                   ],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:55:19.148Z",
+                  "startTime": "2026-10-03T04:49:06.116Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -418,252 +418,6 @@
           "file": "a11y.spec.ts",
           "line": 136,
           "column": 7
-        }
-      ]
-    },
-    {
-      "title": "adaptive-collection-workspace.spec.ts",
-      "file": "adaptive-collection-workspace.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [
-        {
-          "title": "pool-first: Make items routes to the pool",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "tablet",
-              "projectName": "tablet",
-              "results": [
-                {
-                  "workerIndex": 1,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 16770,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-02T09:55:22.010Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "8459740f6655c8183518-9cc62fddf7c1e16375db",
-          "file": "adaptive-collection-workspace.spec.ts",
-          "line": 30,
-          "column": 5
-        },
-        {
-          "title": "both: Photo pool renders before Items, with the item preview shown",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "tablet",
-              "projectName": "tablet",
-              "results": [
-                {
-                  "workerIndex": 1,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1640,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-02T09:55:51.559Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "8459740f6655c8183518-2b373200665c8b3bee19",
-          "file": "adaptive-collection-workspace.spec.ts",
-          "line": 43,
-          "column": 5
-        },
-        {
-          "title": "items-first: View all items routes to the items grid",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "tablet",
-              "projectName": "tablet",
-              "results": [
-                {
-                  "workerIndex": 1,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2593,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-02T09:55:53.215Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "8459740f6655c8183518-a272c5ef73bf4c812110",
-          "file": "adaptive-collection-workspace.spec.ts",
-          "line": 67,
-          "column": 5
-        },
-        {
-          "title": "empty: offers exactly one add-photos action and no pool/items sections",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "tablet",
-              "projectName": "tablet",
-              "results": [
-                {
-                  "workerIndex": 1,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1244,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-02T09:55:55.826Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "8459740f6655c8183518-8595f314e1a1fc60f29f",
-          "file": "adaptive-collection-workspace.spec.ts",
-          "line": 81,
-          "column": 5
-        },
-        {
-          "title": "back arrow on a deep page: the tablet pointer shortcut lands on the parent route",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "tablet",
-              "projectName": "tablet",
-              "results": [
-                {
-                  "workerIndex": 1,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2297,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-02T09:55:57.094Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "8459740f6655c8183518-d02a4d610e60ecebcbed",
-          "file": "adaptive-collection-workspace.spec.ts",
-          "line": 125,
-          "column": 5
-        },
-        {
-          "title": "phone: the trail collapses to a single accessible back link",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "tablet",
-              "projectName": "tablet",
-              "results": [
-                {
-                  "workerIndex": 1,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 2186,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-02T09:55:59.425Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "8459740f6655c8183518-81dce5aacf366a867d6a",
-          "file": "adaptive-collection-workspace.spec.ts",
-          "line": 146,
-          "column": 5
-        },
-        {
-          "title": "keyboard traversal reaches header → primary section → secondary actions → owner utilities in order",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "tablet",
-              "projectName": "tablet",
-              "results": [
-                {
-                  "workerIndex": 1,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 1738,
-                  "errors": [],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-02T09:56:01.629Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "8459740f6655c8183518-1302c8d59ea17c787a69",
-          "file": "adaptive-collection-workspace.spec.ts",
-          "line": 166,
-          "column": 5
         }
       ]
     },
@@ -689,12 +443,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1448,
+                  "duration": 1310,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:56:03.862Z",
+                  "startTime": "2026-10-03T04:49:08.324Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -723,12 +477,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2047,
+                  "duration": 10586,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:56:05.339Z",
+                  "startTime": "2026-10-03T04:49:09.654Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -765,12 +519,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1709,
+                  "duration": 7745,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:56:07.515Z",
+                  "startTime": "2026-10-03T04:49:20.428Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -799,12 +553,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1676,
+                  "duration": 1625,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:56:09.264Z",
+                  "startTime": "2026-10-03T04:49:28.188Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -848,12 +602,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4783,
+                      "duration": 7062,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:56:11.003Z",
+                      "startTime": "2026-10-03T04:49:30.077Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -882,12 +636,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2074,
+                      "duration": 2480,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:56:15.820Z",
+                      "startTime": "2026-10-03T04:49:37.157Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -933,12 +687,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2162,
+                      "duration": 2272,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:56:17.917Z",
+                      "startTime": "2026-10-03T04:49:39.677Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -969,7 +723,7 @@
           "column": 6,
           "specs": [
             {
-              "title": "the items grid requests the resized card width (w=640)",
+              "title": "the home grid requests the resized card width (w=640)",
               "ok": true,
               "tags": [],
               "tests": [
@@ -984,12 +738,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1194,
+                      "duration": 1363,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:56:20.132Z",
+                      "startTime": "2026-10-03T04:49:42.226Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -997,7 +751,7 @@
                   "status": "expected"
                 }
               ],
-              "id": "af38cfc44e4f9b50eb98-01b2be16e7a446f560d6",
+              "id": "af38cfc44e4f9b50eb98-4cb8cc330b189b4cb57e",
               "file": "image-perf.spec.ts",
               "line": 20,
               "column": 7
@@ -1018,12 +772,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1367,
+                      "duration": 1592,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:56:21.370Z",
+                      "startTime": "2026-10-03T04:49:43.772Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1069,12 +823,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 10762,
+                      "duration": 12899,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:56:22.780Z",
+                      "startTime": "2026-10-03T04:49:45.441Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1120,12 +874,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 178,
+                      "duration": 231,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:56:33.606Z",
+                      "startTime": "2026-10-03T04:49:58.486Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1154,12 +908,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 122,
+                      "duration": 111,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:56:33.802Z",
+                      "startTime": "2026-10-03T04:49:58.728Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1188,12 +942,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 87,
+                      "duration": 110,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:56:33.938Z",
+                      "startTime": "2026-10-03T04:49:58.851Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1232,12 +986,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1603,
+                  "duration": 1232,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:56:34.061Z",
+                  "startTime": "2026-10-03T04:49:59.020Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1266,12 +1020,12 @@
                   "workerIndex": 1,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 2063,
+                  "duration": 1566,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:56:35.783Z",
+                  "startTime": "2026-10-03T04:50:00.317Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1282,6 +1036,345 @@
           "id": "9f98fd8c8d1538f5ebbb-3d79aa2a02cf6674e064",
           "file": "layout.spec.ts",
           "line": 48,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "lists-and-home.spec.ts",
+      "file": "lists-and-home.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "collections: search, archive with Undo, Archived, Bring back",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 6393,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:02.443Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-0b3089ab93f11df17bb0",
+          "file": "lists-and-home.spec.ts",
+          "line": 52,
+          "column": 5
+        },
+        {
+          "title": "home: the items grid with Start sorting and Add photos beside it",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 6757,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Nothing matches “zzz-nothing”' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Nothing matches “zzz-nothing”' })\u001b[22m\n\u001b[2m    - waiting for navigation to finish...\u001b[22m\n\u001b[2m    - navigated to \"http://127.0.0.1:3100/collections/e2e-workspace-items-only-col_01m401j3236mgf1w6tjpfbr6ev?q=\"\u001b[22m\n",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Nothing matches “zzz-nothing”' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Nothing matches “zzz-nothing”' })\u001b[22m\n\u001b[2m    - waiting for navigation to finish...\u001b[22m\n\u001b[2m    - navigated to \"http://127.0.0.1:3100/collections/e2e-workspace-items-only-col_01m401j3236mgf1w6tjpfbr6ev?q=\"\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/lists-and-home.spec.ts:105:86",
+                    "location": {
+                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/lists-and-home.spec.ts",
+                      "column": 86,
+                      "line": 105
+                    },
+                    "snippet": "\u001b[0m \u001b[90m 103 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"searchbox\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Search your items\"\u001b[39m })\u001b[33m.\u001b[39mfill(\u001b[32m\"zzz-nothing\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 104 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"button\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Search\"\u001b[39m\u001b[33m,\u001b[39m exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 105 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"heading\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Nothing matches “zzz-nothing”\"\u001b[39m }))\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 106 |\u001b[39m   \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"link\"\u001b[39m\u001b[33m,\u001b[39m { name\u001b[33m:\u001b[39m \u001b[32m\"Archived\"\u001b[39m\u001b[33m,\u001b[39m exact\u001b[33m:\u001b[39m \u001b[36mtrue\u001b[39m })\u001b[33m.\u001b[39mclick()\u001b[33m;\u001b[39m\n \u001b[90m 107 |\u001b[39m   \u001b[36mawait\u001b[39m expect(page)\u001b[33m.\u001b[39mtoHaveURL((u) \u001b[33m=>\u001b[39m u\u001b[33m.\u001b[39mpathname \u001b[33m===\u001b[39m home \u001b[33m&&\u001b[39m u\u001b[33m.\u001b[39msearchParams\u001b[33m.\u001b[39m\u001b[36mget\u001b[39m(\u001b[32m\"status\"\u001b[39m) \u001b[33m===\u001b[39m \u001b[32m\"archived\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 108 |\u001b[39m\u001b[0m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/lists-and-home.spec.ts",
+                        "column": 86,
+                        "line": 105
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoBeVisible\u001b[2m(\u001b[22m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('heading', { name: 'Nothing matches “zzz-nothing”' })\nExpected: visible\nTimeout: 5000ms\nError: element(s) not found\n\nCall log:\n\u001b[2m  - Expect \"toBeVisible\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('heading', { name: 'Nothing matches “zzz-nothing”' })\u001b[22m\n\u001b[2m    - waiting for navigation to finish...\u001b[22m\n\u001b[2m    - navigated to \"http://127.0.0.1:3100/collections/e2e-workspace-items-only-col_01m401j3236mgf1w6tjpfbr6ev?q=\"\u001b[22m\n\n\n  103 |   await page.getByRole(\"searchbox\", { name: \"Search your items\" }).fill(\"zzz-nothing\");\n  104 |   await page.getByRole(\"button\", { name: \"Search\", exact: true }).click();\n> 105 |   await expect(page.getByRole(\"heading\", { name: \"Nothing matches “zzz-nothing”\" })).toBeVisible();\n      |                                                                                      ^\n  106 |   await page.getByRole(\"link\", { name: \"Archived\", exact: true }).click();\n  107 |   await expect(page).toHaveURL((u) => u.pathname === home && u.searchParams.get(\"status\") === \"archived\");\n  108 |\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/lists-and-home.spec.ts:105:86"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:18.162Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/lists-and-home-home-the-it-a1f32-ng-and-Add-photos-beside-it-tablet/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/lists-and-home-home-the-it-a1f32-ng-and-Add-photos-beside-it-tablet/error-context.md"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/lists-and-home-home-the-it-a1f32-ng-and-Add-photos-beside-it-tablet/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/lists-and-home.spec.ts",
+                    "column": 86,
+                    "line": 105
+                  }
+                },
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3220,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 1,
+                  "startTime": "2026-10-03T04:50:25.640Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "trace",
+                      "contentType": "application/zip",
+                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/lists-and-home-home-the-it-a1f32-ng-and-Add-photos-beside-it-tablet-retry1/trace.zip"
+                    }
+                  ]
+                }
+              ],
+              "status": "flaky"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-f21149e85157e10e414c",
+          "file": "lists-and-home.spec.ts",
+          "line": 94,
+          "column": 5
+        },
+        {
+          "title": "home before items: Make items leads when photos wait",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1584,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:29.302Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-aa5add2b6a0a70dca1bb",
+          "file": "lists-and-home.spec.ts",
+          "line": 114,
+          "column": 5
+        },
+        {
+          "title": "phone: with a ranking, the link is hidden so a card row stays above the bar",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1310,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:30.915Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-aa22dce888a71b9022c4",
+          "file": "lists-and-home.spec.ts",
+          "line": 123,
+          "column": 5
+        },
+        {
+          "title": "phone: the bar is pinned to the bottom and never hides the last row",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2173,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:32.251Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-86acc525d43969331c40",
+          "file": "lists-and-home.spec.ts",
+          "line": 136,
+          "column": 5
+        },
+        {
+          "title": "keyboard order on the home: trail → menu → chips → primary → pill → search → cards",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1241,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:34.443Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-0b4acbc246667e3d1a55",
+          "file": "lists-and-home.spec.ts",
+          "line": 202,
+          "column": 5
+        },
+        {
+          "title": "back arrow on a deep page: the tablet pointer shortcut lands on the parent route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1567,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:35.714Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-54d9a17f42e1c003365f",
+          "file": "lists-and-home.spec.ts",
+          "line": 224,
+          "column": 5
+        },
+        {
+          "title": "phone: the trail collapses to a single accessible back link",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1522,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:37.301Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-d8cdbcde6db9948381cd",
+          "file": "lists-and-home.spec.ts",
+          "line": 246,
           "column": 5
         }
       ]
@@ -1305,15 +1398,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 3041,
+                  "duration": 1154,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:56:39.805Z",
+                  "startTime": "2026-10-03T04:50:38.873Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1339,15 +1432,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1774,
+                  "duration": 1328,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:56:42.971Z",
+                  "startTime": "2026-10-03T04:50:40.118Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1373,123 +1466,20 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 1,
-                  "parallelIndex": 0,
-                  "status": "timedOut",
-                  "duration": 30393,
-                  "error": {
-                    "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                    "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                  },
-                  "errors": [
-                    {
-                      "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                    },
-                    {
-                      "location": {
-                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
-                        "column": 10,
-                        "line": 81
-                      },
-                      "message": "Error: page.waitForResponse: Test timeout of 30000ms exceeded.\n\n  79 |   await page.getByLabel(\"Invite by email\").fill(email);\n  80 |   await Promise.all([\n> 81 |     page.waitForResponse(\n     |          ^\n  82 |       (r) =>\n  83 |         r.url().includes(`/api/collections/${collectionId}/invitations`) &&\n  84 |         r.request().method() === \"POST\",\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts:81:10"
-                    }
-                  ],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-10-02T09:56:44.782Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/test-failed-1.png"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet/error-context.md"
-                    }
-                  ]
-                },
-                {
                   "workerIndex": 2,
                   "parallelIndex": 0,
-                  "status": "failed",
-                  "duration": 2303,
-                  "error": {
-                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('status')\nExpected pattern: \u001b[32m/Invitation sent successfully/\u001b[39m\nError: strict mode violation: getByRole('status') resolved to 2 elements:\n    1) <div role=\"status\" aria-live=\"polite\">…</div> aka getByText('Invitation sent successfully!The invite is saved — the email didn\\'t go out, so')\n    2) <div role=\"status\" class=\"sr-only\" aria-live=\"polite\"></div> aka getByRole('status').filter({ hasText: /^$/ })\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('status')\u001b[22m\n",
-                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('status')\nExpected pattern: \u001b[32m/Invitation sent successfully/\u001b[39m\nError: strict mode violation: getByRole('status') resolved to 2 elements:\n    1) <div role=\"status\" aria-live=\"polite\">…</div> aka getByText('Invitation sent successfully!The invite is saved — the email didn\\'t go out, so')\n    2) <div role=\"status\" class=\"sr-only\" aria-live=\"polite\"></div> aka getByRole('status').filter({ hasText: /^$/ })\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('status')\u001b[22m\n\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts:92:24",
-                    "location": {
-                      "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
-                      "column": 24,
-                      "line": 92
-                    },
-                    "snippet": "\u001b[0m \u001b[90m 90 |\u001b[39m   \u001b[36mconst\u001b[39m status \u001b[33m=\u001b[39m page\u001b[33m.\u001b[39mgetByRole(\u001b[32m\"status\"\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 91 |\u001b[39m   \u001b[36mawait\u001b[39m expect(status)\u001b[33m.\u001b[39mtoBeVisible()\u001b[33m;\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 92 |\u001b[39m   \u001b[36mawait\u001b[39m expect(status)\u001b[33m.\u001b[39mtoHaveText(\u001b[35m/Invitation sent successfully/\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 93 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 94 |\u001b[39m\u001b[0m"
-                  },
-                  "errors": [
-                    {
-                      "location": {
-                        "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
-                        "column": 24,
-                        "line": 92
-                      },
-                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mlocator\u001b[39m\u001b[2m).\u001b[22mtoHaveText\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m failed\n\nLocator: getByRole('status')\nExpected pattern: \u001b[32m/Invitation sent successfully/\u001b[39m\nError: strict mode violation: getByRole('status') resolved to 2 elements:\n    1) <div role=\"status\" aria-live=\"polite\">…</div> aka getByText('Invitation sent successfully!The invite is saved — the email didn\\'t go out, so')\n    2) <div role=\"status\" class=\"sr-only\" aria-live=\"polite\"></div> aka getByRole('status').filter({ hasText: /^$/ })\n\nCall log:\n\u001b[2m  - Expect \"toHaveText\" with timeout 5000ms\u001b[22m\n\u001b[2m  - waiting for getByRole('status')\u001b[22m\n\n\n  90 |   const status = page.getByRole(\"status\");\n  91 |   await expect(status).toBeVisible();\n> 92 |   await expect(status).toHaveText(/Invitation sent successfully/);\n     |                        ^\n  93 | });\n  94 |\n    at /home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts:92:24"
-                    }
-                  ],
-                  "stdout": [],
-                  "stderr": [],
-                  "retry": 1,
-                  "startTime": "2026-10-02T09:57:37.849Z",
-                  "annotations": [],
-                  "attachments": [
-                    {
-                      "name": "screenshot",
-                      "contentType": "image/png",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/test-failed-1.png"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/error-context.md"
-                    },
-                    {
-                      "name": "error-context",
-                      "contentType": "text/markdown",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/error-context.md"
-                    },
-                    {
-                      "name": "trace",
-                      "contentType": "application/zip",
-                      "path": "/home/runner/work/purseinator-app/purseinator-app/test-results/members-submitting-a-valid-email-shows-the-announced-success-tablet-retry1/trace.zip"
-                    }
-                  ],
-                  "errorLocation": {
-                    "file": "/home/runner/work/purseinator-app/purseinator-app/e2e/members.spec.ts",
-                    "column": 24,
-                    "line": 92
-                  }
-                },
-                {
-                  "workerIndex": 3,
-                  "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1777,
+                  "duration": 1991,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
-                  "retry": 2,
-                  "startTime": "2026-10-02T09:57:41.344Z",
+                  "retry": 0,
+                  "startTime": "2026-10-03T04:50:41.465Z",
                   "annotations": [],
                   "attachments": []
                 }
               ],
-              "status": "flaky"
+              "status": "expected"
             }
           ],
           "id": "01480a904f937bb0a1f8-16a0057158965d3a7188",
@@ -1518,15 +1508,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1840,
+                  "duration": 1791,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:57:43.369Z",
+                  "startTime": "2026-10-03T04:50:43.492Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1552,15 +1542,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1378,
+                  "duration": 1350,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:57:45.229Z",
+                  "startTime": "2026-10-03T04:50:45.299Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1594,15 +1584,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 858,
+                  "duration": 797,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:57:46.638Z",
+                  "startTime": "2026-10-03T04:50:46.670Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1628,15 +1618,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 900,
+                  "duration": 843,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:57:47.519Z",
+                  "startTime": "2026-10-03T04:50:47.484Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1662,15 +1652,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 927,
+                  "duration": 959,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:57:48.444Z",
+                  "startTime": "2026-10-03T04:50:48.343Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1711,15 +1701,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1321,
+                      "duration": 1223,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:57:49.442Z",
+                      "startTime": "2026-10-03T04:50:49.322Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1762,15 +1752,15 @@
                   "projectName": "tablet",
                   "results": [
                     {
-                      "workerIndex": 3,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 9299,
+                      "duration": 9375,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-02T09:57:50.848Z",
+                      "startTime": "2026-10-03T04:50:50.623Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -1806,15 +1796,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1948,
+                  "duration": 1990,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:58:00.236Z",
+                  "startTime": "2026-10-03T04:51:00.064Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1840,15 +1830,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1979,
+                  "duration": 1898,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:58:02.218Z",
+                  "startTime": "2026-10-03T04:51:02.069Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1874,15 +1864,15 @@
               "projectName": "tablet",
               "results": [
                 {
-                  "workerIndex": 3,
+                  "workerIndex": 2,
                   "parallelIndex": 0,
                   "status": "passed",
-                  "duration": 1490,
+                  "duration": 1590,
                   "errors": [],
                   "stdout": [],
                   "stderr": [],
                   "retry": 0,
-                  "startTime": "2026-10-02T09:58:04.221Z",
+                  "startTime": "2026-10-03T04:51:03.981Z",
                   "annotations": [],
                   "attachments": []
                 }
@@ -1900,9 +1890,9 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-02T09:53:56.616Z",
-    "duration": 249407.138,
-    "expected": 39,
+    "startTime": "2026-10-03T04:47:56.708Z",
+    "duration": 189127.676,
+    "expected": 40,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 1
