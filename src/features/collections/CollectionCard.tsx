@@ -1,21 +1,21 @@
 import type { Collection } from "@/types";
-import { Badge, Card, PhotoViewControl, type ViewerPhoto } from "@/components/ui";
+import { Card } from "@/components/ui";
 import Image from "next/image";
 import Link from "next/link";
 
 interface CollectionCardProps {
   collection: Collection;
   coverPhotoUrl?: string;
-  /** When set, a "view photo" control opens the zoom/rotate lightbox for the cover. */
-  viewerPhoto?: ViewerPhoto;
   /** Calm, informational cue that loose photos are waiting in this collection's pool. */
   hasPooledPhotos?: boolean;
+  /** The owner's ··· menu (CollectionCardMenu); absent for a curator. */
+  menu?: React.ReactNode;
 }
 
-export function CollectionCard({ collection, coverPhotoUrl, viewerPhoto, hasPooledPhotos }: CollectionCardProps) {
+export function CollectionCard({ collection, coverPhotoUrl, hasPooledPhotos, menu }: CollectionCardProps) {
   // Stretched-link pattern: the navigating <Link> is an overlay sibling (not a
-  // wrapper), so the view control is valid DOM and its tap doesn't navigate.
-  // `isolate` scopes the z-index stack so the control (z-20) sits above the link (z-10).
+  // wrapper), so the menu is valid DOM and its tap doesn't navigate.
+  // `isolate` scopes the z-index stack so the menu (z-20) sits above the link (z-10).
   return (
     <Card interactive padding="none" className="relative isolate flex h-full flex-col overflow-hidden">
       {/* Cover — the photograph leads. Branded placeholder until a real cover exists. */}
@@ -39,13 +39,8 @@ export function CollectionCard({ collection, coverPhotoUrl, viewerPhoto, hasPool
       </div>
 
       {/* Name leads; description is a quiet second line. No counts, no dates. */}
-      <div className="flex flex-1 flex-col gap-2 p-5">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="font-display text-lg text-ink line-clamp-2">{collection.name}</h3>
-          {collection.status !== "active" && (
-            <Badge variant={collection.status} className="shrink-0">{collection.status}</Badge>
-          )}
-        </div>
+      <div className="flex flex-1 flex-col gap-2 p-3">
+        <h3 className="min-w-0 break-words font-display text-lg text-ink line-clamp-2">{collection.name}</h3>
         {collection.description && (
           <p className="text-sm text-ink-soft line-clamp-2">{collection.description}</p>
         )}
@@ -54,7 +49,7 @@ export function CollectionCard({ collection, coverPhotoUrl, viewerPhoto, hasPool
             so it's perceivable beyond colour; it sits under the stretched link, so
             it never competes with the card's single navigating action. */}
         {hasPooledPhotos && (
-          <p className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-full bg-info-soft px-3 py-1 text-sm text-info-deep">
+          <p className="mt-auto inline-flex w-fit items-center gap-1.5 rounded-pill bg-info-soft px-3 py-1 text-sm text-info-deep">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" className="h-4 w-4">
               <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.5" />
               <circle cx="8.5" cy="10" r="1.5" fill="currentColor" />
@@ -70,7 +65,7 @@ export function CollectionCard({ collection, coverPhotoUrl, viewerPhoto, hasPool
         className="absolute inset-0 z-10"
         aria-label={collection.name}
       />
-      {viewerPhoto && <PhotoViewControl photo={viewerPhoto} className="absolute right-2 top-2 z-20" />}
+      {menu && <div className="absolute right-2 top-2 z-20">{menu}</div>}
     </Card>
   );
 }

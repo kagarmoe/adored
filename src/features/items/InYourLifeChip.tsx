@@ -2,18 +2,11 @@
 import { useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { UsageAnswer } from "@/lib/derive-usage";
+import { CheckIcon } from "@/components/ui/CheckIcon";
 import { IN_LIFE_CHIP, RESTING_CHIP } from "./usage-chip-copy";
 
 const OPTIONS: [UsageAnswer, string][] = [["uses", "I use this"], ["not_uses", RESTING_CHIP]];
 const JSON_HEADERS = { "Content-Type": "application/json" };
-
-export function CheckIcon({ className = "h-4 w-4" }: { className?: string }) {
-  return (
-    <svg aria-hidden viewBox="0 0 24 24" fill="none" className={className}>
-      <path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 interface Props { collectionId: string; itemId: string; sessionId: string | null; initial?: UsageAnswer }
 

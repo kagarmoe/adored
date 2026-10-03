@@ -6,13 +6,11 @@ import { generateId } from "@/lib/id";
 import { allocateWithRetry } from "../allocateWithRetry";
 import { isUniqueViolation } from "../pg-conflict";
 
-// Optional bounds for the workspace item preview. Omit both and findByCollection
-// keeps today's behavior (full, unordered collection read for the /items grid).
+// Optional ordering for findByCollection; omit it for the full, unordered read.
 // `orderBy: "number"` sorts number ASC with an id ASC tiebreaker (number is
 // nullable, so determinism can't rest on it alone); `number` is the only
 // supported order key for now.
 export interface FindByCollectionOptions {
-  limit?: number;
   orderBy?: "number";
 }
 
@@ -89,11 +87,9 @@ export class ItemRepository {
   }
 
   // Non-deleted items of a collection. With no options this is the full,
-  // unordered read the /items grid already relies on (unchanged). The workspace
-  // preview opts into a bounded slice: { limit: 12, orderBy: "number" }. number
-  // is nullable in schema (determinism rests on the app invariant that create
-  // always assigns one, not a DB constraint), so id ASC is the belt-and-suspenders
-  // tiebreaker — matching the pool read — that keeps a LIMIT cut deterministic.
+  // unordered read. `orderBy: "number"` sorts number ASC; number is nullable in
+  // schema (determinism rests on the app invariant that create always assigns
+  // one, not a DB constraint), so id ASC is the belt-and-suspenders tiebreaker.
   async findByCollection(
     collectionId: string,
     options?: FindByCollectionOptions,
@@ -106,9 +102,7 @@ export class ItemRepository {
       options?.orderBy === "number"
         ? base.orderBy(asc(itemsTable.number), asc(itemsTable.id))
         : base;
-    const items =
-      options?.limit === undefined ? await ordered : await ordered.limit(options.limit);
-    return items.map((i) => this.mapToItem(i));
+    return (await ordered).map((i) => this.mapToItem(i));
   }
 
   // Soft-deleted ("archived") items of a collection, most recently archived first.

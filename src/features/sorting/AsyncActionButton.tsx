@@ -29,7 +29,7 @@ export function AsyncActionButton({
   align?: "start" | "end";
   title?: string;
   ariaLabel?: string;
-  /** Full width below `sm`, natural width above. */
+  /** Full width below `md` (the phone action bar), natural width above. */
   fullWidth?: boolean;
 }): ReactNode {
   const [busy, setBusy] = useState(false);
@@ -51,11 +51,11 @@ export function AsyncActionButton({
   }
 
   return (
-    <div className={`flex flex-col gap-1 ${align === "end" ? "items-end" : "items-start"}${fullWidth ? " w-full sm:w-auto" : ""}`}>
+    <div className={`flex flex-col gap-1 ${align === "end" ? "items-end" : "items-start"}${fullWidth ? " w-full md:w-auto" : ""}`}>
       <Button
         type="button"
         variant={variant}
-        className={fullWidth ? "w-full sm:w-auto" : undefined}
+        className={fullWidth ? "w-full md:w-auto" : undefined}
         onClick={run}
         disabled={busy}
         title={title}

@@ -32,7 +32,7 @@ Status tags: **[shipped]** in the app today · **[planned]** designed but not bu
 - "Waiting for a name" filter, off by default. [shipped]
 - Item page with a photo carousel and a details card; a separate edit page for metadata
   (name, brand, style, color, material, category, dimensions, weight, story). [shipped]
-- Remove an item from its page, with undo on the items list. [shipped]
+- Remove an item from its page, with undo on the collection home. [shipped]
 - Permanently delete an item, or detach it from draft results first. [api-only]
 
 ## Photos

@@ -106,8 +106,8 @@ for (const theme of THEMES) {
     const screens: [string, string][] = [
       ["collections", "/collections"],
       ["collection-workspace", `/collections/${slug}`],
-      ["items", `/collections/${slug}/items`],
-      ["items-archived", `/collections/${slug}/items?status=archived`],
+      ["home-archived", `/collections/${slug}?status=archived`],
+      ["collections-archived", "/collections?status=archived"],
       ["item-detail", `/collections/${slug}/items/1`],
       ["ranking", `/collections/${slug}/results`],
       ["saved-ranking", `/collections/${slug}/results/${finalizedResultNumber}`],

@@ -17,6 +17,6 @@ export default async function ItemEditRedirect({ params }: Props) {
     redirect("/login");
   }
   const collection = await requireCollectionAccess(getDb(), id, session.user.id);
-  const items = `/collections/${collection.slug ?? collection.id}/items`;
-  permanentRedirect(/^\d+$/.test(itemNumber) ? `${items}/${itemNumber}` : items);
+  const home = `/collections/${collection.slug ?? collection.id}`;
+  permanentRedirect(/^\d+$/.test(itemNumber) ? `${home}/items/${itemNumber}` : home);
 }

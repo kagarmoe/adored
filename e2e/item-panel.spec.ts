@@ -118,7 +118,7 @@ test.describe("item panel journey", () => {
     // Archive (soft delete, no confirm) → gone from the list → Archived → Bring back.
     await page.getByRole("button", { name: "More actions" }).click();
     await page.getByRole("menuitem", { name: "Archive" }).click();
-    await page.waitForURL((u) => u.pathname === `/collections/${slug}/items` && u.searchParams.has("removed"));
+    await page.waitForURL((u) => u.pathname === `/collections/${slug}` && u.searchParams.has("removed"));
     await expect(page.getByText(/^Archived\./)).toBeVisible();
     await expect(page.getByRole("link", { name: /Weekend tote/ })).toHaveCount(0);
     await page.getByRole("link", { name: "Archived", exact: true }).click();

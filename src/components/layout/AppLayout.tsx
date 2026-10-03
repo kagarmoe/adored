@@ -13,12 +13,14 @@ interface BreadcrumbItem {
 interface AppLayoutProps {
   breadcrumbs?: BreadcrumbItem[];
   actions?: React.ReactNode;
+  /** The page renders an ActionBar: reserve room so it never covers the last row or footer. */
+  reserveActionBar?: boolean;
   children: React.ReactNode;
 }
 
-export function AppLayout({ breadcrumbs, actions, children }: AppLayoutProps) {
+export function AppLayout({ breadcrumbs, actions, reserveActionBar, children }: AppLayoutProps) {
   return (
-    <div className="flex flex-col min-h-screen bg-ground">
+    <div className={`flex min-h-screen flex-col bg-ground ${reserveActionBar ? "pb-36 md:pb-0 [@media(max-height:500px)]:pb-0" : ""}`}>
       <Header />
 
       <main className="flex-1 pt-20">

@@ -73,7 +73,7 @@ export class PhotoRepository {
   }
 
   // Per-item cover photo for a batch of items, in a single query (avoids N+1
-  // on the items-list page). Cover = the item's hero (is_hero=true) if it has
+  // on the collection home). Cover = the item's hero (is_hero=true) if it has
   // one, else its earliest (created_at asc) non-deleted photo. Items with no
   // photos are absent from the map.
   async findCoverPhotosByItemIds(itemIds: string[]): Promise<Map<string, Photo>> {

@@ -447,13 +447,13 @@ jobs:
             add "e2e/auth.spec.ts e2e/auth-navigation.spec.ts e2e/sort-journey.spec.ts"
           fi
           if [ "$A_COLLECTION" = "true" ]; then
-            add "e2e/adaptive-collection-workspace.spec.ts e2e/delete-collection.spec.ts"
+            add "e2e/lists-and-home.spec.ts e2e/delete-collection.spec.ts"
           fi
           if [ "$A_MEMBERS" = "true" ]; then
             add "e2e/members.spec.ts"
           fi
           if [ "$A_ITEMS" = "true" ]; then
-            add "e2e/item-panel.spec.ts e2e/item-removal.spec.ts e2e/image-perf.spec.ts"
+            add "e2e/item-panel.spec.ts e2e/item-removal.spec.ts e2e/image-perf.spec.ts e2e/lists-and-home.spec.ts"
           fi
           if [ "$A_PROFILE" = "true" ]; then
             add "e2e/profile.spec.ts"

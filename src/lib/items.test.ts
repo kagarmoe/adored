@@ -31,6 +31,13 @@ describe("hasName", () => {
 });
 
 describe("itemsEmptyState", () => {
+  it("everything archived points at Archived, not 'No items yet'", () => {
+    expect(itemsEmptyState({ hasAnyItems: false, hasArchived: true, view: "all", q: "" })).toEqual({
+      heading: "Everything here is archived",
+      message: "Find it under Archived.",
+    });
+  });
+
   it("speaks gently per view, never counting what's missing", () => {
     expect(itemsEmptyState({ hasAnyItems: false, view: "all", q: "" }).heading).toBe("No items yet");
     expect(itemsEmptyState({ hasAnyItems: true, view: "archived", q: "" }).heading).toBe("Nothing archived");

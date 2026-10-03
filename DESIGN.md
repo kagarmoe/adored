@@ -160,8 +160,16 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
 
 - **Buttons:** pill radius (`rounded-pill`), min height 44px. **Primary:** teal fill, white text (dark: teal fill, dark text). **Secondary/ghost:** transparent or soft-aqua, ink/teal text. **Danger:** the reserved error red — only for truly destructive, irreversible actions; sober, not loud.
 - **Quiet links:** a secondary, non-dominant text link (shared `quiet-link` token, `src/lib/design/quiet-link.ts`): `primary`-token text, underlined, ≥44px tap height (`min-h-11`), visible focus ring. Used for the quieter actions beside a single dominant button (e.g. "View all items", "Add more photos") so each surface keeps exactly **one** dominant action.
-- **Cards:** 20px radius, `card` fill (pre-composited), hairline + soft shadow (light) / hairline + glow (dark), no backdrop-filter; the selected card uses a teal border + a check, never colour alone.
+- **Cards:** 20px radius, `card` fill (pre-composited), hairline + soft shadow (light) / hairline + glow (dark), no backdrop-filter; the selected card uses a teal border + a check, never colour alone. Collection cards carry the owner's `···` (top-right, the `compact` trigger over the cover, above the stretched link) and no status badge — the Archived pill says it; item cards carry none — their rarer actions live on the item panel.
 - **Glass panel:** `Card variant="glass"` — glass-strong + blur + rim; reserved for decorative panels. The item panel's fields side uses the pre-composited `card` variant so field contrast stays AA-stable.
+- **Action bar:** the page's one primary action (`ActionBar`, `src/components/layout/ActionBar.tsx`).
+  From `md` up an inline row where the page places it; on phone a fixed bottom bar on `glass-strong`
+  + backdrop blur + a `hairline` top edge; static on a short viewport (browser zoom), never a second fixed
+  band. The page reserves 9rem (`AppLayout reserveActionBar`: the bar plus a two-line error) and sets
+  a matching `scroll-padding-bottom`, so the last row, the footer and a keyboard-focused card never
+  sit behind it. The primary fills the bar below `md`. It holds the primary and at most one pill
+  beside it (the home's **Add photos**). One per screen; with the header it is the second of the three
+  glass-strong surfaces a screen may carry.
 - **Filter pills / chips:** `rounded-pill`, 44px; selected = `chip` fill + primary border + a check glyph, never colour alone.
 - **Inputs:** surface fill, hairline border, pill radius (textareas keep 10px), 44px height; focus → teal ring; error → error border + a message, never colour alone.
 - **Progress line (Sort):** a thin, numberless pill — `primary` fill inside a `content-soft` track with a 1px `track` edge (`#4F7DA0`; dark `#3F7FA0`), so the bar's full extent reads ≥3:1 on ground and the fill ≥3:1 on the track (SC 1.4.11; rows in `contrast.test.ts`). The count is screen-reader text, read on demand, never live.
@@ -173,10 +181,11 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
   arrow speaks `primary` (it is an action) with a 44px hit area that never changes the row
   height. Tablet: the arrow is a pointer-only shortcut (the trail itself is the
   keyboard/screen-reader path); phone: the trail collapses to one accessible
-  "Back to {parent}" link. Trail labels come from one builder
+  "Back to {parent}" link. An item's trail is Collections / {collection} / {item} (no
+  Items level). Trail labels come from one builder
   (`src/components/layout/breadcrumb-trails.ts`) and share the mode-chip vocabulary
-  (Build/Sort/Decide). Mode chips appear on section **index** pages only (Photos, Items,
-  Sort, Decide) — never on decision surfaces or leaf pages ("one decision at a time"); on
+  (Build/Sort/Decide). Mode chips appear on the collection home and the section index pages
+  (Photos, Decide) — never on decision surfaces or leaf pages ("one decision at a time"); on
   descendant pages the active chip marks the current *section* (`aria-current="true"`), not
   a false current page.
 - **Patient waiting (Not yet):** when a deferred ("Not yet") item resurfaces, a calm banner — a cool-blue benign chip (`content-mid`) with `ink` text (not `ink-soft`: ink-soft on sky fails light-theme AA) plus a non-state moon glyph so hue is never the sole signal. Crossfade in with `--ease-gentle`; instant under reduced-motion. Gentle, never urgent: no remaining count, no inbox or "resting place" framing — the item simply comes back when the person is ready.

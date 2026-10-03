@@ -1,0 +1,7 @@
+# Supply-chain scan exceptions (read by the "Supply-chain scan (osv-scanner)" CI step).
+# Each entry must carry a reason and an ignoreUntil date; re-check at that date.
+
+[[IgnoredVulns]]
+id = "GHSA-vfj7-8cjw-p6xm"
+ignoreUntil = 2026-11-02
+reason = "braces <=3.0.3 stack-exhaustion DoS (CVE-2026-93687). Dev-only: eslint-config-next -> @next/eslint-plugin-next -> fast-glob -> micromatch -> braces; no runtime exposure. No fixed version published yet; drop this entry when braces > 3.0.3 ships."

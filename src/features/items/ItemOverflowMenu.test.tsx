@@ -15,7 +15,7 @@ function DirtyForm() {
   return null;
 }
 
-const props = { itemId: "i1", itemsHref: "/collections/bags/items" };
+const props = { itemId: "i1", listHref: "/collections/bags" };
 const fetchMock = () => global.fetch as unknown as ReturnType<typeof vi.fn>;
 const res = (status: number, body: unknown = {}) => ({
   ok: status < 400,
@@ -40,7 +40,7 @@ describe("ItemOverflowMenu", () => {
     expect(screen.queryByRole("menuitem", { name: "Delete" })).not.toBeInTheDocument();
     await userEvent.click(screen.getByRole("menuitem", { name: "Archive" }));
     expect(global.fetch).toHaveBeenCalledWith("/api/items/i1", { method: "DELETE" });
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/bags/items?removed=i1"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/bags?removed=i1"));
   });
 
   it("with unsaved panel edits, Archive asks first and a cancel archives nothing", async () => {
@@ -96,7 +96,7 @@ describe("ItemOverflowMenu", () => {
     });
     await userEvent.click(await screen.findByRole("button", { name: "Delete for good" }));
     expect(fetchMock().mock.calls[2][0]).toBe("/api/items/i1/purge");
-    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/bags/items"));
+    await waitFor(() => expect(push).toHaveBeenCalledWith("/collections/bags"));
   });
 
   it("Keep closes the confirm and hands focus back to the ··· trigger", async () => {

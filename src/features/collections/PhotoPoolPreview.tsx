@@ -1,4 +1,4 @@
-import { Card, CardImage, buttonVariants } from "@/components/ui";
+import { Card, CardImage } from "@/components/ui";
 import { getPoolPhotoAssetUrl, PHOTO_WIDTH } from "@/lib/photos";
 import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
@@ -14,53 +14,60 @@ interface PhotoPoolPreviewProps {
    * off any future client serialization boundary (defensive, Security LOW).
    */
   photos: { id: string }[];
-  /**
-   * Variant for the lead "Make items" action. Demoted to a non-primary when the
-   * workspace already has a single dominant action (an active/paused session's
-   * Resume), so at most one bg-primary renders at a time (A1).
-   */
-  actionVariant?: "primary" | "secondary";
+  /** Show the quiet Make items link (sorting holds the page's primary action). */
+  showLink: boolean;
 }
 
-// Read-only pool preview: thumbnails plus the section-level route action to /pool.
-// No selection, grouping, mutation, or local pool state — /pool owns all of that.
-// The thumbnails are decorative (alt=""): the "Make items" link carries the
-// section's accessible meaning, so AT isn't read 4–6 filenames (spec §11).
-export function PhotoPoolPreview({ collectionId, poolHref, photos, actionVariant = "primary" }: PhotoPoolPreviewProps) {
+// Read-only strip of loose pool photos above the home grid. Its Make items link shows
+// only when sorting holds the page's primary action; otherwise the bar's primary is
+// Make items itself (one name on screen once) and the thumbnails are a single link to
+// the pool. The thumbnails are decorative (alt=""): the link carries the meaning, so
+// AT isn't read 4–6 filenames (spec §11).
+export function PhotoPoolPreview({ collectionId, poolHref, photos, showLink }: PhotoPoolPreviewProps) {
+  const thumbnails = (
+    <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6">
+      {photos.map((photo) => (
+        <li
+          key={photo.id}
+          className="relative flex aspect-square items-center justify-center overflow-hidden rounded-control bg-content-soft"
+        >
+          <CardImage
+            src={getPoolPhotoAssetUrl(collectionId, photo.id, { w: PHOTO_WIDTH.poolTile })}
+            alt=""
+            fallback={<NeutralThumb />}
+          />
+        </li>
+      ))}
+    </ul>
+  );
+
   return (
     <section aria-labelledby="photo-pool-heading">
       <Card padding="lg" className="space-y-4">
         <div>
           <h2 id="photo-pool-heading" className="text-xl text-ink">
-            Photo pool
+            Photos waiting
           </h2>
-          <p className="mt-1 text-ink-soft">Photos waiting here</p>
-          <p className="text-sm text-ink-soft">These can become items whenever you&rsquo;re ready.</p>
+          <p className="mt-1 text-sm text-ink-soft">These can become items whenever you&rsquo;re ready.</p>
         </div>
-
-        <ul className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-          {photos.map((photo) => (
-            <li
-              key={photo.id}
-              className="relative flex aspect-square items-center justify-center overflow-hidden rounded-control bg-content-soft"
-            >
-              <CardImage
-                src={getPoolPhotoAssetUrl(collectionId, photo.id, { w: PHOTO_WIDTH.poolTile })}
-                alt=""
-                fallback={<NeutralThumb />}
-              />
-            </li>
-          ))}
-        </ul>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <Link href={poolHref} className={buttonVariants({ variant: actionVariant })}>
+        {showLink ? (
+          thumbnails
+        ) : (
+          // Photos-only: the bar's primary already reads "Make items", so the strip is one
+          // link to the pool named by the heading — the visible name stays on screen once.
+          <Link
+            href={poolHref}
+            aria-labelledby="photo-pool-heading"
+            className="block rounded-control focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+          >
+            {thumbnails}
+          </Link>
+        )}
+        {showLink && (
+          <Link href={poolHref} className={quietLink}>
             Make items
           </Link>
-          <Link href={poolHref} className={quietLink}>
-            Add more photos
-          </Link>
-        </div>
+        )}
       </Card>
     </section>
   );

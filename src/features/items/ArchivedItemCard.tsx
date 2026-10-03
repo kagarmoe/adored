@@ -16,7 +16,7 @@ export function ArchivedItemCard({ item, coverUrl }: { item: Item; coverUrl?: st
         />
       </div>
       <div className="space-y-2 p-3">
-        <h3 className="truncate text-ink">{itemDisplayName(item)}</h3>
+        <h3 className="min-w-0 break-words text-ink line-clamp-2">{itemDisplayName(item)}</h3>
         {item.brand && <p className="truncate text-xs text-ink-soft">{item.brand}</p>}
         <BringBackButton itemId={item.id} />
       </div>

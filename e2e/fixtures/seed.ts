@@ -176,7 +176,7 @@ export interface SeededCollectionRef {
 }
 
 /**
- * Seed the four adaptive-workspace shapes the `/collections/[id]` page renders
+ * Seed the four home primary-action shapes the `/collections/[id]` page renders
  * (Task 4): the page derives its state from the two bounded preview row counts,
  * so each fixture differs only in whether loose pool photos and/or items exist.
  *
@@ -748,4 +748,17 @@ if (require.main === module) {
 
     await closeDb();
   })();
+}
+
+/** A uniquely named, slugged collection — for specs that act on one card in the shared list. */
+export async function seedNamedCollection(
+  ownerId: string,
+  name: string,
+  status: "active" | "archived" = "active",
+): Promise<SeededCollectionRef> {
+  const { db } = getTestDb();
+  const collectionId = generateId("col");
+  const slug = `e2e-named-${collectionId}`;
+  await db.insert(collectionsTable).values({ id: collectionId, ownerId, name, slug, status });
+  return { collectionId, slug };
 }

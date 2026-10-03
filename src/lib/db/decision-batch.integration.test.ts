@@ -694,10 +694,20 @@ describeDb("decisions batch route (route -> controller -> repo -> DB)", () => {
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
     // One run WITH interleaved usage, one control WITHOUT — identical triage log.
-    // Distinct buckets ⇒ distinct scores ⇒ deterministic orderRank, so the
-    // id-drop comparison is stable across the two (separate) collections.
+    // Distinct buckets ⇒ distinct scores, and pinned createdAt ⇒ the same
+    // orderRank, so the id-drop comparison is stable across the two collections.
     async function runScoring(withUsage: boolean) {
       const { db, collectionId, items, sortSession } = await seedSession(3);
+      // orderRank comes from the insertion engine's canonical sequence (createdAt,
+      // then id), NOT from score. Items created in the same millisecond tie on
+      // createdAt and fall back to ULID's random suffix, so the two collections
+      // could seed rank 0 on different buckets. Pin distinct createdAt values.
+      for (const [i, item] of items.entries()) {
+        await db
+          .update(itemsTable)
+          .set({ createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, i)) })
+          .where(eq(itemsTable.id, item.id));
+      }
       await postBatch(
         batchReq(sortSession.id, {
           decisions: [
