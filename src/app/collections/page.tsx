@@ -23,6 +23,7 @@ import { ArchivedNotice } from "@/features/items/ArchivedNotice";
 import { DISMISS_KEY } from "@/features/onboarding/dismissal";
 import { shouldShowWelcome } from "@/features/onboarding/gate";
 import { isIdShaped } from "@/lib/id";
+import { queryFrom } from "@/lib/searchParam";
 import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
@@ -54,8 +55,7 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
   }
 
   const view = collectionsViewFrom(searchParams?.status);
-  // typeof: a repeated ?q= key arrives as string[] — ignore it.
-  const q = typeof searchParams?.q === "string" ? searchParams.q.slice(0, 100) : "";
+  const q = queryFrom(searchParams?.q);
   const visible = filterCollections(collections, { view, q });
   const empty = collectionsEmptyState({ hasAny: collections.length > 0, view, q });
   const visibleIds = visible.map((c) => c.id);
@@ -79,7 +79,8 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
       <div className="space-y-8">
         <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div className="max-w-2xl">
-            <h1 className="text-2xl text-ink sm:text-3xl">Your collections</h1>
+            {/* tabIndex -1: ArchivedNotice hands focus here as it unmounts. */}
+            <h1 tabIndex={-1} className="text-2xl text-ink outline-hidden sm:text-3xl">Your collections</h1>
             <p className="mt-2 text-ink-soft">The things you&rsquo;re deciding about, gathered in one calm place.</p>
           </div>
           <ActionBar label="Next step">
@@ -92,26 +93,28 @@ export default async function CollectionsPage(props: CollectionsPageProps) {
         {justArchived && <ArchivedNotice kind="collection" id={justArchived} />}
         {broughtBack && <BroughtBackNotice />}
 
-        <div className="space-y-4">
-          <form role="search" action="/collections" className="flex items-end gap-2">
-            {view === "archived" && <input type="hidden" name="status" value="archived" />}
-            <Input
-              type="search"
-              name="q"
-              defaultValue={q}
-              label="Search your collections"
-              placeholder="Name or description…"
-              maxLength={100}
+        {collections.length > 0 && (
+          <div className="space-y-4">
+            <form role="search" action="/collections" className="flex items-end gap-2">
+              {view === "archived" && <input type="hidden" name="status" value="archived" />}
+              <Input
+                type="search"
+                name="q"
+                defaultValue={q}
+                label="Search your collections"
+                placeholder="Name or description…"
+                maxLength={100}
+              />
+              <Button type="submit" variant="secondary" className="h-12">
+                Search
+              </Button>
+            </form>
+            <FilterPills
+              label="Filter collections"
+              pills={COLLECTION_PILLS.map(([v, label]) => ({ label, href: collectionsViewHref(v, q), current: v === view }))}
             />
-            <Button type="submit" variant="secondary" className="h-12">
-              Search
-            </Button>
-          </form>
-          <FilterPills
-            label="Filter collections"
-            pills={COLLECTION_PILLS.map(([v, label]) => ({ label, href: collectionsViewHref(v, q), current: v === view }))}
-          />
-        </div>
+          </div>
+        )}
 
         {visible.length === 0 ? (
           <div className="flex flex-col items-center">

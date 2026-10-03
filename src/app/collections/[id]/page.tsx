@@ -22,6 +22,7 @@ import { ArchivedNotice } from "@/features/items/ArchivedNotice";
 import { ItemFilterPills, type ItemsView } from "@/features/items/ItemFilterPills";
 import { filterItems, itemsEmptyState } from "@/lib/items";
 import { isIdShaped } from "@/lib/id";
+import { queryFrom } from "@/lib/searchParam";
 import { quietLink } from "@/lib/design/quiet-link";
 import Link from "next/link";
 
@@ -46,8 +47,7 @@ export default async function CollectionPage({ params, searchParams: searchParam
 
   const view: ItemsView =
     searchParams?.status === "archived" ? "archived" : searchParams?.unnamed === "1" ? "unnamed" : "all";
-  // typeof: a repeated ?q= key arrives as string[] — ignore it.
-  const q = typeof searchParams?.q === "string" ? searchParams.q.slice(0, 100) : "";
+  const q = queryFrom(searchParams?.q);
   const itemController = ItemController.fromDb(db);
   // One round-trip. A failed read PROPAGATES (never caught into [] and shown as empty).
   // Archived items are always read (this collection's only): they verify ?removed= and
@@ -95,7 +95,8 @@ export default async function CollectionPage({ params, searchParams: searchParam
         <div className="space-y-2">
           <header className="flex items-start justify-between gap-3">
             <div className="min-w-0 max-w-3xl">
-              <h1 className="text-2xl text-ink sm:text-3xl">{collection.name}</h1>
+              {/* tabIndex -1: ArchivedNotice hands focus here as it unmounts. */}
+              <h1 tabIndex={-1} className="text-2xl text-ink outline-hidden sm:text-3xl">{collection.name}</h1>
               {collection.description && <p className="mt-2 text-ink-soft">{collection.description}</p>}
             </div>
             <CollectionHomeMenu href={base} name={collection.name} isOwner={collection.ownerId === session.user.id} />
@@ -148,30 +149,33 @@ export default async function CollectionPage({ params, searchParams: searchParam
           />
         )}
 
-        <div className="space-y-4">
-          <form role="search" action={base} className="flex items-end gap-2">
-            {view === "archived" && <input type="hidden" name="status" value="archived" />}
-            {view === "unnamed" && <input type="hidden" name="unnamed" value="1" />}
-            <div className="w-full">
-              {/* Visually hidden below md (above-the-fold room); the accessible name stays. */}
-              <label htmlFor="home-search" className="mb-2 block text-sm font-medium text-ink max-md:sr-only">
-                Search your items
-              </label>
-              <Input
-                id="home-search"
-                type="search"
-                name="q"
-                defaultValue={q}
-                placeholder="Name, brand, color…"
-                maxLength={100}
-              />
-            </div>
-            <Button type="submit" variant="secondary" className="h-12">
-              Search
-            </Button>
-          </form>
-          <ItemFilterPills path={base} view={view} q={q} />
-        </div>
+        {/* Nothing to search or filter until an item exists, live or archived. */}
+        {liveItems.length + archivedItems.length > 0 && (
+          <div className="space-y-4">
+            <form role="search" action={base} className="flex items-end gap-2">
+              {view === "archived" && <input type="hidden" name="status" value="archived" />}
+              {view === "unnamed" && <input type="hidden" name="unnamed" value="1" />}
+              <div className="w-full">
+                {/* Visually hidden below md (above-the-fold room); the accessible name stays. */}
+                <label htmlFor="home-search" className="mb-2 block text-sm font-medium text-ink max-md:sr-only">
+                  Search your items
+                </label>
+                <Input
+                  id="home-search"
+                  type="search"
+                  name="q"
+                  defaultValue={q}
+                  placeholder="Name, brand, color…"
+                  maxLength={100}
+                />
+              </div>
+              <Button type="submit" variant="secondary" className="h-12">
+                Search
+              </Button>
+            </form>
+            <ItemFilterPills path={base} view={view} q={q} />
+          </div>
+        )}
 
         {visible.length > 0 ? (
           <ul aria-label="Your items" className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">

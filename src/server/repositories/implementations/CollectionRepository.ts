@@ -1,4 +1,4 @@
-import { eq, isNull, and, or, ne, exists } from "drizzle-orm";
+import { eq, isNull, and, or, ne, exists, asc, desc } from "drizzle-orm";
 import type { Database } from "@/lib/db";
 import { collectionsTable, membershipsTable } from "@/lib/db/schema";
 import type { Collection, CollectionStatus } from "@/types";
@@ -66,7 +66,7 @@ export class CollectionRepository {
   // (IDOR-by-list). One query via an EXISTS-membership OR ownerId predicate;
   // the (collection_id, user_id) unique index means each collection matches at
   // most once, but the caller may still own AND have a row for the same id, so
-  // dedupe by id. Excludes soft-deleted, matching findByOwner.
+  // dedupe by id (the Map keeps the query order). Excludes soft-deleted, matching findByOwner.
   async findByOwnerOrMember(userId: string): Promise<Collection[]> {
     const rows = await this.db
       .select()
@@ -89,7 +89,9 @@ export class CollectionRepository {
             ),
           ),
         ),
-      );
+      )
+      // Newest first; id breaks a created_at tie so the grid never reshuffles.
+      .orderBy(desc(collectionsTable.createdAt), asc(collectionsTable.id));
     const byId = new Map<string, Collection>();
     for (const row of rows) {
       if (!byId.has(row.id)) byId.set(row.id, this.mapToCollection(row));

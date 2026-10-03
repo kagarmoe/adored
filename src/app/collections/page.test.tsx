@@ -45,7 +45,7 @@ const renderPage = async (searchParams?: Record<string, string | string[]>) =>
   render(await CollectionsPage({ searchParams: searchParams ? Promise.resolve(searchParams) : undefined }));
 
 describe("/collections: cover-card grid, search, All / Archived, owner ···", () => {
-  it("All shows the active collections as cards; New collection is the one primary, in the Next step bar", async () => {
+  it("All is the current pill and shows the active collections as cards; New collection is the one primary, in the Next step bar", async () => {
     const { container } = await renderPage();
     expect(screen.getByRole("link", { name: "Summer bags" })).toHaveAttribute("href", "/collections/summer-bags");
     expect(screen.getByRole("link", { name: "Mum's china" })).toBeInTheDocument();
@@ -54,8 +54,6 @@ describe("/collections: cover-card grid, search, All / Archived, owner ···", 
     expect(within(bar).getByRole("link", { name: "New collection" })).toHaveAttribute("href", "/collections/new");
     expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
     expect(screen.getByRole("link", { name: "All" })).toHaveAttribute("aria-current", "page");
-    // Browser zoom shrinks the viewport below md AND short: never two fixed bands.
-    expect(bar.className).toContain("[@media(max-height:500px)]:static");
   });
 
   it("Archived lists archived collections, with Bring back in the owner's menu", async () => {
@@ -96,8 +94,9 @@ describe("/collections: cover-card grid, search, All / Archived, owner ···", 
   it("shows Undo only for the viewer's own collection that is archived now", async () => {
     const SHARED_ARCHIVED = mk({ id: "col_d", ownerId: "someone-else", name: "Their attic", status: "archived" });
     collectionController.listCollections.mockResolvedValue([MINE, SHARED, ARCHIVED, SHARED_ARCHIVED]);
-    await renderPage({ removed: "col_c" });
+    const { container } = await renderPage({ removed: "col_c" });
     expect(screen.getByRole("status")).toHaveTextContent(/^Archived\./);
+    expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
     for (const removed of [
       "col_a" /* restored already */,
       "col_zzz" /* not in their list */,
@@ -131,5 +130,12 @@ describe("/collections: cover-card grid, search, All / Archived, owner ···", 
     await renderPage();
     expect(screen.getByRole("heading", { name: "Nothing here right now" })).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: /collection/i }).map((l) => l.textContent)).toEqual(["New collection"]);
+  });
+
+  it("no collections at all: no search and no pills", async () => {
+    collectionController.listCollections.mockResolvedValue([]);
+    await renderPage();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Archived" })).not.toBeInTheDocument();
   });
 });

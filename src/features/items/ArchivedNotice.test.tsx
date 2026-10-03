@@ -45,6 +45,21 @@ describe("ArchivedNotice", () => {
     );
   });
 
+  it("after Undo or Done, focus moves to the list heading — never dropped to the page as the notice unmounts", async () => {
+    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ ok: true });
+    render(
+      <main>
+        <h1 tabIndex={-1}>Summer bags</h1>
+        <ArchivedNotice kind="item" id="item_1" />
+      </main>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: /^undo$/i }));
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Summer bags" })).toHaveFocus());
+    screen.getByRole("status").focus();
+    fireEvent.click(screen.getByRole("button", { name: /^done$/i }));
+    expect(screen.getByRole("heading", { name: "Summer bags" })).toHaveFocus();
+  });
+
   it("keeps co-present filters when stripping the removed param", () => {
     search = "status=archived&removed=item_1";
     render(<ArchivedNotice kind="item" id="item_1" />);

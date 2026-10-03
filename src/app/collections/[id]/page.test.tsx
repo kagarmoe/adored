@@ -151,10 +151,11 @@ describe("the home is the items grid", () => {
 
   it("Archived lists soft-deleted items with Bring back and no panel link", async () => {
     itemRepo.findArchivedByCollection.mockResolvedValue([makeItem(3, "Old clutch")]);
-    await renderPage({ status: "archived" });
+    const { container } = await renderPage({ status: "archived" });
     expect(screen.getByText("Old clutch")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Bring back" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Old clutch" })).not.toBeInTheDocument();
+    expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
   });
 
   it("search narrows the grid, keeps the query, and the pills link back to the home with it", async () => {
@@ -179,11 +180,33 @@ describe("the home is the items grid", () => {
     expect(screen.getByRole("link", { name: "Clear search" })).toHaveAttribute("href", "/collections/summer-bags?unnamed=1");
   });
 
+  it("a whitespace-only query is no query: the pool strip stays and nothing offers Clear search", async () => {
+    photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    await renderPage({ q: "   " });
+    expect(screen.getByRole("region", { name: "Photos waiting" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Tote" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Clear search" })).not.toBeInTheDocument();
+  });
+
+  it("nothing here at all: no search and no pills, only the empty state", async () => {
+    await renderPage();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Archived" })).not.toBeInTheDocument();
+    document.body.innerHTML = "";
+    // Photos waiting but no items yet: still nothing to search.
+    photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1")]);
+    await renderPage();
+    expect(screen.queryByRole("searchbox")).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Archived" })).not.toBeInTheDocument();
+  });
+
   it("shows the undo notice only for an archived item of this collection", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
     itemRepo.findArchivedByCollection.mockResolvedValue([makeItem(9, "Old clutch")]);
-    await renderPage({ removed: "item_9" });
+    const { container } = await renderPage({ removed: "item_9" });
     expect(screen.getByRole("status")).toHaveTextContent(/^Archived\./);
+    expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
     expect(itemRepo.findArchivedByCollection).toHaveBeenCalledWith(COLLECTION_ID); // scoped to THIS collection
     for (const removed of [
       "item_1" /* still live: a stale link */,
@@ -220,14 +243,16 @@ describe("one primary action, in the Next step bar", () => {
     for (const status of ["active", "paused"] as const) {
       document.body.innerHTML = "";
       sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ ...makeSession(5), status }]);
-      await renderPage();
+      const { container } = await renderPage();
       expect(within(bar()).getByRole("button", { name: "Keep sorting" })).toBeInTheDocument();
+      expect(container.querySelectorAll(".bg-primary")).toHaveLength(1);
     }
   });
 
   it("pool photos and no items: Make items leads; the strip shows the photos without a second link", async () => {
     photoRepo.findPoolByCollection.mockResolvedValue([makePoolPhoto("ph_1"), makePoolPhoto("ph_2")]);
     const { container } = await renderPage();
+    expect(photoRepo.findPoolByCollection).toHaveBeenCalledWith(COLLECTION_ID, 6);
     expect(within(bar()).getByRole("link", { name: "Make items" })).toHaveAttribute("href", "/collections/summer-bags/pool");
     expect(screen.getAllByRole("link", { name: "Make items" })).toHaveLength(1);
     const strip = screen.getByRole("region", { name: "Photos waiting" });
@@ -270,6 +295,11 @@ describe("header: See your ranking and the ··· menu", () => {
     sessionRepo.findByCollectionAndCurator.mockResolvedValue([makeSession(5)]);
     await renderPage();
     expect(screen.queryByRole("link", { name: "See your ranking" })).not.toBeInTheDocument();
+    document.body.innerHTML = "";
+    // A finished sort that placed nothing still has a ranking to look at.
+    sessionRepo.findByCollectionAndCurator.mockResolvedValue([{ ...makeSession(5), status: "completed" }]);
+    await renderPage();
+    expect(screen.getByRole("link", { name: "See your ranking" })).toBeInTheDocument();
   });
 
   it("the owner's menu: Add item, Collection settings, Members", async () => {

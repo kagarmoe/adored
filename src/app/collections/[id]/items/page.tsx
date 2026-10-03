@@ -1,5 +1,6 @@
 import { redirectRetired } from "@/lib/collections/retired-redirect";
 import { isIdShaped } from "@/lib/id";
+import { queryFrom } from "@/lib/searchParam";
 
 type Param = string | string[] | undefined;
 
@@ -18,7 +19,8 @@ export default async function ItemsListRedirect({ params, searchParams }: Props)
   const keep = new URLSearchParams();
   if (sp.status === "archived") keep.set("status", "archived");
   if (sp.unnamed === "1") keep.set("unnamed", "1");
-  if (typeof sp.q === "string" && sp.q.trim()) keep.set("q", sp.q.slice(0, 100));
+  const q = queryFrom(sp.q);
+  if (q) keep.set("q", q);
   if (isIdShaped(sp.removed)) keep.set("removed", sp.removed);
   return redirectRetired(id, "", keep);
 }

@@ -40,6 +40,13 @@ export function ArchivedNotice({ kind, id }: ArchivedNoticeProps) {
     return qs ? `${pathname}?${qs}` : pathname;
   }
 
+  // The notice unmounts as the URL loses ?removed=; focus goes to the list's heading
+  // first so it is never dropped to <body>.
+  function leave() {
+    router.replace(hrefWithoutRemoved());
+    document.querySelector<HTMLElement>("main h1")?.focus();
+  }
+
   async function restore() {
     const safe = encodeURIComponent(id);
     // Literal paths (not a joined segment) so the UI-route connectivity scan can verify both wires.
@@ -48,7 +55,7 @@ export function ArchivedNotice({ kind, id }: ArchivedNoticeProps) {
         ? await fetch(`/api/items/${safe}/restore`, { method: "POST" })
         : await fetch(`/api/collections/${safe}/restore`, { method: "POST" });
     if (!res.ok) throw new Error("restore failed");
-    router.replace(hrefWithoutRemoved());
+    leave();
   }
 
   // Defense in depth behind each page's own check.
@@ -59,7 +66,7 @@ export function ArchivedNotice({ kind, id }: ArchivedNoticeProps) {
       ref={containerRef}
       tabIndex={-1}
       role="status"
-      className="flex flex-col gap-3 rounded-card bg-surface p-4 ring-1 ring-hairline outline-hidden sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 rounded-card bg-surface p-4 ring-1 ring-hairline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:justify-between"
     >
       <span className="text-sm text-ink">
         Archived. You&rsquo;ll find it under Archived.
@@ -70,7 +77,7 @@ export function ArchivedNotice({ kind, id }: ArchivedNoticeProps) {
           label="Undo"
           busyLabel="Bringing it back…"
         />
-        <Button variant="ghost" onClick={() => router.replace(hrefWithoutRemoved())}>
+        <Button variant="ghost" onClick={leave}>
           Done
         </Button>
       </div>

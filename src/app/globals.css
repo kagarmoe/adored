@@ -432,7 +432,7 @@
 
 /* ActionBar is fixed on phones: keep keyboard-focused / scrolled-to content above it.
    9rem matches AppLayout's reserveActionBar (pb-36). */
-@media (max-width: 767.98px) and (min-height: 501px) {
+@media (width < 48rem) and (min-height: 501px) {
   html:has([data-action-bar]) {
     scroll-padding-bottom: 9rem;
   }

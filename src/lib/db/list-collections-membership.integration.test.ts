@@ -15,12 +15,16 @@ import { CollectionController } from "@/server/api/collections";
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
 /** Create a collection row owned by ownerId. Returns collectionId. */
-async function seedCollection(ownerId: string, name = "Owned"): Promise<string> {
+async function seedCollection(
+  ownerId: string,
+  name = "Owned",
+  createdAt = new Date(),
+  collectionId = generateId("col"),
+): Promise<string> {
   const { db } = getTestDb();
-  const collectionId = generateId("col");
   await db.execute(sql`
     INSERT INTO collections (id, owner_id, name, status, created_at, updated_at)
-    VALUES (${collectionId}, ${ownerId}, ${name}, 'active', now(), now())
+    VALUES (${collectionId}, ${ownerId}, ${name}, 'active', ${createdAt.toISOString()}, now())
   `);
   return collectionId;
 }
@@ -88,6 +92,19 @@ describeDb("CollectionRepository.findByOwnerOrMember — r50o", () => {
 
     const result = await repo.findByOwnerOrMember(userId);
     expect(ids(result)).toEqual([owned, borrowed].sort());
+  });
+
+  it("lists newest first, a created_at tie broken by id (the /collections grid order)", async () => {
+    const { db } = getTestDb();
+    const repo = new CollectionRepository(db);
+    const old = await seedCollection(userId, "Old", new Date("2020-01-01T00:00:00Z"));
+    const tie = new Date("2025-01-01T00:00:00Z");
+    // Inserted b before a so a heap-order result would come back wrong.
+    await seedCollection(userId, "Tie B", tie, "col_tie_b");
+    await seedCollection(userId, "Tie A", tie, "col_tie_a");
+
+    const result = await repo.findByOwnerOrMember(userId);
+    expect(result.map((c) => c.id)).toEqual(["col_tie_a", "col_tie_b", old]);
   });
 
   // LOAD-BEARING: a PENDING invitation (no membership row) must NOT surface the
