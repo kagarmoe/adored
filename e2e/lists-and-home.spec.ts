@@ -4,6 +4,7 @@
 // geometry (viewport-sensitive, checked here in CI at iPhone width), and wayfinding.
 import { test, expect, type Page } from "@playwright/test";
 import { closeDb, getTestDb } from "./fixtures/db";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
 import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import {
   seedBaseline,
@@ -24,6 +25,7 @@ let startable: SeededCollectionRef;
 let shelf: { name: string } & SeededCollectionRef;
 let long: { slug: string };
 let ranked: { slug: string };
+let archivedHome: string;
 let pool: SeededCollectionRef;
 
 test.beforeAll(async () => {
@@ -37,6 +39,9 @@ test.beforeAll(async () => {
   shelf = { name, ...(await seedNamedCollection(ownerId, name)) };
   long = await seedJourneyScenario(ownerId, 8); // enough cards to scroll on a phone
   pool = await seedPool(ownerId, 12); // enough tiles to scroll on a phone
+  const withArchived = await seedJourneyScenario(ownerId, 2);
+  await new ItemRepository(getTestDb().db).softDelete(withArchived.itemIds[0]);
+  archivedHome = `/collections/${withArchived.slug}?status=archived`;
   ranked = await seedSortScenario(ownerId); // has a finalized ranking, so the chip row carries See your ranking
 });
 
@@ -321,4 +326,33 @@ test("phone: the trail collapses to a single accessible back link", async ({ pag
 
   await back.click();
   await expect(page).toHaveURL(new RegExp(`/collections/${poolOnly.slug}$`));
+});
+
+test("phone: an archived card's Bring back lines up with the name and fits the card, idle and busy", async ({ page }) => {
+  // Viewport-sensitive: a 390px two-column card is the narrowest column the pill must fit.
+  await page.setViewportSize(PHONE);
+  await page.goto(archivedHome);
+  const tile = page.getByRole("list", { name: "Your items" }).getByRole("listitem").first();
+  const name = (await tile.getByRole("heading").boundingBox())!;
+  const cardBox = (await tile.boundingBox())!;
+  const fits = async (label: RegExp) => {
+    const pill = tile.getByRole("button", { name: label });
+    const box = (await pill.boundingBox())!;
+    expect(Math.abs(box.x - name.x)).toBeLessThanOrEqual(1); // the pill's edge is the name's edge
+    expect(box.x + box.width).toBeLessThanOrEqual(cardBox.x + cardBox.width - 12); // inside p-3
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    // The label never spills sideways or downward, and stays on one line.
+    expect(
+      await pill.evaluate((el) => {
+        const line = document.createRange();
+        line.selectNodeContents(el);
+        return el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight && line.getClientRects().length === 1;
+      }),
+    ).toBe(true);
+  };
+  await fits(/^Bring back$/);
+  // Hold the restore open so the busy label can be measured.
+  await page.route("**/api/items/*/restore", () => {});
+  await tile.getByRole("button", { name: /^Bring back$/ }).click();
+  await fits(/^One moment…$/);
 });
