@@ -164,7 +164,7 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
 - **Glass panel:** `Card variant="glass"` — glass-strong + blur + rim; reserved for decorative panels. The item panel's fields side uses the pre-composited `card` variant so field contrast stays AA-stable.
 - **Action bar:** the page's one primary action (`ActionBar`, `src/components/layout/ActionBar.tsx`).
   From `md` up an inline row where the page places it; on phone a fixed bottom bar on `glass-strong`
-  + backdrop blur + a `rim` top edge; static on a short viewport (browser zoom), never a second fixed
+  + backdrop blur + a `hairline` top edge; static on a short viewport (browser zoom), never a second fixed
   band. The page reserves 9rem (`AppLayout reserveActionBar`: the bar plus a two-line error) and sets
   a matching `scroll-padding-bottom`, so the last row, the footer and a keyboard-focused card never
   sit behind it. The primary fills the bar below `md`. It holds the primary and at most one pill
