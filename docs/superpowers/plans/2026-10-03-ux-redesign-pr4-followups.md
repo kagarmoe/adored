@@ -4,7 +4,7 @@
 
 **Goal:** Close six follow-up beads of epic purses-w7ss (.5, .6, .7, .8, .12, .16): a gentle note before a revision discards hand-placed pins, every draft writer under the curator lock, batched `saveAndShare` writes, a migration `lock_timeout`, one-row-per-item cover reads, and creation-ordered ids.
 
-**Architecture:** Service/repository changes in `SortResultService`, `SortResultItemRepository`, `DecisionEventRepository`, `PhotoRepository`; one runtime option in `scripts/migrate.ts`; a module-level ULID monotonic factory in `src/lib/id.ts`; one client island (`MakeRevisionButton`) gains a confirm step driven by a new server-side 409 from the supersede route (the server owns the check, inside the curator lock).
+**Architecture:** Service/repository changes in `SortResultService`, `SortResultItemRepository`, `DecisionEventRepository`, `PhotoRepository`; a verified `lock_timeout` in `scripts/migrate.ts`; a module-level ULID monotonic factory in `src/lib/id.ts`; one client island (`MakeRevisionButton`) gains a confirm step driven by a new server-side 409 from the supersede route (the server owns the check, inside the curator lock).
 
 **Tech Stack:** Next.js 16 App Router, TypeScript strict, drizzle-orm ^0.45.2 (postgres-js), Postgres 16, vitest 4 (+ `RUN_DB_TESTS=1` DB tier), Playwright, `ulid` 3.0.2 (installed; already exports `monotonicFactory`, used by `generateOrderedIdFactory`).
 
@@ -26,11 +26,11 @@
 
 ## Review Focus
 
-1. **Revision when the open draft's pins already match the saved order** (e.g. right after Save, which carries pins into a fresh draft at their saved slots) → no note; the revision opens straight away. Pinned by the `pinsLostToRevision` unit test in Task 6.
+1. **Revision when the open draft's pins already match the saved order** (e.g. right after Save, which carries pins into a fresh draft at their saved slots) → no note; the revision opens straight away. Pinned by the `pinsLostToRevision` unit test and, through the real route, by the extended "pins survive a save" DB test in Task 6.
 2. **Pins changed in another tab after the saved-result page rendered** → the server still refuses to discard them silently (409 with the live count). The check runs inside the curator lock, so the DB route test in Task 6 is the proof; the client never computes the count.
-3. **Two non-hero photos with identical `created_at`** → the cover is deterministic (lower id), on both the item and collection variants. Pinned by the tie tests in Task 2.
-4. **A curator pins while the owner's purge-prep runs** → the purge-prep waits for the curator's writer instead of deleting pin rows under it. Pinned by the lock-wait DB test in Task 4.
-5. **A migration waiting on a lock held by live traffic** → fails within ~5 s with a clear "lock timeout" error instead of queueing every read behind it. Pinned by the DB test in Task 3.
+3. **Two non-hero photos with identical `created_at`** → the cover is deterministic (lower id), on both the item and collection variants. Pinned by the tie tests in Task 2, which give the later-inserted row the lower id so heap order cannot pass them by accident.
+4. **A curator pins while the owner's purge-prep runs** → the purge-prep waits for the curator's writer instead of deleting pin rows under it. Pinned by the lock-wait DB test in Task 4 (the holder is a member, so an owner-only lock fails it).
+5. **A migration waiting on a lock held by live traffic** → fails within ~5 s with a clear "lock timeout" error instead of queueing every read behind it. Pinned by the DB test in Task 3. A connection that cannot carry `lock_timeout` (pooler dropped it) refuses to migrate at all — pinned by the `ensureLockTimeout` unit test.
 
 ---
 
@@ -43,7 +43,8 @@
 | `src/lib/db/preference-bulk-upsert.integration.test.ts` | pin item `createdAt` in "reordering three loved items" | 1 |
 | `src/server/repositories/implementations/PhotoRepository.ts` | `findCoverPhotosByItemIds` / `findCoverPhotosByCollectionIds` → `selectDistinctOn` | 2 |
 | `src/lib/db/cover-photos.integration.test.ts`, `src/lib/db/collection-cover-photos.integration.test.ts` | `created_at` tie → lower id test | 2 |
-| `scripts/migrate.ts` | `connection: { lock_timeout: 5_000 }` | 3 |
+| `scripts/migrate.ts` | `connection: { lock_timeout: 5_000 }` + verify-before-migrate (`ensureLockTimeout`) | 3 |
+| `scripts/lock-timeout.ts` (+ `scripts/lock-timeout.test.ts`) | new: `ensureLockTimeout(sql)` — applied / applied-after-SET / fail-loud | 3 |
 | `src/lib/db/migrate-lock-timeout.integration.test.ts` | new: migrator fails fast on a held lock | 3 |
 | `src/server/services/SortResultService.ts` | purge-prep under `lockCollectionCurators`; delete dead `updateResultName`; comment update | 4 |
 | `src/app/api/items/[id]/remove-from-sorts/route.ts` | pass `item.collectionId` | 4 |
@@ -52,13 +53,13 @@
 | `src/server/repositories/implementations/DecisionEventRepository.ts` | `findBySessions` | 5 |
 | `src/server/services/decision-log.ts` (+ new `decision-log.test.ts`) | one decisions query | 5 |
 | `src/server/services/SortResultService.ts` | `saveAndShare` rebuild + kept pins via `createMany` | 5 |
-| `src/server/services/SortResultService.test.ts`, `PreferenceStateService.test.ts`, `ScoringService.test.ts` | new happy-path test; mocks gain `findBySessions` | 5 |
+| `src/server/services/SortResultService.test.ts`, `PreferenceStateService.test.ts` | new happy-path test; mocks gain `findBySessions` | 5 |
 | `src/server/services/sortResultMaterialization.ts` (+ test) | `pinsLostToRevision` | 6 |
-| `src/server/services/SortResultService.ts` | `RevisionDiscardsPinsError`; `supersedeResult(id, { discardPins })` | 6 |
+| `src/server/services/SortResultService.ts` | `RevisionDiscardsPinsError` (thrown after the tx returns); `supersedeResult(id, { discardPins })` | 6 |
 | `src/server/api/http-errors.ts` | map `RevisionDiscardsPinsError` → 409 `{ error, code, pinCount }` | 6 |
 | `src/app/api/sort-results/[id]/supersede/route.ts` | optional body `{ discardPins: true }` | 6 |
 | `src/features/results/MakeRevisionButton.tsx` (+ new test) | inline note + confirm | 6 |
-| `src/lib/db/ranking-save-route.integration.test.ts` | 409 → confirm → 201 route test; existing shared-draft test passes `discardPins` | 6 |
+| `src/lib/db/ranking-save-route.integration.test.ts` | 409 → confirm → 201 route test; "pins survive a save" also supersedes with no body → 201; existing shared-draft test passes `discardPins` | 6 |
 | `docs/DATABASE.md`, `docs/DEPLOYMENT.md`, `docs/API.md`, `docs/ARCHITECTURE.md`, `docs/doc-ownership.md` | docs sync | 7 |
 
 ---
@@ -81,8 +82,6 @@ describe("generateId", () => {
   it("ids minted in the same millisecond strictly increase, so createdAt ties break in creation order (purses-w7ss.16)", () => {
     const ids = Array.from({ length: 200 }, () => generateId("item")); // a tight loop guarantees same-ms runs
     for (let i = 1; i < ids.length; i++) expect(ids[i] > ids[i - 1]).toBe(true);
-    const t = new Date(1000);
-    expect(compareByCreatedAtThenId({ id: ids[0], createdAt: t }, { id: ids[1], createdAt: t })).toBeLessThan(0);
   });
 });
 ```
@@ -160,14 +159,19 @@ Behaviour-preserving refactor: the semantics (hero first, else earliest `created
     const p2 = await seedPhoto(item.id, "tie-2", false);
     const { db } = getTestDb();
     await db.execute(sql`UPDATE photos SET created_at = '2026-01-01T00:00:00Z'::timestamptz WHERE id IN (${p1.id}, ${p2.id})`);
+    // Give the SECOND-inserted photo the lower id, so heap/insert order and id order
+    // disagree — otherwise a query that drops `id` from ORDER BY still passes.
+    // (No FK references photos.id, so renaming the key is safe.)
+    const lowId = "photo_00000000000000000000000000";
+    await db.execute(sql`UPDATE photos SET id = ${lowId} WHERE id = ${p2.id}`);
     const covers = await photoRepo().findCoverPhotosByItemIds([item.id]);
-    expect(covers.get(item.id)!.id).toBe([p1.id, p2.id].sort()[0]);
+    expect(covers.get(item.id)!.id).toBe(lowId);
   });
 ```
 
 (Adjust `itemRepo().create(...)` to match how the file's other tests create items — read the existing "falls back to the earliest photo" test and mirror it.)
 
-- [ ] **Step 2: Write the tie test (collection variant)** — same shape in `collection-cover-photos.integration.test.ts` after "falls back to the earliest assigned photo when there is no hero", using that file's own seeding helper, asserting `findCoverPhotosByCollectionIds([collectionId]).get(collectionId)!.id` is the lower of the two ids.
+- [ ] **Step 2: Write the tie test (collection variant)** — same shape in `collection-cover-photos.integration.test.ts` after "falls back to the earliest assigned photo when there is no hero", using that file's own seeding helper (`seedPhoto(collectionId, item.id, …)`), the same `created_at` stamp, and the same `UPDATE photos SET id = 'photo_00000000000000000000000000' WHERE id = <second-inserted photo>`, asserting `findCoverPhotosByCollectionIds([collectionId]).get(collectionId)!.id` is `'photo_00000000000000000000000000'`.
 
 - [ ] **Step 3: Run both files against the current code**
 
@@ -228,15 +232,57 @@ git commit -m "perf(photos): DISTINCT ON for cover lookups, one row per item/col
 
 ### Task 3: Migration `lock_timeout` — purses-w7ss.8
 
+The migrator runs at `vercel-build` on the pooled `DATABASE_URL` (Neon PgBouncer), which may silently drop a startup parameter. So the startup parameter is not trusted: before any migration the script reads `current_setting('lock_timeout')`, falls back to `SET`, and refuses to migrate if neither took.
+
 **Files:**
-- Modify: `scripts/migrate.ts:16`
+- Modify: `scripts/migrate.ts`
+- Create: `scripts/lock-timeout.ts`, `scripts/lock-timeout.test.ts` (unit; `scripts/**/*.test.ts` is in the vitest include, so it runs in `npm run test:ci`)
 - Create: `src/lib/db/migrate-lock-timeout.integration.test.ts`
 
 **Interfaces:**
 - Consumes: `getTestDb`, `closeDb`, `TEST_DATABASE_URL` from `e2e/fixtures/db.ts`.
-- Produces: `npm run db:migrate` exits 1 with a "lock timeout" error after ~5 s when a lock it needs is held.
+- Produces:
+  - `ensureLockTimeout(sql: postgres.Sql): Promise<"applied" | "applied-after-set">` — throws `Error("lock_timeout not applied through this connection — run migrations against the direct URL")` when the setting is not `5s` even after `set lock_timeout = '5s'`.
+  - `npm run db:migrate` exits 1 with a "lock timeout" error after ~5 s when a lock it needs is held, and exits 1 before any migration when `lock_timeout` cannot be applied.
 
-- [ ] **Step 1: Write the failing test** — `src/lib/db/migrate-lock-timeout.integration.test.ts`:
+- [ ] **Step 1: Write the failing helper unit test** — `scripts/lock-timeout.test.ts`:
+
+```ts
+import { describe, expect, it, vi } from "vitest";
+import type postgres from "postgres";
+import { ensureLockTimeout } from "./lock-timeout";
+
+// A tagged-template sql mock: each call returns the next scripted result.
+function fakeSql(...results: unknown[][]) {
+  const calls: string[] = [];
+  const fn = vi.fn((strings: TemplateStringsArray) => {
+    calls.push(strings.join("?"));
+    return Promise.resolve(results.shift() ?? []);
+  });
+  return { sql: fn as unknown as postgres.Sql, calls };
+}
+
+describe("ensureLockTimeout (purses-w7ss.8)", () => {
+  it("accepts the startup parameter when it reached the server", async () => {
+    const { sql, calls } = fakeSql([{ lock_timeout: "5s" }]);
+    await expect(ensureLockTimeout(sql)).resolves.toBe("applied");
+    expect(calls).toHaveLength(1);
+  });
+
+  it("falls back to SET when the pooler dropped the startup parameter", async () => {
+    const { sql, calls } = fakeSql([{ lock_timeout: "0" }], [], [{ lock_timeout: "5s" }]);
+    await expect(ensureLockTimeout(sql)).resolves.toBe("applied-after-set");
+    expect(calls[1]).toMatch(/set lock_timeout = '5s'/);
+  });
+
+  it("refuses loudly when neither took", async () => {
+    const { sql } = fakeSql([{ lock_timeout: "0" }], [], [{ lock_timeout: "0" }]);
+    await expect(ensureLockTimeout(sql)).rejects.toThrow(/lock_timeout not applied through this connection — run migrations against the direct URL/);
+  });
+});
+```
+
+- [ ] **Step 2: Write the failing DB test** — `src/lib/db/migrate-lock-timeout.integration.test.ts`:
 
 ```ts
 // @vitest-environment node
@@ -245,7 +291,6 @@ git commit -m "perf(photos): DISTINCT ON for cover lookups, one row per item/col
 // lock_timeout (exit 1, "lock timeout") instead of waiting forever and queueing
 // every read behind it (purses-w7ss.8).
 import { spawn } from "node:child_process";
-import path from "node:path";
 import { afterAll, describe, expect, it } from "vitest";
 import { closeDb, getTestDb, TEST_DATABASE_URL } from "../../../e2e/fixtures/db";
 
@@ -253,17 +298,22 @@ const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
 function runMigrate(deadlineMs: number): Promise<{ code: number | null; output: string }> {
   return new Promise((resolve) => {
-    const tsx = path.resolve(process.cwd(), "node_modules/.bin/tsx");
-    const child = spawn(tsx, ["scripts/migrate.ts"], {
+    // One process (node + the tsx loader), so SIGKILL reaches the migrator itself.
+    const child = spawn(process.execPath, ["--import", "tsx", "scripts/migrate.ts"], {
       cwd: process.cwd(),
       env: { ...process.env, DATABASE_URL: TEST_DATABASE_URL },
     });
     let output = "";
     child.stdout.on("data", (d) => (output += d));
     child.stderr.on("data", (d) => (output += d));
-    // Without lock_timeout the child waits forever; kill it BEFORE the lock is
-    // released so it can never go on to run migrations.
+    // Without lock_timeout the child waits forever; kill it before the holder
+    // releases the lock. (Best-effort: if the kill lands late, an up-to-date test
+    // DB has nothing pending, so the migrator would run nothing.)
     const timer = setTimeout(() => child.kill("SIGKILL"), deadlineMs);
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      resolve({ code: null, output: `${output}\nspawn error: ${err.message}` });
+    });
     child.on("exit", (code) => {
       clearTimeout(timer);
       resolve({ code, output });
@@ -278,45 +328,70 @@ describeDb("db:migrate lock_timeout (script -> Postgres)", () => {
 
   it("fails fast with a lock timeout when the ledger is locked, and never waits indefinitely", async () => {
     const { client } = getTestDb();
+    const started = Date.now();
     const result = await client.begin(async (tx) => {
       await tx`lock table drizzle.__drizzle_migrations in access exclusive mode`;
       return runMigrate(20_000);
     });
     expect(result.code).toBe(1);
     expect(result.output).toMatch(/lock timeout/i);
+    expect(Date.now() - started).toBeLessThan(12_000);
   }, 30_000);
 });
 ```
 
-- [ ] **Step 2: Run it and watch it fail**
+- [ ] **Step 3: Run both and watch them fail**
 
+Run: `npx vitest run scripts/lock-timeout.test.ts`
+Expected: FAIL — `./lock-timeout` does not exist.
 Run: `RUN_DB_TESTS=1 DATABASE_URL_TEST=postgresql://postgres:test@localhost:5433/app_test npx vitest run --no-file-parallelism src/lib/db/migrate-lock-timeout.integration.test.ts`
 Expected: FAIL after ~20 s — `result.code` is `null` (child killed while still waiting on the lock).
 
-- [ ] **Step 3: Minimal implementation** — `scripts/migrate.ts`, replace `const sql = postgres(databaseUrl, { max: 1 });` with:
+- [ ] **Step 4: Minimal implementation** — create `scripts/lock-timeout.ts`:
+
+```ts
+import type postgres from "postgres";
+
+// The migrator runs at vercel-build on the pooled DATABASE_URL; PgBouncer may drop
+// a startup parameter silently. Verify the cap is live before migrating, and refuse
+// to migrate uncapped (purses-w7ss.8).
+export async function ensureLockTimeout(sql: postgres.Sql): Promise<"applied" | "applied-after-set"> {
+  const read = async () => (await sql`select current_setting('lock_timeout') as lock_timeout`)[0]?.lock_timeout;
+  if ((await read()) === "5s") return "applied";
+  await sql`set lock_timeout = '5s'`;
+  if ((await read()) === "5s") return "applied-after-set";
+  throw new Error("lock_timeout not applied through this connection — run migrations against the direct URL");
+}
+```
+
+`scripts/migrate.ts`: replace `const sql = postgres(databaseUrl, { max: 1 });` with:
 
 ```ts
 // A migration's DDL takes ACCESS EXCLUSIVE; while it WAITS for that lock, every
 // new read of the table queues behind it. Cap the wait at 5 s so a busy table
 // fails the deploy loudly (rolled back, safe to re-run) instead of stalling prod
-// reads. Startup parameter, like db.ts's statement_timeout (value in ms).
+// reads. Startup parameter (ms), verified by ensureLockTimeout before migrating.
 const sql = postgres(databaseUrl, { max: 1, connection: { lock_timeout: 5_000 } });
 ```
 
-- [ ] **Step 4: Run it and watch it pass**
+and in `runMigrations`, inside the `try` before `migrate(...)`: ``console.log(`lock_timeout: ${await ensureLockTimeout(sql)}`);`` (import `ensureLockTimeout` from `./lock-timeout`). The existing `catch` already logs and exits 1, so the fail-loud branch exits 1 before any migration.
 
-Same command as Step 2. Expected: PASS in ~6–8 s (tsx start + 5 s lock wait).
+Caveat for the implementer (do not code around it): under PgBouncer *transaction* pooling a session `SET` can land on a different backend than drizzle's migration transaction, so `applied-after-set` is only trustworthy on a session-mode or direct connection. The DEPLOYMENT/DATABASE docs (Task 7) say so; if prod logs `applied-after-set` on the pooled URL, point `db:migrate` at the direct URL.
 
-- [ ] **Step 5: Confirm a normal migrate still succeeds**
+- [ ] **Step 5: Run both and watch them pass**
+
+Same commands as Step 3. Expected: PASS — the unit test's three branches; the DB test in ~6–8 s (tsx start + 5 s lock wait), well under the 12 s assertion.
+
+- [ ] **Step 6: Confirm a normal migrate still succeeds**
 
 Run: `DATABASE_URL=postgresql://postgres:test@localhost:5433/app_test npm run db:migrate`
-Expected: "✅ Migrations completed successfully" (nothing pending; exit 0).
+Expected: "lock_timeout: applied" then "✅ Migrations completed successfully" (nothing pending; exit 0).
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
-git add scripts/migrate.ts src/lib/db/migrate-lock-timeout.integration.test.ts
-git commit -m "fix(migrate): 5s lock_timeout so a blocked migration fails fast (purses-w7ss.8)"
+git add scripts/migrate.ts scripts/lock-timeout.ts scripts/lock-timeout.test.ts src/lib/db/migrate-lock-timeout.integration.test.ts
+git commit -m "fix(migrate): verified 5s lock_timeout so a blocked migration fails fast (purses-w7ss.8)"
 ```
 
 ---
@@ -339,19 +414,22 @@ git commit -m "fix(migrate): 5s lock_timeout so a blocked migration fails fast (
 ```ts
   it("(e) waits for an in-flight curator writer: purge-prep takes the curator lock (purses-w7ss.6)", async () => {
     const itemId = await seedItemWithPreference();
-    await placeInResult(itemId, "draft");
+    const memberId = await addMember();
+    await placeInResult(itemId, "draft", memberId);
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
 
-    // A second connection plays a curator writer mid-transaction (pin/save hold this lock).
+    // A second connection plays a MEMBER curator's writer mid-transaction (pin/save
+    // hold this lock). The member's key, not the owner's: a purge-prep that took only
+    // the actor's (owner's) lock would not wait, so that mutant fails here.
     const holder = postgres(TEST_DATABASE_URL, { max: 1 });
     try {
       let call!: Promise<Response>;
       const outcome = await holder.begin(async (tx) => {
-        await tx`select pg_advisory_xact_lock(hashtext(${collectionId}), hashtext(${ownerId}))`;
+        await tx`select pg_advisory_xact_lock(hashtext(${collectionId}), hashtext(${memberId}))`;
         call = removeFromSorts(removeReq() as any, { params: Promise.resolve({ id: itemId }) });
         const waiting = (async () => {
           for (let i = 0; i < 50; i++) {
-            const [row] = await tx`select count(*)::int as n from pg_locks where locktype = 'advisory' and not granted`;
+            const [row] = await tx`select count(*)::int as n from pg_locks where locktype = 'advisory' and not granted and database = (select oid from pg_database where datname = current_database())`;
             if (row.n > 0) return "waiting" as const;
             await new Promise((r) => setTimeout(r, 100));
           }
@@ -417,7 +495,7 @@ git commit -m "fix(results): purge-prep under the curators' lock; drop dead upda
 
 ### Task 5: Batched `saveAndShare` writes — purses-w7ss.7
 
-Two independent reductions, same transaction: (a) the rebuild and the kept pins each become one multi-row `INSERT` (kept pins carry `manualRank` at insert — no create-then-update); (b) the decision log loads in one query instead of one per session. `loadCuratorDecisionEvents` is THE shared definition (spec §2.6), so it changes for every caller — same session set, same rows. Row order was never guaranteed (no `ORDER BY` before either); every consumer sorts with `compareByCreatedAtThenId` (`derive-usage.ts:16`, `ScoringService.ts:101`) — the implementer re-confirms with `grep -rn "listForCurator\|loadCuratorDecisionEvents" src` that no consumer reads the raw order.
+Two independent reductions, same transaction: (a) the rebuild and the kept pins each become one multi-row `INSERT` (kept pins carry `manualRank` at insert — no create-then-update); (b) the decision log loads in one query instead of one per session. `loadCuratorDecisionEvents` is THE shared definition (spec §2.6), so it changes for every caller — same session set, same rows. Row order was never guaranteed (no `ORDER BY` before either); every consumer sorts with `compareByCreatedAtThenId` (`derive-usage.ts:16`) — the implementer re-confirms with `grep -rn "listForCurator\|loadCuratorDecisionEvents" src` that no consumer reads the raw order.
 
 **Files:**
 - Modify: `src/server/repositories/implementations/SortResultItemRepository.ts` (add `createMany`)
@@ -425,12 +503,12 @@ Two independent reductions, same transaction: (a) the rebuild and the kept pins 
 - Modify: `src/server/services/decision-log.ts`
 - Create: `src/server/services/decision-log.test.ts`
 - Modify: `src/server/services/SortResultService.ts:289-320`
-- Test: `src/server/services/SortResultService.test.ts`; update mocks in `PreferenceStateService.test.ts:23,176,226` and `ScoringService.test.ts:63`
+- Test: `src/server/services/SortResultService.test.ts`; update mocks in `PreferenceStateService.test.ts:23,176,226`. Not `ScoringService.test.ts`: `ScoringService` has its own per-session loop (`ScoringService.ts:62`), never calls `loadCuratorDecisionEvents`, and is reached only from tests — its deletion is bead purses-w7ss.19.
 
 **Interfaces:**
 - Consumes: nothing from earlier tasks.
 - Produces:
-  - `SortResultItemRepository.createMany(rows: NewSortResultItem[]): Promise<SortResultItem[]>` where `type NewSortResultItem = { sortResultId: string; itemId: string; computedRank: number; computedBucket: RankBucket; manualRank?: number | null; usage?: "uses" | "not_uses" | null }` (exported from the repository file). Empty input → `[]`, no query.
+  - `SortResultItemRepository.createMany(rows: NewSortResultItem[]): Promise<void>` (no caller reads the rows back, so no `.returning()`) where `type NewSortResultItem = { sortResultId: string; itemId: string; computedRank: number; computedBucket: RankBucket; manualRank?: number | null; usage?: "uses" | "not_uses" | null }` (exported from the repository file). Empty input → no query.
   - `DecisionEventRepository.findBySessions(sessionIds: string[]): Promise<DecisionEvent[]>`. Empty input → `[]`, no query.
 
 - [ ] **Step 1: Write the failing decision-log test** — `src/server/services/decision-log.test.ts`:
@@ -459,7 +537,7 @@ describe("loadCuratorDecisionEvents", () => {
 - [ ] **Step 2: Write the failing saveAndShare test** — in `SortResultService.test.ts`:
   - extend the hoisted mocks: `txItemRepo` gains `createMany: vi.fn()`; `txResultRepo` gains `findDraftForUpdate: vi.fn()`; `txPrefRepo` gains `findByCollection: vi.fn()`;
   - add a hoisted `txLiveItemRepo = { findByCollection: vi.fn() }` and `vi.mock("@/server/repositories/implementations/ItemRepository", () => ({ ItemRepository: vi.fn(function () { return txLiveItemRepo; }) }));`
-  - in `beforeEach`: `txItemRepo.createMany.mockResolvedValue([]); txResultRepo.findDraftForUpdate.mockResolvedValue(null);`
+  - in `beforeEach`: `txItemRepo.createMany.mockResolvedValue(undefined); txResultRepo.findDraftForUpdate.mockResolvedValue(null);`
   - add the test:
 
 ```ts
@@ -525,10 +603,11 @@ export type NewSortResultItem = {
 
 ```ts
   // One INSERT for a whole materialization (the per-row loop held the curator lock N round trips).
-  async createMany(rows: NewSortResultItem[]): Promise<SortResultItem[]> {
-    if (rows.length === 0) return [];
+  // 10 bind params per row against Postgres's 65,535 cap: fine up to ~6,553 rows per call.
+  async createMany(rows: NewSortResultItem[]): Promise<void> {
+    if (rows.length === 0) return;
     const now = new Date();
-    const inserted = await this.db
+    await this.db
       .insert(sortResultItemsTable)
       .values(
         rows.map((r) => ({
@@ -543,9 +622,7 @@ export type NewSortResultItem = {
           createdAt: now,
           updatedAt: now,
         })),
-      )
-      .returning();
-    return inserted.map((i) => this.mapToResultItem(i));
+      );
   }
 ```
 
@@ -602,7 +679,7 @@ and the kept-pins block (lines ~313-320) with:
 
 (Kept pins' slots are distinct loved-list indexes, so equal `updatedAt` on them is safe — `dense-pins-splice` only needs distinct slots.)
 
-- [ ] **Step 6: Update the other mocks** — `PreferenceStateService.test.ts` (lines 23, 176, 226) and `ScoringService.test.ts` (line 63): each mocked `DecisionEventRepository` gains `findBySessions` returning the same events its `findBySession` returned (keep `findBySession` only if something else in that file still calls it). Example for line 23: `return { findBySessions: vi.fn().mockResolvedValue([]) } as unknown as DecisionEventRepository;`.
+- [ ] **Step 6: Update the other mocks** — `PreferenceStateService.test.ts` (lines 23, 176, 226): each mocked `DecisionEventRepository` gains `findBySessions` returning the same events its `findBySession` returned (keep `findBySession` only if something else in that file still calls it). Example for line 23: `return { findBySessions: vi.fn().mockResolvedValue([]) } as unknown as DecisionEventRepository;`.
 
 - [ ] **Step 7: Run unit + DB proof**
 
@@ -614,7 +691,7 @@ Expected: PASS — the un-mocked save path (multi-row insert, usage stamping, pi
 - [ ] **Step 8: Commit**
 
 ```bash
-git add src/server/repositories/implementations/SortResultItemRepository.ts src/server/repositories/implementations/DecisionEventRepository.ts src/server/services/decision-log.ts src/server/services/decision-log.test.ts src/server/services/SortResultService.ts src/server/services/SortResultService.test.ts src/server/services/PreferenceStateService.test.ts src/server/services/ScoringService.test.ts
+git add src/server/repositories/implementations/SortResultItemRepository.ts src/server/repositories/implementations/DecisionEventRepository.ts src/server/services/decision-log.ts src/server/services/decision-log.test.ts src/server/services/SortResultService.ts src/server/services/SortResultService.test.ts src/server/services/PreferenceStateService.test.ts
 git commit -m "perf(results): one multi-row insert and one decisions load in saveAndShare (purses-w7ss.7)"
 ```
 
@@ -654,36 +731,12 @@ describe("pinsLostToRevision", () => {
   it("ignores pins already at their saved slot and unpinned rows (no note right after Save)", () => {
     expect(pinsLostToRevision([row("a", 0), row("b", null)], saved)).toBe(0);
   });
-  it("is zero with no open draft rows", () => {
-    expect(pinsLostToRevision([], saved)).toBe(0);
-  });
 });
 ```
 
-- [ ] **Step 2: Failing service test** — in `SortResultService.test.ts`, import `RevisionDiscardsPinsError`, add inside `describe("SortResultService.supersedeResult")`:
+(No service-level "refuses… writes nothing" unit test: the DB route test in Step 2 proves the same contract un-mocked, and a mocked twin would only duplicate it at a weaker tier.)
 
-```ts
-  it("refuses to discard the open draft's hand placements without the flag, and writes nothing", async () => {
-    const source = sortResult({ id: "res-1", status: "finalized" });
-    const sourceItems = [sortResultItem({ itemId: "a", computedRank: 0, computedBucket: "top" })];
-    txResultRepo.findDrafts.mockResolvedValue([sortResult({ id: "draft-1" })]);
-    txItemRepo.findByResult.mockResolvedValueOnce([sortResultItem({ sortResultId: "draft-1", itemId: "z", manualRank: 0 })]);
-    const service = new SortResultService(
-      { findById: async () => source } as unknown as SortResultRepository,
-      { findByResult: async () => sourceItems } as unknown as SortResultItemRepository,
-      {} as unknown as CollectionPreferenceItemRepository,
-      txDb,
-    );
-
-    const err = await service.supersedeResult("res-1").catch((e: unknown) => e);
-    expect(err).toBeInstanceOf(RevisionDiscardsPinsError);
-    expect((err as RevisionDiscardsPinsError).pinCount).toBe(1);
-    expect(txItemRepo.deleteByResult).not.toHaveBeenCalled();
-    expect(txResultRepo.insertWithNumber).not.toHaveBeenCalled();
-  });
-```
-
-- [ ] **Step 3: Failing route test (DB, the one crossing)** — `ranking-save-route.integration.test.ts`: add `import { POST as supersede } from "@/app/api/sort-results/[id]/supersede/route";` beside the `save` import, and a request helper:
+- [ ] **Step 2: Failing route tests (DB, the one crossing)** — `ranking-save-route.integration.test.ts`: add `import { POST as supersede } from "@/app/api/sort-results/[id]/supersede/route";` beside the `save` import, and a file-scope request helper:
 
 ```ts
 const supersedeReq = (body?: unknown) =>
@@ -707,10 +760,8 @@ Then the test:
 
     const asked = await supersede(supersedeReq() as any, ctx(saved!.id));
     expect(asked.status).toBe(409);
-    expect(await asked.json()).toMatchObject({ code: "revision_discards_pins", pinCount: expect.any(Number) });
+    expect(await asked.json()).toMatchObject({ code: "revision_discards_pins", pinCount: 1 });
     expect(new Map((await service.listPins(s.collectionId, ownerId)).map((p) => [p.itemId, p.position])).get(s.a)).toBe(1); // untouched
-
-    expect((await supersede(supersedeReq({ discardPins: "yes" }) as any, ctx(saved!.id))).status).toBe(400);
 
     const confirmed = await supersede(supersedeReq({ discardPins: true }) as any, ctx(saved!.id));
     expect(confirmed.status).toBe(201);
@@ -720,16 +771,28 @@ Then the test:
   });
 ```
 
+(The strict-body 400 is not tested here: one crossing per route, and the zod schema cannot be unit-tested from outside because an App Router `route.ts` may export only route handlers/config. `z.literal(true).strict()` is trusted.)
+
+Extend the existing "pins survive a save" test — the real-seam proof of Review Focus 1 (pins carried by Save sit at their saved slots, so a revision asks nothing). Keep the save response, and after its existing assertions append:
+
+```ts
+    // Right after Save the carried pin sits at its saved slot: a revision opens without a note.
+    const result = await new SortResultRepository(db).findByCollectionAndNumber(s.collectionId, savedBody.resultNumber);
+    expect((await supersede(supersedeReq() as any, ctx(result!.id))).status).toBe(201);
+```
+
+where the save line becomes `const savedRes = await save(saveReq({ name: "Kept", saveKey: KEY }), ctx(s.collectionId)); expect(savedRes.status).toBe(201); const savedBody = (await savedRes.json()) as { resultNumber: number };`.
+
 Also update the existing test "a revision replaces a shared open draft, taking its share with it": `service.supersedeResult(saved!.id, { discardPins: true })` (its draft holds a hand move, so without the flag it now — correctly — asks).
 
-- [ ] **Step 4: Run all three and watch them fail**
+- [ ] **Step 3: Run them and watch them fail**
 
-Run: `npx vitest run src/server/services/sortResultMaterialization.test.ts src/server/services/SortResultService.test.ts`
-Expected: FAIL (`pinsLostToRevision` / `RevisionDiscardsPinsError` not exported).
+Run: `npx vitest run src/server/services/sortResultMaterialization.test.ts`
+Expected: FAIL (`pinsLostToRevision` not exported).
 Run: `RUN_DB_TESTS=1 DATABASE_URL_TEST=postgresql://postgres:test@localhost:5433/app_test npx vitest run --no-file-parallelism src/lib/db/ranking-save-route.integration.test.ts`
-Expected: FAIL — first supersede returns 201, not 409.
+Expected: FAIL — the new test's first supersede returns 201, not 409. ("pins survive a save" already passes — it is a guard that the check does not over-fire.)
 
-- [ ] **Step 5: Implement server side**
+- [ ] **Step 4: Implement server side**
 
 `sortResultMaterialization.ts`, after `savedOrderPositions`:
 
@@ -753,19 +816,27 @@ export class RevisionDiscardsPinsError extends Error {
 }
 ```
 
-`supersedeResult` — signature `async supersedeResult(id: string, opts: { discardPins?: boolean } = {}): Promise<SortResult | null>`; first lines inside the `inCuratorTx` callback, before `deleteDrafts`:
+`supersedeResult` — signature `async supersedeResult(id: string, opts: { discardPins?: boolean } = {}): Promise<SortResult | null>`. The error is NOT thrown inside `inCuratorTx`: `withTransaction` calls `logDbError` on any throw, so every prompt would log a DB error. The callback checks first (no writes happen before the check, so returning early commits nothing) and returns a sentinel; the method throws after the transaction returns:
 
 ```ts
+    const outcome = await this.inCuratorTx(source.collectionId, source.curatorId, "supersede_result", async (tx) => {
+      const itemRepo = new SortResultItemRepository(tx);
       if (!opts.discardPins) {
-        const itemRepo = new SortResultItemRepository(tx);
+        let lost = 0;
         for (const draft of await new SortResultRepository(tx).findDrafts(source.collectionId, source.curatorId)) {
-          const lost = pinsLostToRevision(await itemRepo.findByResult(draft.id), slots);
-          if (lost > 0) throw new RevisionDiscardsPinsError(lost);
+          lost += pinsLostToRevision(await itemRepo.findByResult(draft.id), slots);
         }
+        if (lost > 0) return { pinsLost: lost } as const;
       }
+      await this.deleteDrafts(tx, source.collectionId, source.curatorId);
+      // … the existing insertResultWithItems + re-pin loop, reusing this itemRepo …
+      return { revision } as const;
+    });
+    if ("pinsLost" in outcome) throw new RevisionDiscardsPinsError(outcome.pinsLost);
+    return outcome.revision;
 ```
 
-(Rename the later `const itemRepo` in the same callback, or hoist this one and reuse it — one `SortResultItemRepository(tx)` per callback.) Update the method comment: "…replacing any other; when that other draft holds hand placements the revision would move, the person confirms first (`discardPins`)."
+(One `SortResultItemRepository(tx)` per callback — drop the later `const itemRepo`.) `discardPins: true` discards whatever pins exist at confirm time — no `expectPinCount` round-trip (controller ruling A3). Update the method comment: "…replacing any other; when that other draft holds hand placements the revision would move, the person confirms first (`discardPins`)."
 
 `http-errors.ts` — import `RevisionDiscardsPinsError`; add before the `NothingToSaveError` branch:
 
@@ -808,11 +879,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
 (Authz stays before any body read, matching the route precedent.)
 
-- [ ] **Step 6: Server tests pass**
+- [ ] **Step 5: Server tests pass**
 
-Re-run both Step 4 commands. Expected: PASS. Also run `RUN_DB_TESTS=1 … npx vitest run --no-file-parallelism src/lib/db/sort-results-pipeline.integration.test.ts src/lib/db/sort-pipeline.integration.test.ts src/lib/db/route-authz-enumeration.integration.test.ts` — existing supersede tests post without a body against curators with no hand-placed draft, so they stay green; if one now 409s, read why before touching it (a draft with off-slot pins is exactly the case that should ask).
+Re-run both Step 3 commands. Expected: PASS. Also run `npx vitest run src/server/services` (existing `supersedeResult` unit tests must stay green with the sentinel shape) and `RUN_DB_TESTS=1 … npx vitest run --no-file-parallelism src/lib/db/sort-results-pipeline.integration.test.ts src/lib/db/sort-pipeline.integration.test.ts src/lib/db/route-authz-enumeration.integration.test.ts` — existing supersede tests post without a body against curators with no hand-placed draft, so they stay green; if one now 409s, read why before touching it (a draft with off-slot pins is exactly the case that should ask).
 
-- [ ] **Step 7: Failing component test** — `src/features/results/MakeRevisionButton.test.tsx`:
+- [ ] **Step 6: Failing component test** — `src/features/results/MakeRevisionButton.test.tsx`:
 
 ```tsx
 // @vitest-environment jsdom
@@ -839,6 +910,7 @@ describe("MakeRevisionButton", () => {
     renderIt();
     await userEvent.click(screen.getByRole("button", { name: "Make a revision" }));
     expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][1]?.body).toBeUndefined();
     expect(push).toHaveBeenCalledWith("/collections/bags/results");
   });
 
@@ -846,7 +918,11 @@ describe("MakeRevisionButton", () => {
     fetchMock.mockResolvedValueOnce(asks(2)).mockResolvedValueOnce({ ok: true, status: 201, json: async () => ({}) });
     renderIt();
     await userEvent.click(screen.getByRole("button", { name: "Make a revision" }));
-    expect(screen.getByText(/You've placed 2 pieces by hand on your live ranking/)).toBeVisible();
+    expect(fetchMock.mock.calls[0][1]?.body).toBeUndefined();
+    const note = screen.getByText(/You've moved 2 pieces by hand on your ranking\. .*so those moves won't be kept\./);
+    expect(note).toBeVisible();
+    expect(note).toHaveFocus();
+    expect(screen.getByRole("link", { name: "See your ranking first" })).toHaveAttribute("href", "/collections/bags/results");
     expect(push).not.toHaveBeenCalled();
     await userEvent.click(screen.getByRole("button", { name: "Start the revision" }));
     expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({ discardPins: true });
@@ -857,39 +933,49 @@ describe("MakeRevisionButton", () => {
     fetchMock.mockResolvedValueOnce(asks(1));
     renderIt();
     await userEvent.click(screen.getByRole("button", { name: "Make a revision" }));
-    expect(screen.getByText(/You've placed 1 piece by hand/)).toBeVisible();
+    expect(screen.getByText(/You've moved 1 piece by hand on your ranking\. .*so that move won't be kept\./)).toBeVisible();
     await userEvent.click(screen.getByRole("button", { name: "Keep my ranking" }));
-    expect(screen.queryByText(/placed 1 piece/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/moved 1 piece/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Make a revision" })).toHaveFocus();
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("a 409 with any other code shows the gentle error, not the note", async () => {
+    fetchMock.mockResolvedValueOnce({ ok: false, status: 409, json: async () => ({ code: "something_else" }) });
+    renderIt();
+    await userEvent.click(screen.getByRole("button", { name: "Make a revision" }));
+    expect(screen.getByRole("status")).toHaveTextContent(/didn't open just now/);
+    expect(screen.queryByText(/by hand on your ranking/)).not.toBeInTheDocument();
+    expect(push).not.toHaveBeenCalled();
   });
 });
 ```
 
-- [ ] **Step 8: Run it and watch it fail**
+- [ ] **Step 7: Run it and watch it fail**
 
 Run: `npx vitest run src/features/results/MakeRevisionButton.test.tsx`
-Expected: FAIL — the first test passes; the 409 tests fail (current code shows the error copy).
+Expected: FAIL — the first and last tests pass; the two 409-note tests fail (current code shows the error copy).
 
-- [ ] **Step 9: Implement the island** — replace `src/features/results/MakeRevisionButton.tsx`:
+- [ ] **Step 8: Implement the island** — replace `src/features/results/MakeRevisionButton.tsx`:
 
 ```tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 
 // Spec §4.4: a saved ranking stays as it is; "Make a revision" opens a copy (pinned
-// to the saved order) on the live Ranking, where saving it issues its own link.
-// When the live Ranking holds hand placements the copy would move, the server
+// to the saved order) on the Ranking, where saving it issues its own link.
+// When the Ranking holds hand placements the copy would move, the server
 // answers 409 with the count and the person chooses (purses-w7ss.5).
 type Phase = { kind: "idle" } | { kind: "busy" } | { kind: "asking"; pinCount: number };
 
-export function revisionNote(pinCount: number): string {
-  const pieces = pinCount === 1 ? "1 piece" : `${pinCount} pieces`;
-  const places = pinCount === 1 ? "that spot" : "those spots";
-  return `You've placed ${pieces} by hand on your live ranking. A revision starts again from this saved order, so ${places} won't carry over.`;
+function revisionNote(pinCount: number): string {
+  return pinCount === 1
+    ? "You've moved 1 piece by hand on your ranking. A revision sets your ranking back to this saved order, so that move won't be kept."
+    : `You've moved ${pinCount} pieces by hand on your ranking. A revision sets your ranking back to this saved order, so those moves won't be kept.`;
 }
 
 export function MakeRevisionButton({ resultId, rankingHref }: { resultId: string; rankingHref: string }) {
@@ -928,6 +1014,8 @@ export function MakeRevisionButton({ resultId, rankingHref }: { resultId: string
       if (!res.ok) throw new Error("supersede");
       router.push(rankingHref);
     } catch {
+      // A failed confirm unmounts the note; send focus back to the trigger, not <body>.
+      if (discardPins) returnFocus.current = true;
       setError("That didn't open just now — nothing was lost. Try again whenever you like.");
       setPhase({ kind: "idle" });
     }
@@ -935,8 +1023,8 @@ export function MakeRevisionButton({ resultId, rankingHref }: { resultId: string
 
   if (phase.kind === "asking") {
     return (
-      <div role="group" aria-label="Before you revise" className="flex max-w-prose flex-col items-start gap-3">
-        <p ref={note} tabIndex={-1} className="text-sm text-ink">
+      <div role="group" aria-label="Before you revise" className="flex max-w-prose flex-col items-start gap-3 rounded-control bg-content-soft px-4 py-3">
+        <p ref={note} tabIndex={-1} className="text-sm text-ink focus:outline-hidden">
           {revisionNote(phase.pinCount)}
         </p>
         <div className="flex flex-wrap gap-2">
@@ -954,6 +1042,9 @@ export function MakeRevisionButton({ resultId, rankingHref }: { resultId: string
             Keep my ranking
           </Button>
         </div>
+        <Link href={rankingHref} className="text-sm text-ink-soft underline underline-offset-2">
+          See your ranking first
+        </Link>
       </div>
     );
   }
@@ -973,33 +1064,35 @@ export function MakeRevisionButton({ resultId, rankingHref }: { resultId: string
 }
 ```
 
-Design notes for the reviewer: not `danger` — the loss is a few hand moves the person can redo, not irreversible data (TONE: red only for the irreversible). The count describes the person's own work, never a deficit. Check the token names (`text-ink`, `text-ink-soft`, `max-w-prose`) against `DESIGN.md`/existing usage before committing; swap for the nearest existing token if one is missing. If ESLint flags the exported `revisionNote` under react-refresh's only-export-components rule, keep it module-private.
+Design notes for the reviewer: not `danger` — the loss is a few hand moves the person can redo, not irreversible data (TONE: red only for the irreversible). The count describes the person's own work, never a deficit. `rounded-control` and `bg-content-soft` exist (`globals.css`); confirm `text-ink`, `text-ink-soft`, `max-w-prose` against `DESIGN.md`/existing usage and swap for the nearest existing token if one is missing. Check the link's contrast on `bg-content-soft` in both themes (WCAG AA); fall back to `text-ink` if `text-ink-soft` falls short. `revisionNote` is module-private (react-refresh's only-export-components rule).
 
-- [ ] **Step 10: Run it and watch it pass**
+- [ ] **Step 9: Run it and watch it pass**
 
 Run: `npx vitest run src/features/results/MakeRevisionButton.test.tsx`
-Expected: PASS (3 tests).
+Expected: PASS (4 tests).
 
-- [ ] **Step 11: Commit**
+- [ ] **Step 10: Commit**
 
 ```bash
-git add src/server/services/sortResultMaterialization.ts src/server/services/sortResultMaterialization.test.ts src/server/services/SortResultService.ts src/server/services/SortResultService.test.ts src/server/api/http-errors.ts "src/app/api/sort-results/[id]/supersede/route.ts" src/features/results/MakeRevisionButton.tsx src/features/results/MakeRevisionButton.test.tsx src/lib/db/ranking-save-route.integration.test.ts
+git add src/server/services/sortResultMaterialization.ts src/server/services/sortResultMaterialization.test.ts src/server/services/SortResultService.ts src/server/api/http-errors.ts "src/app/api/sort-results/[id]/supersede/route.ts" src/features/results/MakeRevisionButton.tsx src/features/results/MakeRevisionButton.test.tsx src/lib/db/ranking-save-route.integration.test.ts
 git commit -m "feat(results): ask before a revision sets hand-placed pieces aside (purses-w7ss.5)"
 ```
+
+(Add `src/server/services/SortResultService.test.ts` only if Step 5 required adjusting an existing `supersedeResult` test.)
 
 ---
 
 ### Task 7: Docs sync, full gates, screenshots
 
 **Files:**
-- Modify: `docs/DATABASE.md` (line ~31-33 id rule; line ~84 lock table row; §2 Migration workflow — lock_timeout + retry), `docs/DEPLOYMENT.md` (Step 4 "Run Database Migration" — one-line lock_timeout note), `docs/API.md` (§ `POST /api/sort-results/[id]/supersede`, line ~421), `docs/ARCHITECTURE.md` (repository facts touched: `createMany`, `findBySessions`, `DISTINCT ON` covers — only where ARCHITECTURE already describes these repos), `docs/doc-ownership.md` (add `scripts/migrate.ts :: docs/DATABASE.md, docs/DEPLOYMENT.md`).
+- Modify: `docs/DATABASE.md` (line ~31-33 id rule; line ~84 lock table row; §2 Migration workflow — lock_timeout + retry), `docs/DEPLOYMENT.md` (Step 4 "Run Database Migration" — one-line lock_timeout note), `docs/API.md` (§ `POST /api/sort-results/[id]/supersede`, line ~421), `docs/ARCHITECTURE.md` (repository facts touched: `createMany`, `findBySessions`, `DISTINCT ON` covers — only where ARCHITECTURE already describes these repos), `docs/doc-ownership.md` (add `scripts/migrate.ts`, `scripts/lock-timeout.ts :: docs/DATABASE.md, docs/DEPLOYMENT.md`).
 
 - [ ] **Step 1: Docs** — run `/sync-docs` (per `docs/doc-ownership.md`; never PRODUCT/TONE). Required facts:
-  - DATABASE.md id rule: "`generateId` mints from one process-wide ULID monotonic factory, so ids minted in one process sort in creation order even within a millisecond; `generateOrderedIdFactory()` remains for batch inserts. Ids minted concurrently on two instances are not ordered."
-  - DATABASE.md line ~84: remove "the result rename and owner purge-prep are still unlocked (`purses-w7ss.6`)"; say "owner purge-prep takes every curator's lock for the collection (`lockCollectionCurators`)".
-  - DATABASE.md §2: "`scripts/migrate.ts` sets `lock_timeout = 5s`. A migration that cannot get its lock within 5 s fails with SQLSTATE 55P03 and rolls back (drizzle applies pending migrations in one transaction), so the Vercel build fails loudly instead of queueing reads behind it. **Retry:** redeploy (or re-run `db:migrate`) once the blocking traffic has passed; there is no automatic retry. A repeat failure means a long-held lock — find it in `pg_locks`/`pg_stat_activity` before retrying."
+  - DATABASE.md id rule: "`generateId` mints from one process-wide ULID monotonic factory, so ids minted in one process sort in creation order even within a millisecond; `generateOrderedIdFactory()` remains for batch inserts. Ids minted concurrently on two instances are not ordered. A module-level monotonic factory is safe because ids are not capabilities: knowing or predicting one grants nothing — share and invite tokens come from `randomBytes`, and every access check is server-side authz." (Consolidating `generateOrderedIdFactory` is bead purses-w7ss.20.)
+  - DATABASE.md line ~84: remove "the result rename and owner purge-prep are still unlocked (`purses-w7ss.6`)"; say "every draft writer in `SortResultService` is under the curator lock; the owner purge-prep takes every curator's lock for the collection (`lockCollectionCurators`)". Do not claim every draft writer app-wide: `AccountDeletionService` is bead purses-w7ss.18.
+  - DATABASE.md §2: "`scripts/migrate.ts` sets `lock_timeout = 5s` (startup parameter, then `ensureLockTimeout` reads it back, falls back to `SET`, and refuses to migrate if neither took — the pooled URL may drop startup parameters; a `SET` is only trustworthy on a session-mode/direct connection, so if the build logs `applied-after-set` or refuses, run migrations against the direct URL). A migration that cannot get its lock within 5 s fails with SQLSTATE 55P03 and rolls back (drizzle applies pending migrations in one transaction), so the Vercel build fails loudly instead of queueing reads behind it. **Retry:** redeploy (or re-run `db:migrate`) once the blocking traffic has passed; there is no automatic retry. A repeat failure means a long-held lock — find it in `pg_locks`/`pg_stat_activity` before retrying."
   - DEPLOYMENT.md Step 4: one sentence pointing to that DATABASE.md paragraph.
-  - API.md supersede: optional body `{ "discardPins": true }`; new `409 { error, code: "revision_discards_pins", pinCount }` when the open draft holds hand placements the revision would move; pins already at their saved slot don't count; `400` for any other body.
+  - API.md supersede: optional body `{ "discardPins": true }`; new `409 { error, code: "revision_discards_pins", pinCount }` when the open draft holds hand placements the revision would move; pins already at their saved slot don't count; `discardPins` discards whatever pins exist at confirm time (no count echo); `400` for any other body.
 
 - [ ] **Step 2: Full gates** (each command separately; record exit codes; no `| tail`):
 
@@ -1010,12 +1103,11 @@ npm run build
 npm run auth:verify
 npm run test:db
 npx playwright test e2e/sort-journey.spec.ts --project=tablet
-PW_VIEWPORT=phone npx playwright test e2e/sort-journey.spec.ts
 ```
 
-Expected: all exit 0. `PW_VIEWPORT=phone` runs without `--project` (memory `pw-viewport-renames-project`). Before the Playwright runs after `test:db`, recycle the DB container: `bash e2e/fixtures/test-db.sh down && bash e2e/fixtures/test-db.sh up` (memory `e2e-needs-fresh-container-after-test-db`). Also confirm the CI map still routes `src/features/results/**` to `e2e/sort-journey.spec.ts` (`.github/workflows/ci.yml` ~line 326-441; no change expected).
+Expected: all exit 0. One viewport is the gate: the change is not viewport-sensitive. A phone run happens only to capture screenshots in Step 3 (`PW_VIEWPORT=phone` without `--project`, memory `pw-viewport-renames-project`) — it is not a gate. Before the Playwright runs after `test:db`, recycle the DB container: `bash e2e/fixtures/test-db.sh down && bash e2e/fixtures/test-db.sh up` (memory `e2e-needs-fresh-container-after-test-db`). Also confirm the CI map still routes `src/features/results/**` to `e2e/sort-journey.spec.ts` (`.github/workflows/ci.yml` ~line 326-441; no change expected).
 
-- [ ] **Step 3: Screenshots** — the only visible change is the revision note on `/collections/[id]/results/[n]`. Use the `pr-screenshots` skill: light + dark, tablet + phone, of the note open (seed: save a ranking, move a piece on the live Ranking, open the saved result, click "Make a revision"). Embed per `docs/cookbook/add-images-to-pr.md`. Close the Playwright browser when done.
+- [ ] **Step 3: Screenshots** — the only visible change is the revision note on `/collections/[id]/results/[n]`. Use the `pr-screenshots` skill: light + dark, tablet + phone (phone for the PR images only), of the note open (seed: save a ranking, move a piece on the Ranking, open the saved result, click "Make a revision"). Embed per `docs/cookbook/add-images-to-pr.md`. Close the Playwright browser when done.
 
 - [ ] **Step 4: Graph** (controller only, PR boundary): `graphify update .` (use `--force` only if the graph shrank because symbols were genuinely deleted — `updateResultName` was).
 
@@ -1032,10 +1124,10 @@ git commit -m "docs: sync for PR 4 follow-ups (epic purses-w7ss)"
 
 ## Decisions this plan takes where the spec is silent
 
-1. **.5 copy and interaction.** The server decides: `POST /supersede` without `{ "discardPins": true }` returns 409 `revision_discards_pins` with `pinCount` when the revision would move or drop any of the open draft's pins; the check runs inside the curator lock, so a stale page can never discard silently. The client then shows an inline note in place of the button, with no modal: "You've placed N pieces by hand on your live ranking. A revision starts again from this saved order, so those spots won't carry over." (singular: "1 piece … that spot won't"). The buttons are **Start the revision** (primary) and **Keep my ranking** (ghost). Neither uses the `danger` style, because the loss is redoable hand moves and TONE keeps red for the irreversible. Focus moves to the note when it opens and back to "Make a revision" when the person keeps their ranking.
+1. **.5 copy and interaction.** The server decides: `POST /supersede` without `{ "discardPins": true }` returns 409 `revision_discards_pins` with `pinCount` when the revision would move or drop any of the open draft's pins; the check runs inside the curator lock, so a stale page can never discard silently. The client then shows an inline note in place of the button, with no modal: "You've moved N pieces by hand on your ranking. A revision sets your ranking back to this saved order, so those moves won't be kept." (singular: "You've moved 1 piece by hand on your ranking. A revision sets your ranking back to this saved order, so that move won't be kept."). The buttons are **Start the revision** (primary) and **Keep my ranking** (ghost), with a quiet "See your ranking first" link to the Ranking under them. The note sits in a soft `bg-content-soft` panel. Neither uses the `danger` style, because the loss is redoable hand moves and TONE keeps red for the irreversible. Focus moves to the note when it opens and back to "Make a revision" when the person keeps their ranking or a confirmed revision fails. The 409 is returned as a value from the transaction and thrown after it, so a prompt never logs as a DB error.
 2. **What happens to pins on revision.** Unchanged once confirmed: the open draft and its pins are deleted and the revision pins the saved order. A pin already at its saved slot doesn't count as lost, because the revision re-pins it in the same place, so right after Save (whose kept pins match the saved order) there is no note. Pins aren't merged into the revision, since merging would contradict the spec's "opens a copy of the saved order".
 3. **`DISTINCT ON` tie-break.** `ORDER BY <item_id|collection_id>, is_hero DESC, created_at ASC, id ASC`. This matches the old JS walk exactly (the earliest hero wins over everything, otherwise the earliest photo, with id breaking `created_at` ties). It applies to both the item and the collection variants.
-4. **`lock_timeout` value and retry policy.** It is 5 s, set as a startup parameter on the migrator's connection only (the same mechanism as `db.ts`'s `statement_timeout`, already proven through the prod pooler). That is well under the 25 s statement cap and the 30 s function cap. There is no automatic retry: the migration transaction rolls back, the Vercel build fails loudly, and a redeploy is the retry. A repeat failure is investigated in `pg_locks` first.
+4. **`lock_timeout` value and retry policy.** It is 5 s, set as a startup parameter on the migrator's connection only. Because the migrator runs at build time on the pooled URL, which may drop startup parameters silently, `scripts/migrate.ts` verifies it before migrating: it reads `current_setting('lock_timeout')`, falls back to `set lock_timeout = '5s'`, and exits 1 before any migration with "lock_timeout not applied through this connection — run migrations against the direct URL" if neither took. There is no automatic retry: the migration transaction rolls back, the Vercel build fails loudly, and a redeploy is the retry. A repeat failure is investigated in `pg_locks` first.
 5. **Monotonic ULID scope.** It covers all ids. `generateId` has one module-level `monotonicFactory()` for every prefix, which gives creation order within a process and nothing across instances (stated in `id.ts` and DATABASE.md). `generateOrderedIdFactory()` stays as it is, because removing it is out of scope.
 6. **.6 approach.** The uncalled `updateResultName` is deleted rather than locked. The purge-prep takes `lockCollectionCurators` (every curator of the collection, in key order), because it deletes rows from any curator's draft. The route passes `item.collectionId`.
 7. **.7 decisions load.** The shared `loadCuratorDecisionEvents` itself switches to one `findBySessions` query, with the same session set and rows. That benefits every caller, not only `saveAndShare`. Row order was never guaranteed and consumers sort with `compareByCreatedAtThenId`. The other per-row loops (`insertResultWithItems`, the supersede re-pin loop) stay as they are, because they are out of the bead's scope.
@@ -1043,6 +1135,17 @@ git commit -m "docs: sync for PR 4 follow-ups (epic purses-w7ss)"
 
 ## Owner-veto list (behaviour changes)
 
-- **Revision prompt:** "Make a revision" now asks first (inline note, the copy above) when the live Ranking holds hand placements the revision would move; the API gains a 409 `revision_discards_pins` and an optional `{ discardPins: true }` body.
+- **Revision prompt:** "Make a revision" now asks first (inline note, the copy above) when the Ranking holds hand placements the revision would move; the API gains a 409 `revision_discards_pins` and an optional `{ discardPins: true }` body.
 - **Id generation:** every `generateId` id now comes from one process-wide ULID monotonic factory, so ids minted in the same millisecond on one instance sort in creation order. The format is unchanged and existing ids are untouched.
-- **Migration deploys:** a migration that waits more than 5 s for a lock now fails the deploy instead of waiting; the retry is a redeploy.
+- **Migration deploys:** a migration that waits more than 5 s for a lock now fails the deploy instead of waiting; the retry is a redeploy. A build whose connection cannot carry `lock_timeout` refuses to migrate.
+
+## Rulings (controller)
+
+- **A3 — no `expectPinCount`.** The confirm does not echo the count; `discardPins` discards whatever pins exist at confirm time, and API.md says so.
+- **A4 — `AccountDeletionService` draft writes.** Out of scope; tracked in bead purses-w7ss.18. DATABASE.md claims the lock only for `SortResultService`'s draft writers.
+- **Q5 — `ScoringService`.** Not touched (its own per-session loop, reached only from tests); deletion tracked in bead purses-w7ss.19.
+- **Q9 — ordered-id factory.** `generateOrderedIdFactory` stays; consolidating it is bead purses-w7ss.20.
+
+## Rejected review findings
+
+- None rejected outright. One partial: the "zod schema unit test" half of Q8's `discardPins: "yes"` → 400 move is not possible (an App Router `route.ts` may export only handlers/config, so the schema cannot be imported by a test) — the reviewer's "or drop it" alternative is taken.
