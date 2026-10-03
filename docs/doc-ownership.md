@@ -19,5 +19,8 @@ src/app/api/ :: docs/API.md
 src/lib/design/ :: DESIGN.md
 src/app/globals.css :: DESIGN.md
 vercel.json :: docs/DEPLOYMENT.md
+scripts/migrate.ts :: docs/DATABASE.md, docs/DEPLOYMENT.md
+scripts/lock-timeout.ts :: docs/DATABASE.md, docs/DEPLOYMENT.md
+scripts/migration-url.ts :: docs/DATABASE.md, docs/DEPLOYMENT.md
 .github/workflows/ :: docs/ARCHITECTURE.md, docs/DEPLOYMENT.md
 <!-- ownership:end -->
