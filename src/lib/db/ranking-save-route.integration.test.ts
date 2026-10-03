@@ -19,6 +19,7 @@ vi.mock("@/lib/auth", () => mockAuth(mockGetSession));
 vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 import { POST as save } from "@/app/api/collections/[id]/ranking/save/route";
+import { POST as supersede } from "@/app/api/sort-results/[id]/supersede/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 const KEY = "01j00000000000000000000000";
@@ -29,6 +30,12 @@ const saveReq = (body: unknown) =>
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify(body),
+  });
+const supersedeReq = (body?: unknown) =>
+  new Request("http://localhost/api/sort-results/x/supersede", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 const ctx = (id: string) => ({ params: Promise.resolve({ id }) }) as any;
 
@@ -91,11 +98,17 @@ describeDb("save and share (route -> service -> DB)", () => {
     const service = SortResultService.fromDb(db);
     await service.pinItem(s.collectionId, ownerId, s.a, 1);
 
-    expect((await save(saveReq({ name: "Kept", saveKey: KEY }), ctx(s.collectionId))).status).toBe(201);
+    const savedRes = await save(saveReq({ name: "Kept", saveKey: KEY }), ctx(s.collectionId));
+    expect(savedRes.status).toBe(201);
+    const savedBody = (await savedRes.json()) as { resultNumber: number };
 
     expect((await service.listPins(s.collectionId, ownerId)).map((p) => [p.itemId, p.position])).toEqual([[s.a, 1]]);
     const draft = await new SortResultRepository(db).findDraft(s.collectionId, ownerId);
     expect((await new SortResultItemRepository(db).findByResult(draft!.id)).map((r) => r.itemId)).toEqual([s.a]);
+
+    // Right after Save the carried pin sits at its saved slot: a revision opens without a note.
+    const result = await new SortResultRepository(db).findByCollectionAndNumber(s.collectionId, savedBody.resultNumber);
+    expect((await supersede(supersedeReq() as any, ctx(result!.id))).status).toBe(201);
   });
 
   it("a save with no pins leaves no open draft behind", async () => {
@@ -190,10 +203,30 @@ describeDb("save and share (route -> service -> DB)", () => {
     await new SortResultShareRepository(db).create({ sortResultId: draft!.id, shareToken: "draft-share" });
 
     const saved = await new SortResultRepository(db).findByCollectionAndNumber(s.collectionId, first.resultNumber);
-    const revision = await service.supersedeResult(saved!.id);
+    const revision = await service.supersedeResult(saved!.id, { discardPins: true });
 
     expect(revision!.id).not.toBe(draft!.id);
     expect(await new SortResultRepository(db).findById(draft!.id)).toBeNull();
     expect(await new SortResultShareRepository(db).findByToken("draft-share")).toBeNull();
+  });
+
+  it("a revision asks before setting hand placements aside: 409 with the count, then 201 with discardPins", async () => {
+    const { db } = getTestDb();
+    const s = await seedSorting();
+    const first = (await (await save(saveReq({ name: "First", saveKey: KEY }), ctx(s.collectionId))).json()) as { resultNumber: number };
+    const saved = await new SortResultRepository(db).findByCollectionAndNumber(s.collectionId, first.resultNumber);
+    const service = SortResultService.fromDb(db);
+    await service.pinItem(s.collectionId, ownerId, s.a, 1); // a moves off its saved slot (2nd)
+
+    const asked = await supersede(supersedeReq() as any, ctx(saved!.id));
+    expect(asked.status).toBe(409);
+    expect(await asked.json()).toMatchObject({ code: "revision_discards_pins", pinCount: 1 });
+    expect(new Map((await service.listPins(s.collectionId, ownerId)).map((p) => [p.itemId, p.position])).get(s.a)).toBe(1); // untouched
+
+    const confirmed = await supersede(supersedeReq({ discardPins: true }) as any, ctx(saved!.id));
+    expect(confirmed.status).toBe(201);
+    expect(new Map((await service.listPins(s.collectionId, ownerId)).map((p) => [p.itemId, p.position]))).toEqual(
+      new Map([[s.b, 1], [s.a, 2]]),
+    );
   });
 });

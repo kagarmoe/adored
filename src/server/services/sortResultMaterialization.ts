@@ -182,3 +182,8 @@ export function savedOrderPositions(rows: readonly SortResultItem[]): Map<string
     ordered.filter((r) => effectiveBucket(r) !== "low").map((r, i) => [r.itemId, i]),
   );
 }
+
+/** Pure: how many of the open draft's pins a revision would move or drop (a pin already at its saved slot stays). */
+export function pinsLostToRevision(draftRows: readonly SortResultItem[], savedSlots: ReadonlyMap<string, number>): number {
+  return draftRows.filter((r) => r.manualRank !== null && savedSlots.get(r.itemId) !== r.manualRank).length;
+}

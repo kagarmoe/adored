@@ -75,6 +75,8 @@ In Vercel Project Settings → Environment Variables, add:
 
 After deployment is connected to database:
 
+Migrations also run on every Vercel build (`vercel-build`) with a 5 s `lock_timeout`: a migration that waits longer for a lock fails the build, and a redeploy is the retry — see [DATABASE.md §2, "Lock timeout and retry"](DATABASE.md#2-migration-workflow).
+
 ```bash
 # SSH into Vercel deployment
 vercel env pull  # Pull environment variables locally

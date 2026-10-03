@@ -93,6 +93,20 @@ describeDb("collection-cover lookup (repo -> DB)", () => {
     expect(covers.get(collectionId)?.id).toBe(b1.id);
   });
 
+  it("breaks a created_at tie by the lower id when there is no hero", async () => {
+    const collectionId = await seedCollection("col_tie");
+    const item = await itemRepo().create({ collectionId });
+    const p1 = await seedPhoto(collectionId, item.id, "tie-1", false);
+    const p2 = await seedPhoto(collectionId, item.id, "tie-2", false);
+    const { db } = getTestDb();
+    await db.execute(sql`UPDATE photos SET created_at = '2026-01-01T00:00:00Z'::timestamptz WHERE id IN (${p1.id}, ${p2.id})`);
+    // SECOND-inserted photo gets the lower id so insert order and id order disagree.
+    const lowId = "photo_00000000000000000000000000";
+    await db.execute(sql`UPDATE photos SET id = ${lowId} WHERE id = ${p2.id}`);
+    const covers = await photoRepo().findCoverPhotosByCollectionIds([collectionId]);
+    expect(covers.get(collectionId)!.id).toBe(lowId);
+  });
+
   it("excludes pooled photos: a collection whose only photo is pooled has no cover", async () => {
     const collectionId = await seedCollection("col_pooled");
     await seedPhoto(collectionId, null, "pooled", false); // item_id IS NULL

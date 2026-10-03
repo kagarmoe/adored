@@ -14,6 +14,7 @@ import { CollectionPreferenceItemRepository } from "@/server/repositories/implem
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { loadCuratorDecisionEvents } from "@/server/services/decision-log";
+import { lockCollectionCurators } from "@/server/services/purge-lock";
 import { deriveUsage, type UsageAnswer } from "@/lib/derive-usage";
 import {
   rankPreferencesToItems,
@@ -22,6 +23,7 @@ import {
   pinsFromRows,
   placePin,
   savedOrderPositions,
+  pinsLostToRevision,
   type MaterializedItem,
   type Pin,
 } from "./sortResultMaterialization";
@@ -31,6 +33,15 @@ export class SupersedeStateError extends Error {
   constructor() {
     super("Can only supersede finalized results");
     this.name = "SupersedeStateError";
+  }
+}
+
+/** A revision would set the open draft's hand placements aside; the person confirms first → 409. */
+export class RevisionDiscardsPinsError extends Error {
+  readonly code = "revision_discards_pins";
+  constructor(readonly pinCount: number) {
+    super("Your hand-placed pieces would move. Start the revision anyway?");
+    this.name = "RevisionDiscardsPinsError";
   }
 }
 
@@ -153,8 +164,8 @@ export class SortResultService {
    * The ranking writers run here — pin, unpin, save, revision, finalize, delete and
    * the legacy create: one transaction holding the (collection, curator) advisory
    * lock, so they serialize and the open-draft index is a backstop, never a 500.
-   * (Still unlocked, tracked in purses-w7ss.6: the result rename and the owner's
-   * purge-prep.) The (collection, number) race — another curator saving in the same
+   * (The owner's purge-prep crosses curators and takes all of them:
+   * lockCollectionCurators.) The (collection, number) race — another curator saving in the same
    * collection — aborts the transaction, so it is retried at this boundary.
    */
   private async inCuratorTx<T>(
@@ -298,25 +309,26 @@ export class SortResultService {
       const events = await loadCuratorDecisionEvents(new SessionRepository(tx), new DecisionEventRepository(tx), collectionId, curatorId);
       const usage = deriveUsage(events, new Set(ordered.map((e) => e.itemId)));
       await itemRepo.deleteByResult(draft.id);
-      for (const [index, entry] of ordered.entries()) {
-        await itemRepo.create({
+      await itemRepo.createMany(
+        ordered.map((entry, index) => ({
           sortResultId: draft.id,
           itemId: entry.itemId,
           computedRank: index,
           computedBucket: entry.bucket,
           usage: usage.get(entry.itemId) ?? null,
-        });
-      }
+        })),
+      );
       const result = await resultRepo.markSaved(draft.id, name, saveKey);
       // The saved draft is finalized now, so the open-draft index admits a new one.
       // Only the explicit pins travel — the rest keep flowing with later answers.
       const keptPins = loved.flatMap((entry, slot) => (entry.pinned ? [{ entry, slot }] : []));
       if (keptPins.length > 0) {
         const next = await this.getOrCreateOpenDraft(tx, collectionId, curatorId);
-        for (const { entry, slot } of keptPins) {
-          const row = await itemRepo.create({ sortResultId: next.id, itemId: entry.itemId, computedRank: slot, computedBucket: entry.bucket });
-          await itemRepo.update(row.id, { manualRank: slot, manualBucket: null });
-        }
+        await itemRepo.createMany(
+          keptPins.map(({ entry, slot }) => ({
+            sortResultId: next.id, itemId: entry.itemId, computedRank: slot, computedBucket: entry.bucket, manualRank: slot,
+          })),
+        );
       }
 
       const sessionRepo = new SessionRepository(tx);
@@ -339,13 +351,6 @@ export class SortResultService {
 
     const items = await this.sortResultItemRepo.findByResult(id);
     return { result, items };
-  }
-
-  async updateResultName(id: string, name: string): Promise<SortResult> {
-    return this.sortResultRepo.update(id, {
-      name,
-      updatedAt: new Date(),
-    });
   }
 
   /**
@@ -387,7 +392,7 @@ export class SortResultService {
     });
   }
 
-  async supersedeResult(id: string): Promise<SortResult | null> {
+  async supersedeResult(id: string, opts: { discardPins?: boolean } = {}): Promise<SortResult | null> {
     const source = await this.sortResultRepo.findById(id);
     if (!source) return null;
     if (source.status !== "finalized") throw new SupersedeStateError();
@@ -399,19 +404,32 @@ export class SortResultService {
     // Spec §4.4 "Make a revision opens a new copy to adjust": the copy becomes THE open
     // draft (replacing any other) with the saved loved order pinned, so the live
     // Ranking shows the saved order until the person moves or unpins something.
+    // When that other draft holds hand placements the revision would move, the
+    // person confirms first (`discardPins`).
     const slots = savedOrderPositions(sourceItems);
-    return this.inCuratorTx(source.collectionId, source.curatorId, "supersede_result", async (tx) => {
+    const outcome = await this.inCuratorTx<{ pinsLost: number } | { revision: SortResult }>(source.collectionId, source.curatorId, "supersede_result", async (tx) => {
+      const itemRepo = new SortResultItemRepository(tx);
+      if (!opts.discardPins) {
+        // Checked before any write, so returning early commits nothing. A sentinel, not a
+        // throw: withTransaction logs every throw as a DB error, and this is a prompt.
+        let lost = 0;
+        for (const draft of await new SortResultRepository(tx).findDrafts(source.collectionId, source.curatorId)) {
+          lost += pinsLostToRevision(await itemRepo.findByResult(draft.id), slots);
+        }
+        if (lost > 0) return { pinsLost: lost };
+      }
       await this.deleteDrafts(tx, source.collectionId, source.curatorId);
       const revision = await this.insertResultWithItems(
         tx, source.collectionId, source.curatorId, `${source.name} (Revision)`, items, usageByItemId,
       );
-      const itemRepo = new SortResultItemRepository(tx);
       for (const row of await itemRepo.findByResult(revision.id)) {
         const slot = slots.get(row.itemId);
         if (slot !== undefined) await itemRepo.update(row.id, { manualRank: slot, manualBucket: null });
       }
-      return revision;
+      return { revision };
     });
+    if ("pinsLost" in outcome) throw new RevisionDiscardsPinsError(outcome.pinsLost);
+    return outcome.revision;
   }
 
   /**
@@ -452,15 +470,23 @@ export class SortResultService {
    * Invariant: every write inside the transaction goes to the tx-bound repo, not
    * the injected `this.sortResultItemRepo`. The finalized count runs in the same
    * transaction so `removed`/`remainingInFinalized` are a consistent snapshot.
+   * Takes every curator's lock for the collection (purge-lock), like the purge itself.
    */
   async removeItemFromDraftResults(
+    collectionId: string,
     itemId: string,
   ): Promise<{ removed: number; remainingInFinalized: number }> {
-    return withTransaction(this.db, async (tx) => {
-      const repo = new SortResultItemRepository(tx);
-      const removed = await repo.deleteByItemInDraftResults(itemId);
-      const remainingInFinalized = await repo.countByItemInFinalizedResults(itemId);
-      return { removed, remainingInFinalized };
-    });
+    return withTransaction(
+      this.db,
+      async (tx) => {
+        // Crosses curators, so it serializes with EVERY curator's pin/save/revision.
+        await lockCollectionCurators(tx, collectionId);
+        const repo = new SortResultItemRepository(tx);
+        const removed = await repo.deleteByItemInDraftResults(itemId);
+        const remainingInFinalized = await repo.countByItemInFinalizedResults(itemId);
+        return { removed, remainingInFinalized };
+      },
+      { op: "remove_item_from_draft_results", ctx: { collectionId } },
+    );
   }
 }

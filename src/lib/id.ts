@@ -1,14 +1,19 @@
-import { ulid, monotonicFactory } from "ulid";
+import { monotonicFactory } from "ulid";
+
+// One process-wide monotonic factory: base ulid() randomizes within a millisecond,
+// and items/collections carry JS-ms createdAt, so same-ms rows tied and
+// compareByCreatedAtThenId ordered them by chance (purses-w7ss.16). Monotonic
+// within this process only — rows minted concurrently on two instances stay
+// unordered, which is honest: they were concurrent.
+const nextUlid = monotonicFactory();
 
 export function generateId(prefix: string): string {
-  return `${prefix}_${ulid().toLowerCase()}`;
+  return `${prefix}_${nextUlid().toLowerCase()}`;
 }
 
-// Batch-insert ids: monotonic WITHIN one factory instance (base ulid() is not
-// monotonic within a millisecond), preserving the `event_` + lowercase
-// convention — lowercasing is order-preserving for Crockford base32, and the
-// prefix keeps new ids in the same code-unit ordering regime as existing rows
-// (spec §2.3.5). One factory per request/batch; never module-level shared.
+// Batch-insert ids with the `event_` + lowercase convention (spec §2.3.5).
+// Redundant since purses-w7ss.16 made generateId process-wide monotonic;
+// consolidation onto generateId("event") is purses-w7ss.20.
 export function generateOrderedIdFactory(): () => string {
   const next = monotonicFactory();
   return () => `event_${next().toLowerCase()}`;

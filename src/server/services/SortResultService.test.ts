@@ -16,8 +16,9 @@ const { txResultRepo, txItemRepo, txSessionRepo, isResultNumberConflict } = vi.h
     findDrafts: vi.fn(),
     findBySaveKey: vi.fn(),
     markSaved: vi.fn(),
+    findDraftForUpdate: vi.fn(),
   },
-  txItemRepo: { create: vi.fn(), deleteByResult: vi.fn(), findByResult: vi.fn(), update: vi.fn() },
+  txItemRepo: { create: vi.fn(), createMany: vi.fn(), deleteByResult: vi.fn(), findByResult: vi.fn(), update: vi.fn() },
   // finalizeResult resolves the curator's open session via a tx-bound
   // SessionRepository — mocked the same way as the other tx-bound repos above.
   txSessionRepo: { findInProgress: vi.fn(), update: vi.fn() },
@@ -34,9 +35,13 @@ const { txShareRepo } = vi.hoisted(() => ({ txShareRepo: { findByResult: vi.fn()
 vi.mock("@/server/repositories/implementations/SortResultShareRepository", () => ({
   SortResultShareRepository: vi.fn(function () { return txShareRepo; }),
 }));
-const { txPrefRepo } = vi.hoisted(() => ({ txPrefRepo: { findByItem: vi.fn() } }));
+const { txPrefRepo } = vi.hoisted(() => ({ txPrefRepo: { findByItem: vi.fn(), findByCollection: vi.fn() } }));
 vi.mock("@/server/repositories/implementations/CollectionPreferenceItemRepository", () => ({
   CollectionPreferenceItemRepository: vi.fn(function () { return txPrefRepo; }),
+}));
+const { txLiveItemRepo } = vi.hoisted(() => ({ txLiveItemRepo: { findByCollection: vi.fn() } }));
+vi.mock("@/server/repositories/implementations/ItemRepository", () => ({
+  ItemRepository: vi.fn(function () { return txLiveItemRepo; }),
 }));
 // Every draft writer takes the (collection, curator) advisory lock; the fake tx
 // can't execute SQL, so stub only the lock (the DB tier proves it for real).
@@ -49,12 +54,12 @@ vi.mock("@/server/repositories/implementations/SessionRepository", () => ({
   SessionRepository: vi.fn(function () { return txSessionRepo; }),
 }));
 // Epic S: the service reads the curator's decision log to snapshot usage at
-// materialization. This unit test isolates the tx wiring, so stub the log empty
-// → every item is stamped usage:null (the real usage-fold proof is the un-mocked
-// sort-results-usage-snapshot.integration.test.ts).
-vi.mock("@/server/services/decision-log", () => ({
-  loadCuratorDecisionEvents: async () => [],
-}));
+// materialization. Stubbed empty by default → items stamped usage:null; the
+// saveAndShare test feeds one usage event to prove its usage mapping. The DB tier
+// (sort-results-usage-snapshot.integration.test.ts) covers the draft and revision
+// paths, not saveAndShare.
+const { loadCuratorDecisionEvents } = vi.hoisted(() => ({ loadCuratorDecisionEvents: vi.fn() }));
+vi.mock("@/server/services/decision-log", () => ({ loadCuratorDecisionEvents }));
 
 import {
   SortResultService,
@@ -138,6 +143,7 @@ beforeEach(() => {
   // clearAllMocks wipes the hoisted predicate's implementation too; restore the
   // default (no conflict) so only the exhaustion test opts into retries.
   isResultNumberConflict.mockReturnValue(false);
+  loadCuratorDecisionEvents.mockResolvedValue([]);
   txResultRepo.getNextResultNumber.mockResolvedValue(1);
   txResultRepo.insertWithNumber.mockResolvedValue(sortResult());
   txResultRepo.delete.mockResolvedValue(undefined);
@@ -145,6 +151,8 @@ beforeEach(() => {
   txResultRepo.update.mockResolvedValue(sortResult({ status: "finalized" }));
   txItemRepo.create.mockResolvedValue(sortResultItem());
   txItemRepo.deleteByResult.mockResolvedValue(undefined);
+  txItemRepo.createMany.mockResolvedValue(undefined);
+  txResultRepo.findDraftForUpdate.mockResolvedValue(null);
   txResultRepo.findDrafts.mockResolvedValue([]);
   txItemRepo.findByResult.mockResolvedValue([]);
   txSessionRepo.findInProgress.mockResolvedValue(null);
@@ -517,5 +525,46 @@ describe("SortResultService.saveAndShare replay", () => {
     );
     expect(txResultRepo.markSaved).not.toHaveBeenCalled();
     expect(txShareRepo.create).not.toHaveBeenCalled();
+  });
+});
+
+describe("SortResultService.saveAndShare writes", () => {
+  it("rebuilds the saved rows and the kept pins with one multi-row insert each — never row by row (purses-w7ss.7)", async () => {
+    const draft = sortResult({ id: "draft-1" });
+    const next = sortResult({ id: "draft-2" });
+    txResultRepo.findBySaveKey.mockResolvedValue(null);
+    txResultRepo.findDraftForUpdate.mockResolvedValueOnce(draft).mockResolvedValueOnce(null);
+    txResultRepo.insertWithNumber.mockResolvedValue(next);
+    txResultRepo.markSaved.mockResolvedValue(sortResult({ id: "draft-1", status: "finalized" }));
+    txLiveItemRepo.findByCollection.mockResolvedValue([{ id: "a" }, { id: "b" }, { id: "c" }]);
+    txPrefRepo.findByCollection.mockResolvedValue([
+      preference({ itemId: "a", rankBucket: "top", orderRank: 0 }),
+      preference({ itemId: "b", rankBucket: "top", orderRank: 1 }),
+      preference({ itemId: "c", rankBucket: "low", orderRank: null }),
+    ]);
+    // b was hand-placed first.
+    txItemRepo.findByResult.mockResolvedValue([sortResultItem({ sortResultId: "draft-1", itemId: "b", manualRank: 0 })]);
+    txShareRepo.create.mockResolvedValue(undefined);
+    loadCuratorDecisionEvents.mockResolvedValue([
+      { id: "ev-1", sessionId: "s-1", type: "usage", decision: { itemId: "a", result: "uses" }, createdAt: new Date(1) },
+    ]);
+
+    const service = new SortResultService(
+      {} as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
+      txDb,
+    );
+    await service.saveAndShare(COLLECTION, CURATOR, "Keepers", "01j00000000000000000000000");
+
+    expect(txItemRepo.create).not.toHaveBeenCalled();
+    expect(txItemRepo.update).not.toHaveBeenCalled();
+    expect(txItemRepo.createMany).toHaveBeenCalledTimes(2);
+    const [saved] = txItemRepo.createMany.mock.calls[0];
+    expect(saved.map((r: { itemId: string; computedRank: number }) => [r.itemId, r.computedRank])).toEqual([["b", 0], ["a", 1], ["c", 2]]);
+    expect(saved.map((r: { itemId: string; usage: string | null }) => [r.itemId, r.usage])).toEqual([["b", null], ["a", "uses"], ["c", null]]);
+    expect(txItemRepo.createMany.mock.calls[1][0]).toEqual([
+      { sortResultId: "draft-2", itemId: "b", computedRank: 0, computedBucket: "top", manualRank: 0 },
+    ]);
   });
 });

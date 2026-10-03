@@ -87,6 +87,21 @@ describeDb("cover-photo lookup (repo -> DB)", () => {
     expect(covers.get(item.id)?.id).toBe(b1.id);
   });
 
+  it("breaks a created_at tie by the lower id when there is no hero", async () => {
+    const item = await itemRepo().create({ collectionId });
+    const p1 = await seedPhoto(item.id, "tie-1", false);
+    const p2 = await seedPhoto(item.id, "tie-2", false);
+    const { db } = getTestDb();
+    await db.execute(sql`UPDATE photos SET created_at = '2026-01-01T00:00:00Z'::timestamptz WHERE id IN (${p1.id}, ${p2.id})`);
+    // Give the SECOND-inserted photo the lower id, so heap/insert order and id order
+    // disagree — otherwise a query that drops `id` from ORDER BY still passes.
+    // (No FK references photos.id, so renaming the key is safe.)
+    const lowId = "photo_00000000000000000000000000";
+    await db.execute(sql`UPDATE photos SET id = ${lowId} WHERE id = ${p2.id}`);
+    const covers = await photoRepo().findCoverPhotosByItemIds([item.id]);
+    expect(covers.get(item.id)!.id).toBe(lowId);
+  });
+
   it("excludes soft-deleted photos (a deleted hero is ignored)", async () => {
     const item = await itemRepo().create({ collectionId });
     const c1 = await seedPhoto(item.id, "c1", true); // hero, then deleted

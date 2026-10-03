@@ -204,6 +204,27 @@ for (const theme of ["light", "dark"] as const) {
     const shot = (n: string) =>
       page.screenshot({ path: `pr-screenshots/${n}-${theme}-${proj}.png`, fullPage: true });
 
+    if (!only || only.includes("result-revision-note")) {
+      // purses-w7ss.5: the revision note. A hand move on the Ranking pins a piece off
+      // its saved slot, so "Make a revision" on the saved result asks first. Pin once
+      // (the second theme pass finds the Unpin button and reuses it); end on "Keep my
+      // ranking" so nothing is discarded.
+      await page.goto(`/collections/${slug}/results`);
+      if ((await page.getByRole("button", { name: /^Unpin / }).count()) === 0) {
+        // Wait for the pin write itself: the Unpin button appears optimistically.
+        const pinned = page.waitForResponse((r) => r.url().includes("/ranking/pins/") && r.ok());
+        await page.getByRole("button", { name: /^Move .* down$/ }).first().click();
+        await pinned;
+        await page.waitForLoadState("networkidle"); // let the post-pin refresh settle
+      }
+      await page.goto(`/collections/${slug}/results/${finalizedResultNumber}`);
+      await page.getByRole("button", { name: "Make a revision" }).click();
+      await page.getByRole("group", { name: "Before you revise" }).waitFor({ state: "visible", timeout: 10_000 });
+      await page.waitForTimeout(400);
+      await shot("result-revision-note");
+      await page.getByRole("button", { name: "Keep my ranking" }).click();
+    }
+
     if (only && !only.includes("item-delete-confirm")) return;
 
     // purses-v7gv: the item ··· menu (owner sees Archive + Delete) and the

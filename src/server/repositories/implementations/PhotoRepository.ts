@@ -1,7 +1,7 @@
 import type { Database } from "@/lib/db";
 import type { Photo } from "@/types";
 import { photosTable } from "@/lib/db/schema";
-import { eq, and, isNull, isNotNull, asc, inArray, sql } from "drizzle-orm";
+import { eq, and, isNull, isNotNull, asc, desc, inArray, sql } from "drizzle-orm";
 import { generateId } from "@/lib/id";
 
 export class PhotoRepository {
@@ -72,50 +72,27 @@ export class PhotoRepository {
     return photos.map((p) => this.mapToPhoto(p));
   }
 
-  // Per-item cover photo for a batch of items, in a single query (avoids N+1
-  // on the collection home). Cover = the item's hero (is_hero=true) if it has
-  // one, else its earliest (created_at asc) non-deleted photo. Items with no
-  // photos are absent from the map.
+  // Per-item cover for a batch of items: ONE row per item, chosen in SQL —
+  // hero first, else the earliest (created_at, then id) non-deleted photo.
+  // Items with no photos are absent from the map.
   async findCoverPhotosByItemIds(itemIds: string[]): Promise<Map<string, Photo>> {
-    const map = new Map<string, Photo>();
-    if (itemIds.length === 0) return map;
+    if (itemIds.length === 0) return new Map();
     const rows = await this.db
-      .select()
+      .selectDistinctOn([photosTable.itemId])
       .from(photosTable)
-      .where(
-        and(
-          inArray(photosTable.itemId, itemIds),
-          isNull(photosTable.deletedAt),
-        ),
-      )
-      .orderBy(asc(photosTable.createdAt), asc(photosTable.id));
-    // earliest-first (id breaks created_at ties so "earliest" is deterministic);
-    // hero wins. Walk once: set the first photo seen per item (the earliest),
-    // then let a hero override.
-    for (const row of rows) {
-      const photo = this.mapToPhoto(row);
-      if (!photo.itemId) continue;
-      const existing = map.get(photo.itemId);
-      if (!existing) {
-        map.set(photo.itemId, photo);
-      } else if (photo.isHero && !existing.isHero) {
-        map.set(photo.itemId, photo);
-      }
-    }
-    return map;
+      .where(and(inArray(photosTable.itemId, itemIds), isNull(photosTable.deletedAt)))
+      .orderBy(photosTable.itemId, desc(photosTable.isHero), asc(photosTable.createdAt), asc(photosTable.id));
+    return new Map(rows.map((r) => [r.itemId as string, this.mapToPhoto(r)]));
   }
 
-  // Per-collection cover photo for a batch of collections, in a single query
-  // (avoids N+1 on the collections-home page). A collection's cover is a
-  // representative ASSIGNED photo (item_id IS NOT NULL): its hero (is_hero=true)
-  // if any, else the earliest (created_at asc) non-deleted assigned photo.
-  // POOLED photos (item_id IS NULL) are excluded — they have no item-scoped asset
-  // URL. Collections with no assigned photos are absent from the map.
+  // Per-collection cover: ONE assigned (item_id IS NOT NULL) photo per collection,
+  // hero first, else earliest (created_at, then id). Pooled photos have no
+  // item-scoped asset URL and are excluded. NOT an access boundary: callers pass
+  // only access-filtered ids (see findCollectionIdsWithPooledPhotos).
   async findCoverPhotosByCollectionIds(collectionIds: string[]): Promise<Map<string, Photo>> {
-    const map = new Map<string, Photo>();
-    if (collectionIds.length === 0) return map;
+    if (collectionIds.length === 0) return new Map();
     const rows = await this.db
-      .select()
+      .selectDistinctOn([photosTable.collectionId])
       .from(photosTable)
       .where(
         and(
@@ -124,19 +101,8 @@ export class PhotoRepository {
           isNull(photosTable.deletedAt),
         ),
       )
-      .orderBy(asc(photosTable.createdAt), asc(photosTable.id));
-    // earliest-first (id breaks created_at ties); a hero overrides. One
-    // representative cover photo per collection.
-    for (const row of rows) {
-      const photo = this.mapToPhoto(row);
-      const existing = map.get(photo.collectionId);
-      if (!existing) {
-        map.set(photo.collectionId, photo);
-      } else if (photo.isHero && !existing.isHero) {
-        map.set(photo.collectionId, photo);
-      }
-    }
-    return map;
+      .orderBy(photosTable.collectionId, desc(photosTable.isHero), asc(photosTable.createdAt), asc(photosTable.id));
+    return new Map(rows.map((r) => [r.collectionId, this.mapToPhoto(r)]));
   }
 
   // Which of the GIVEN collections hold at least one pooled photo (item_id IS

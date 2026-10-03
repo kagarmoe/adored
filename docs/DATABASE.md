@@ -17,8 +17,8 @@ log, not here.*
 ### Primary keys are text, app-generated, and prefixed
 
 Every table declares `id: text("id").primaryKey()` — no `serial`, no `uuid`, no DB default. The id is
-minted in the app by `generateId(prefix)` (`src/lib/id.ts:3`), which returns
-`` `${prefix}_${ulid().toLowerCase()}` ``.
+minted in the app by `generateId(prefix)` (`src/lib/id.ts:10`), which returns
+`` `${prefix}_${nextUlid().toLowerCase()}` `` from one module-level ULID `monotonicFactory()`.
 
 **The ULID's lexicographic time-ordering is load-bearing.** Decision-event replay sorts by `createdAt`,
 then breaks same-millisecond ties by *code-unit id comparison* (`compareByCreatedAtThenId`,
@@ -28,9 +28,13 @@ lexicographically in time order. The contract is pinned by a test, not folklore:
 chronology contract)"`). Lowercasing is order-preserving for Crockford base32; the fixed prefix keeps all
 ids of a kind in one ordering regime.
 
-Batch inserts use `generateOrderedIdFactory()` (`src/lib/id.ts:12`) instead — bare `ulid()` is **not**
-monotonic within a single millisecond, so a batch would produce ids whose order does not match insertion
-order. One factory per request/batch; never a module-level shared one.
+`generateId` mints from one process-wide ULID monotonic factory, so ids minted in one process sort in
+creation order even within a millisecond (bare `ulid()` randomizes within a millisecond, which ordered
+same-ms rows by chance — `purses-w7ss.16`). Ids minted concurrently on two instances are not ordered.
+`generateOrderedIdFactory()` (`src/lib/id.ts:19`) remains for batch inserts (one factory per request/batch;
+consolidating it is `purses-w7ss.20`). A module-level monotonic factory is safe because ids are not
+capabilities: knowing or predicting one grants nothing — share and invite tokens come from `randomBytes`,
+and every access check is server-side authz.
 
 ### Soft delete via `deletedAt`
 
@@ -81,7 +85,7 @@ A partial unique index encodes "unique *among the rows that count*". Each predic
 | `sessions_active_unique` on `(collection_id, curator_id)` (`schema.ts:206`) | `deleted_at is null and status in ('active','paused')` | **One in-progress session per (collection, curator).** Terminal or soft-deleted rows free the slot. |
 | `preferences_order_rank_unique` on `(collection_id, curator_id, order_rank)` (`schema.ts:297`) | `order_rank is not null` | Manual ordering is unique per curator *where set*; unranked rows (NULL) don't collide. |
 | `decision_events_client_key_unique` on `(session_id, client_key)` (`schema.ts:233`) | `client_key is not null` | Idempotency key, only for requests that supply one. |
-| `sort_results_open_draft_unique` on `(collection_id, curator_id)` (`schema.ts:360`) | `status = 'draft'` | **One open draft per (collection, curator)** (migration 0003). The ranking writers (pin, unpin, save, revision, finalize, draft delete, legacy create) run under the `(collection, curator)` advisory lock (`SortResultService.inCuratorTx`), so the index is a backstop, never a 500 for them; the result rename and owner purge-prep are still unlocked (`purses-w7ss.6`). |
+| `sort_results_open_draft_unique` on `(collection_id, curator_id)` (`schema.ts:360`) | `status = 'draft'` | **One open draft per (collection, curator)** (migration 0003). The ranking writers (pin, unpin, save, revision, finalize, draft delete, legacy create) run under the `(collection, curator)` advisory lock (`SortResultService.inCuratorTx`), so the index is a backstop, never a 500 for them. Every draft writer in `SortResultService` is under the curator lock; the owner purge-prep (`removeItemFromDraftResults`) takes every curator's lock for the collection (`lockCollectionCurators`). (`AccountDeletionService`'s draft writes are `purses-w7ss.18`.) |
 | `sort_results_save_key_unique` on `(curator_id, save_key)` (`schema.ts:363`) | `save_key is not null` | Save-and-share idempotency key (migration 0003); a retried save returns the same link. |
 
 **The rule a partial unique index imposes on every writer** (memory:
@@ -171,15 +175,44 @@ Migrations are **append-only**: to change the schema, add a new `.sql`; never ed
 plus `meta/_journal.json`. Code comments elsewhere may cite migration numbers that are not files on disk —
 `drizzle/` is the truth.
 
+**Lock timeout and retry.** `scripts/migrate.ts` sets `lock_timeout = 5s` as a connection startup
+parameter; `ensureLockTimeout` (`scripts/lock-timeout.ts`) reads it back and refuses to migrate unless it
+is `5s`. Neon silently drops `lock_timeout` as a startup parameter on **both** its pooled and direct
+endpoints (observed 2026-10-03), so on a direct (non-`-pooler`) host the migrator falls back to a session
+`SET lock_timeout = '5s'` on its single (`max: 1`) session, which the migration transaction inherits —
+`lock_timeout: applied-after-set` is the normal line on Vercel (`applied` where the startup parameter is
+honoured, e.g. local Postgres). On a pooled host it refuses instead (under PgBouncer a `SET` can stick to
+a pooled backend that later serves app traffic). It logs
+`migrate: using <DATABASE_URL|non-pooling|derived-direct> connection (<hostname>)` first — hostname only,
+never the URL. `pickMigrationUrl` (`scripts/migration-url.ts`) only leaves `DATABASE_URL` when its host
+contains `-pooler`, so a pulled Vercel var never overrides a local/test URL. For a `-pooler`
+`DATABASE_URL` it **derives the direct host** by dropping `-pooler` (Neon's convention: same credentials,
+database and params), so `POSTGRES_URL_NON_POOLING` is optional. A `POSTGRES_URL_NON_POOLING` naming the
+same endpoint, database and user is used as-is; a mismatched or unparseable one is ignored with a warning
+(naming the mismatched part) and the derived host is used instead. An unparseable `DATABASE_URL` still
+throws, and `ensureLockTimeout` still refuses if the setting is not applied. A
+migration that cannot get its lock within 5 s fails with SQLSTATE 55P03 and rolls back (drizzle applies
+pending migrations in one transaction), so the Vercel build fails loudly instead of queueing reads behind it.
+**Retry:** redeploy (or re-run `db:migrate`) once the blocking traffic has passed; there is no automatic
+retry. A repeat failure means a long-held lock — find it in `pg_locks`/`pg_stat_activity` before retrying.
+
 ### Trap 1 — `db:migrate` silently targets **dev**
 
-`scripts/migrate.ts:8` does `dotenv.config({ path: ".env.local" })`, and `.env.local` points
+`scripts/migrate.ts:10` does `dotenv.config({ path: ".env.local" })`, and `.env.local` points
 `DATABASE_URL` at the Neon **development** branch. dotenv does *not* override an already-set variable, so
 the only way to target another database is to set it explicitly:
 
 ```bash
 DATABASE_URL=<prod-url> npm run db:migrate
 ```
+
+If `<prod-url>` is a `-pooler` host, the migrator migrates over the direct host derived from it (same
+credentials and database). dotenv may fill `POSTGRES_URL_NON_POOLING` from `.env.local` (e.g. by
+`vercel env pull` — the **dev** direct URL) when it is not set in the shell; that mismatch is **ignored
+with a warning** (`POSTGRES_URL_NON_POOLING points at a different endpoint than DATABASE_URL — ignoring
+it — using the direct host derived from DATABASE_URL instead`), never a silent database switch, and
+`ensureLockTimeout` still refuses if `lock_timeout` is not applied. The `migrate: using …` line names the
+host it took.
 
 The symptom of forgetting is nasty, because the build never touches the DB: **the build passes, and every
 page using the new column 500s at runtime with `column X does not exist`** (memory:
@@ -341,6 +374,10 @@ things the repo does itself:
 
 **Pooled vs direct endpoint.** The app connects through Neon's **pooled** endpoint — the `-pooler` host in
 `.env.local` (§4) — because serverless functions open many short-lived connections. Anything needing a
-session-scoped feature the pooler does not support belongs on the direct (non-`-pooler`) host. `db:migrate`
-and `db:reset` use whatever URL you hand them, so pass the same string the app uses unless you have a
+session-scoped feature the pooler does not support belongs on the direct (non-`-pooler`) host. `db:reset`
+uses whatever URL you hand it; `db:migrate` does too, except that a `-pooler` `DATABASE_URL` migrates
+over the direct host (a matching `POSTGRES_URL_NON_POOLING`, else the host derived by dropping `-pooler`;
+a mismatched var is ignored with a warning). Neon drops `lock_timeout` as a startup parameter on both
+endpoints (observed 2026-10-03); the migrator sets it per session on the direct one and refuses on a
+pooled one (§2). Pass the same string the app uses unless you have a
 specific reason not to — and see §3 on the grant trap if you hand-assemble one.

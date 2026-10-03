@@ -8,7 +8,8 @@
 // direct row counts, not by the response body alone.
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { sql } from "drizzle-orm";
-import { closeDb, getTestDb, resetDb } from "../../../e2e/fixtures/db";
+import postgres from "postgres";
+import { closeDb, getTestDb, resetDb, TEST_DATABASE_URL } from "../../../e2e/fixtures/db";
 import { seedBaseline } from "../../../e2e/fixtures/seed";
 import { generateId } from "@/lib/id";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
@@ -162,5 +163,39 @@ describeDb("POST /api/items/[id]/remove-from-sorts (route -> service -> DB) — 
     mockGetSession.mockResolvedValue({ user: { id: ownerId } });
     const res = await removeFromSorts(removeReq() as any, { params: Promise.resolve({ id: "item_does_not_exist" }) });
     expect(res.status).toBe(404);
+  });
+
+  it("(e) waits for an in-flight curator writer: purge-prep takes the curator lock (purses-w7ss.6)", async () => {
+    const itemId = await seedItemWithPreference();
+    const memberId = await addMember();
+    await placeInResult(itemId, "draft", memberId);
+    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
+
+    // A second connection plays a MEMBER curator's writer mid-transaction (pin/save
+    // hold this lock). The member's key, not the owner's: a purge-prep that took only
+    // the actor's (owner's) lock would not wait, so that mutant fails here.
+    const holder = postgres(TEST_DATABASE_URL, { max: 1 });
+    try {
+      let call!: Promise<Response>;
+      const outcome = await holder.begin(async (tx) => {
+        await tx`select pg_advisory_xact_lock(hashtext(${collectionId}), hashtext(${memberId}))`;
+        call = removeFromSorts(removeReq() as any, { params: Promise.resolve({ id: itemId }) });
+        const waiting = (async () => {
+          for (let i = 0; i < 50; i++) {
+            const [row] = await tx`select count(*)::int as n from pg_locks where locktype = 'advisory' and not granted and database = (select oid from pg_database where datname = current_database())`;
+            if (row.n > 0) return "waiting" as const;
+            await new Promise((r) => setTimeout(r, 100));
+          }
+          return "never waited" as const;
+        })();
+        return Promise.race([call.then(() => "finished first" as const), waiting]);
+      });
+      expect(outcome).toBe("waiting");
+      const res = await call; // the holder committed; the purge-prep proceeds
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ removed: 1, remainingInFinalized: 0 });
+    } finally {
+      await holder.end({ timeout: 5 });
+    }
   });
 });
