@@ -22,7 +22,7 @@ export function MostLovedHero({ item, collectionId, heroPhotoUrl }: MostLovedHer
               src={heroPhotoUrl}
               alt={itemDisplayName(item)}
               fallback={
-                <span className="font-display text-7xl text-ink-soft/70" aria-hidden>
+                <span className="font-display text-7xl text-ink-soft" aria-hidden>
                   {itemInitial(item)}
                 </span>
               }

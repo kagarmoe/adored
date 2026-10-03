@@ -55,7 +55,7 @@ export function DeleteCollectionSection({
   }
 
   return (
-    <Card padding="lg" className="mt-10 border border-error-soft bg-error-soft/30">
+    <Card variant="danger" padding="lg" className="mt-10">
       <h2 className="text-lg text-ink">Delete this collection</h2>
       <p className="mt-1 text-sm text-ink-soft">
         Permanently removes this collection and everything in it — items, photos, and sorts. This

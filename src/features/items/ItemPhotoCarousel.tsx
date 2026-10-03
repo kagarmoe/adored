@@ -328,7 +328,7 @@ export function ItemPhotoCarousel({
           >
             <span
               aria-hidden
-              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-ink/10 shadow-lift"
+              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-hairline shadow-lift"
             >
               <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
                 <path
@@ -373,7 +373,7 @@ export function ItemPhotoCarousel({
                     className="inline-flex h-11 w-11 items-center justify-center focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <span
-                      className={`block h-2 w-2 rounded-full ${i === current ? "bg-primary" : "bg-ink-soft/70"}`}
+                      className={`block h-2 rounded-full ${i === current ? "w-4 bg-primary" : "w-2 bg-ink-soft"}`}
                     />
                   </button>
                 ))}
@@ -423,7 +423,7 @@ function NavArrow({
       onClick={() => {
         if (!disabled) onClick();
       }}
-      className={`absolute top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-ink/10 shadow-lift transition-colors hover:bg-surface-raised focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${side === "left" ? "left-3" : "right-3"} ${disabled ? "opacity-40" : ""}`}
+      className={`absolute top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-hairline shadow-lift transition-colors hover:bg-surface-raised focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${side === "left" ? "left-3" : "right-3"} ${disabled ? "opacity-40" : ""}`}
     >
       <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5">
         <path

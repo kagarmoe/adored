@@ -5,13 +5,15 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   padding?: "md" | "lg" | "none";
   interactive?: boolean;
   /** "card": grid/list tile, opaque pre-composited fill, no blur (cheap to scroll).
-   *  "glass": a text-carrying panel over photos/scroll — glass-strong + blur + rim. */
-  variant?: "card" | "glass";
+   *  "glass": a text-carrying panel over photos/scroll — glass-strong + blur + rim.
+   *  "danger": a destructive section (delete account / collection) — the card fill with a sober error rim. */
+  variant?: "card" | "glass" | "danger";
 }
 
 const surfaceMap = {
   card: "bg-card shadow-card border border-hairline",
   glass: "bg-glass-strong backdrop-blur-xl shadow-lift border border-rim",
+  danger: "bg-card shadow-card border border-error",
 };
 
 const paddingMap = {

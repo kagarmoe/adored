@@ -114,6 +114,8 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.ink, t.card, 4.5, "ink on card"],
     [t.inkSoft, t.card, 4.5, "ink-soft on card"],
     [t.primary, t.card, 4.5, "primary link on card"],
+    // Danger sections (Card variant="danger"): the error rim must read as an edge on the card fill (SC 1.4.11).
+    [t.error, t.card, 3.0, "error rim on card (danger section)"],
     [t.chipInk, t.chip, 4.5, "chip ink on chip (selected pill / chip)"],
     [t.primary, t.chip, 3.0, "selected border (primary) on chip"],
     ...GLASS_COMPOSITES.flatMap((k): [string, string, number, string][] => [
