@@ -20,7 +20,7 @@ function makeSessionRepo(sessions: Session[] = []): SessionRepository {
   } as unknown as SessionRepository;
 }
 function makeDecisionRepo(): DecisionEventRepository {
-  return { findBySession: vi.fn().mockResolvedValue([]) } as unknown as DecisionEventRepository;
+  return { findBySessions: vi.fn().mockResolvedValue([]) } as unknown as DecisionEventRepository;
 }
 
 const COLLECTION = "col-1";
@@ -173,7 +173,7 @@ describe("PreferenceStateService.recalculatePreferences", () => {
     ];
     const sessions: Session[] = [{ id: "sess-1" } as Session];
     const decisionRepo = {
-      findBySession: vi.fn().mockResolvedValue([
+      findBySessions: vi.fn().mockResolvedValue([
         {
           id: "evt-1",
           sessionId: "sess-1",
@@ -223,7 +223,7 @@ describe("PreferenceStateService.recalculatePreferences", () => {
       { id: "c", createdAt: t2, deletedAt: null } as Item,
     ];
     const decisionRepo = {
-      findBySession: vi.fn().mockResolvedValue([
+      findBySessions: vi.fn().mockResolvedValue([
         { id: "e1", sessionId: "sess-1", type: "pairwise_compare", decision: { itemAId: "a", itemBId: "b", result: "item_b" }, createdAt: t1 },
         { id: "e2", sessionId: "sess-1", type: "pairwise_compare", decision: { itemAId: "a", itemBId: "c", result: "item_a" }, createdAt: t2 },
       ]),

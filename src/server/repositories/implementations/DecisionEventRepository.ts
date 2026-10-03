@@ -49,6 +49,15 @@ export class DecisionEventRepository {
     return events.map((e) => this.mapToDecisionEvent(e));
   }
 
+  async findBySessions(sessionIds: string[]): Promise<DecisionEvent[]> {
+    if (sessionIds.length === 0) return [];
+    const events = await this.db
+      .select()
+      .from(decisionEventsTable)
+      .where(inArray(decisionEventsTable.sessionId, sessionIds));
+    return events.map((e) => this.mapToDecisionEvent(e));
+  }
+
   // Delete every decision of this collection's sessions (decisions have no
   // collection_id — scope via the parent sessions). Purge-only.
   async deleteByCollection(collectionId: string): Promise<void> {

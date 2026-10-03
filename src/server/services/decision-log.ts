@@ -5,7 +5,7 @@ import type { DecisionEventRepository } from "@/server/repositories/implementati
 // THE definition of "the curator's decision log" — the recompute and the round
 // page provably read the same log (spec §2.6). Body is the former private
 // PreferenceStateService.loadDecisionEvents, verbatim: the curator's non-deleted
-// sessions' decision events, fetched once and in parallel
+// sessions' decision events, fetched in one query
 // (findByCollectionAndCurator yields the same session set the scorer scopes to).
 export async function loadCuratorDecisionEvents(
   sessionRepo: SessionRepository,
@@ -14,8 +14,5 @@ export async function loadCuratorDecisionEvents(
   curatorId: string,
 ): Promise<DecisionEvent[]> {
   const sessions = await sessionRepo.findByCollectionAndCurator(collectionId, curatorId);
-  const perSession = await Promise.all(
-    sessions.map((s) => decisionRepo.findBySession(s.id)),
-  );
-  return perSession.flat();
+  return decisionRepo.findBySessions(sessions.map((s) => s.id));
 }

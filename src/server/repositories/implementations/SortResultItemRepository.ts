@@ -4,6 +4,15 @@ import { sortResultItemsTable, sortResultsTable } from "@/lib/db/schema";
 import type { SortResultItem, RankBucket, UsageResult } from "@/types";
 import { generateId } from "@/lib/id";
 
+export type NewSortResultItem = {
+  sortResultId: string;
+  itemId: string;
+  computedRank: number;
+  computedBucket: RankBucket;
+  manualRank?: number | null;
+  usage?: "uses" | "not_uses" | null;
+};
+
 export class SortResultItemRepository {
   constructor(private db: Database) {}
 
@@ -34,6 +43,29 @@ export class SortResultItemRepository {
       })
       .returning();
     return this.mapToResultItem(item);
+  }
+
+  // One INSERT for a whole materialization (the per-row loop held the curator lock N round trips).
+  // 10 bind params per row against Postgres's 65,535 cap: fine up to ~6,553 rows per call.
+  async createMany(rows: NewSortResultItem[]): Promise<void> {
+    if (rows.length === 0) return;
+    const now = new Date();
+    await this.db
+      .insert(sortResultItemsTable)
+      .values(
+        rows.map((r) => ({
+          id: generateId("sri"),
+          sortResultId: r.sortResultId,
+          itemId: r.itemId,
+          computedRank: r.computedRank,
+          computedBucket: r.computedBucket,
+          manualRank: r.manualRank ?? null,
+          manualBucket: null,
+          usage: r.usage ?? null,
+          createdAt: now,
+          updatedAt: now,
+        })),
+      );
   }
 
   async findById(id: string): Promise<SortResultItem | null> {

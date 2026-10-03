@@ -299,25 +299,26 @@ export class SortResultService {
       const events = await loadCuratorDecisionEvents(new SessionRepository(tx), new DecisionEventRepository(tx), collectionId, curatorId);
       const usage = deriveUsage(events, new Set(ordered.map((e) => e.itemId)));
       await itemRepo.deleteByResult(draft.id);
-      for (const [index, entry] of ordered.entries()) {
-        await itemRepo.create({
+      await itemRepo.createMany(
+        ordered.map((entry, index) => ({
           sortResultId: draft.id,
           itemId: entry.itemId,
           computedRank: index,
           computedBucket: entry.bucket,
           usage: usage.get(entry.itemId) ?? null,
-        });
-      }
+        })),
+      );
       const result = await resultRepo.markSaved(draft.id, name, saveKey);
       // The saved draft is finalized now, so the open-draft index admits a new one.
       // Only the explicit pins travel — the rest keep flowing with later answers.
       const keptPins = loved.flatMap((entry, slot) => (entry.pinned ? [{ entry, slot }] : []));
       if (keptPins.length > 0) {
         const next = await this.getOrCreateOpenDraft(tx, collectionId, curatorId);
-        for (const { entry, slot } of keptPins) {
-          const row = await itemRepo.create({ sortResultId: next.id, itemId: entry.itemId, computedRank: slot, computedBucket: entry.bucket });
-          await itemRepo.update(row.id, { manualRank: slot, manualBucket: null });
-        }
+        await itemRepo.createMany(
+          keptPins.map(({ entry, slot }) => ({
+            sortResultId: next.id, itemId: entry.itemId, computedRank: slot, computedBucket: entry.bucket, manualRank: slot,
+          })),
+        );
       }
 
       const sessionRepo = new SessionRepository(tx);
