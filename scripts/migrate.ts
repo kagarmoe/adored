@@ -12,7 +12,7 @@ dotenv.config({ path: ".env.development.local" });
 
 // Direct URL only when DATABASE_URL is the pooler host; test/local URLs are never
 // overridden by a pulled Vercel var (see pickMigrationUrl).
-const { url: databaseUrl, kind: urlKind, host: urlHost } = pickMigrationUrl({
+const { url: databaseUrl, kind: urlKind, host: urlHost, warning } = pickMigrationUrl({
   DATABASE_URL: process.env.DATABASE_URL,
   POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING,
 });
@@ -31,6 +31,7 @@ const migrationsFolder = path.resolve(process.cwd(), "drizzle");
 async function runMigrations() {
   console.log("Running migrations...");
   try {
+    if (warning) console.warn(`migrate: WARNING ${warning}`);
     // Hostname only — never the URL, which carries credentials.
     console.log(`migrate: using ${urlKind} connection (${urlHost})`);
     console.log(`lock_timeout: ${await ensureLockTimeout(sql)}`);

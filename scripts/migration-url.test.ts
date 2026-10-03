@@ -15,36 +15,37 @@ describe("pickMigrationUrl (purses-w7ss.8)", () => {
     });
   });
 
-  it("refuses a non-pooling URL on a different endpoint, without echoing credentials", () => {
+  const fallback = (part: string) => ({
+    url: POOLED,
+    kind: "DATABASE_URL",
+    host: POOLER_HOST,
+    warning: `POSTGRES_URL_NON_POOLING points at a different ${part} than DATABASE_URL — ignoring it and migrating via DATABASE_URL`,
+  });
+
+  it("warns and falls back to DATABASE_URL on a different endpoint, without echoing credentials", () => {
     const other = "postgresql://u:secret@ep-other-999.us-east-2.aws.neon.tech/db";
-    expect(() => pickMigrationUrl({ DATABASE_URL: POOLED, POSTGRES_URL_NON_POOLING: other })).toThrow(
-      "POSTGRES_URL_NON_POOLING points at a different endpoint than DATABASE_URL — refusing to migrate",
-    );
-    try {
-      pickMigrationUrl({ DATABASE_URL: POOLED, POSTGRES_URL_NON_POOLING: other });
-    } catch (e) {
-      expect((e as Error).message).not.toMatch(/secret|ep-other|postgresql:/);
-    }
+    const r = pickMigrationUrl({ DATABASE_URL: POOLED, POSTGRES_URL_NON_POOLING: other });
+    expect(r).toEqual(fallback("endpoint"));
+    expect(r.warning).not.toMatch(/secret|ep-other|postgresql:/);
   });
 
-  it("refuses a non-pooling URL on the same endpoint but a different database", () => {
+  it("warns and falls back on the same endpoint but a different database", () => {
     const otherDb = "postgresql://u:p@ep-cool-123.us-east-2.aws.neon.tech/otherdb?sslmode=require";
-    expect(() => pickMigrationUrl({ DATABASE_URL: POOLED, POSTGRES_URL_NON_POOLING: otherDb })).toThrow(
-      "POSTGRES_URL_NON_POOLING points at a different database than DATABASE_URL — refusing to migrate",
-    );
+    expect(pickMigrationUrl({ DATABASE_URL: POOLED, POSTGRES_URL_NON_POOLING: otherDb })).toEqual(fallback("database"));
   });
 
-  it("refuses a non-pooling URL with a different user", () => {
+  it("warns and falls back on a different user", () => {
     const otherUser = "postgresql://admin:p@ep-cool-123.us-east-2.aws.neon.tech/db?sslmode=require";
-    expect(() => pickMigrationUrl({ DATABASE_URL: POOLED, POSTGRES_URL_NON_POOLING: otherUser })).toThrow(
-      "POSTGRES_URL_NON_POOLING points at a different user than DATABASE_URL — refusing to migrate",
-    );
+    expect(pickMigrationUrl({ DATABASE_URL: POOLED, POSTGRES_URL_NON_POOLING: otherUser })).toEqual(fallback("user"));
   });
 
-  it("refuses an unparseable non-pooling URL on a pooler host", () => {
-    expect(() => pickMigrationUrl({ DATABASE_URL: POOLED, POSTGRES_URL_NON_POOLING: "not a url" })).toThrow(
-      "POSTGRES_URL_NON_POOLING is not a valid URL",
-    );
+  it("warns and falls back on an unparseable non-pooling URL", () => {
+    expect(pickMigrationUrl({ DATABASE_URL: POOLED, POSTGRES_URL_NON_POOLING: "not a url" })).toEqual({
+      url: POOLED,
+      kind: "DATABASE_URL",
+      host: POOLER_HOST,
+      warning: "POSTGRES_URL_NON_POOLING is not a valid URL — ignoring it",
+    });
   });
 
   it("keeps the pooled DATABASE_URL when no non-pooling URL exists", () => {

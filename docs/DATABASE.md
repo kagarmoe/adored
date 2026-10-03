@@ -184,8 +184,9 @@ migrations against the direct URL (`POSTGRES_URL_NON_POOLING`). It logs
 `pickMigrationUrl` (`scripts/migration-url.ts`) switches to `POSTGRES_URL_NON_POOLING` **only** when
 `DATABASE_URL`'s host contains `-pooler`, so a pulled Vercel var never overrides a local/test URL, and
 **only** when the direct URL names the same Neon endpoint (the pooler host minus `-pooler`), database and
-user. Any mismatch, or either URL failing to parse, refuses to migrate (the message names the mismatched
-part). A pooler `DATABASE_URL` with no non-pooling var is used as-is, still guarded by the read-back. A
+user. On any mismatch, or an unparseable non-pooling URL, it ignores that URL with a warning (naming the
+mismatched part) and migrates via `DATABASE_URL`, whose `lock_timeout` `ensureLockTimeout` verifies; an
+unparseable `DATABASE_URL` still throws. A pooler `DATABASE_URL` with no non-pooling var is used as-is, still guarded by the read-back. A
 migration that cannot get its lock within 5 s fails with SQLSTATE 55P03 and rolls back (drizzle applies
 pending migrations in one transaction), so the Vercel build fails loudly instead of queueing reads behind it.
 **Retry:** redeploy (or re-run `db:migrate`) once the blocking traffic has passed; there is no automatic
@@ -203,9 +204,10 @@ DATABASE_URL=<prod-url> npm run db:migrate
 
 If `<prod-url>` is a `-pooler` host, the migrator switches to `POSTGRES_URL_NON_POOLING` — and dotenv
 fills that from `.env.local` when it is set there (e.g. by `vercel env pull` — the **dev** direct URL) and
-not in the shell. That mismatch now
-**refuses** (`POSTGRES_URL_NON_POOLING points at a different endpoint than DATABASE_URL — refusing to
-migrate`) instead of silently switching databases. Pass the matching direct URL too
+not in the shell. That mismatch is now
+**ignored with a warning** (`POSTGRES_URL_NON_POOLING points at a different endpoint than DATABASE_URL —
+ignoring it and migrating via DATABASE_URL`) and the migrator uses `DATABASE_URL`, instead of silently
+switching databases; `ensureLockTimeout` still verifies the pooled URL's `lock_timeout`. Pass the matching direct URL too
 (`POSTGRES_URL_NON_POOLING=<prod-direct-url>`), or hand it the direct URL as `DATABASE_URL`; the
 `migrate: using …` line names the host it took.
 
@@ -371,5 +373,5 @@ things the repo does itself:
 `.env.local` (§4) — because serverless functions open many short-lived connections. Anything needing a
 session-scoped feature the pooler does not support belongs on the direct (non-`-pooler`) host. `db:reset`
 uses whatever URL you hand it; `db:migrate` does too, except that a `-pooler` `DATABASE_URL` with a
-matching `POSTGRES_URL_NON_POOLING` migrates over the direct URL, and a mismatched one refuses (§2). Pass the same string the app uses unless you have a
+matching `POSTGRES_URL_NON_POOLING` migrates over the direct URL, and a mismatched one is ignored with a warning (§2). Pass the same string the app uses unless you have a
 specific reason not to — and see §3 on the grant trap if you hand-assemble one.
