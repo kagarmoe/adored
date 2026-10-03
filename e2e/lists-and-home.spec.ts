@@ -8,6 +8,7 @@ import {
   seedBaseline,
   seedJourneyScenario,
   seedNamedCollection,
+  seedSortScenario,
   seedWorkspaceStates,
   type SeededCollectionRef,
 } from "./fixtures/seed";
@@ -21,6 +22,7 @@ let itemsOnly: SeededCollectionRef;
 let startable: SeededCollectionRef;
 let shelf: { name: string } & SeededCollectionRef;
 let long: { slug: string };
+let ranked: { slug: string };
 
 test.beforeAll(async () => {
   ownerId = await seedBaseline();
@@ -32,6 +34,7 @@ test.beforeAll(async () => {
   const name = `E2E Shelf ${Date.now()}`;
   shelf = { name, ...(await seedNamedCollection(ownerId, name)) };
   long = await seedJourneyScenario(ownerId, 8); // enough cards to scroll on a phone
+  ranked = await seedSortScenario(ownerId); // has a finalized ranking, so the chip row carries See your ranking
 });
 
 test.afterAll(async () => {
@@ -115,6 +118,19 @@ test("home before items: Make items leads when photos wait", async ({ page }) =>
   await expect(page.getByRole("region", { name: "Photos waiting" })).toBeVisible();
   await bar.getByRole("link", { name: "Make items" }).click();
   await page.waitForURL((u) => u.pathname === `/collections/${poolOnly.slug}/pool`);
+});
+
+test("phone: with a ranking, the link is hidden so a card row stays above the bar", async ({ page }) => {
+  await page.setViewportSize(PHONE);
+  await page.goto(`/collections/${ranked.slug}`);
+  const bar = page.getByRole("region", { name: "Next step" });
+  await expect(bar).toBeVisible();
+  await expect(page.getByRole("link", { name: "See your ranking" })).toBeHidden();
+  const barBox = (await bar.boundingBox())!;
+  const first = (await page.getByRole("list", { name: "Your items" }).getByRole("listitem").first().boundingBox())!;
+  expect(first.y + first.height / 2).toBeLessThan(barBox.y);
+  await page.setViewportSize({ width: 820, height: 1180 });
+  await expect(page.getByRole("link", { name: "See your ranking" })).toBeVisible();
 });
 
 test("phone: the bar is pinned to the bottom and never hides the last row", async ({ page }) => {

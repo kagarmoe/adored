@@ -104,7 +104,7 @@ export default async function CollectionPage({ params, searchParams: searchParam
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <WorkspaceModeChips base={base} activeMode="build" />
             {hasEverSorted && (
-              <Link href={`${base}/results`} className={quietLink}>
+              <Link href={`${base}/results`} className={`${quietLink} max-md:hidden`}>
                 See your ranking
               </Link>
             )}
