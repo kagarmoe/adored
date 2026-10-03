@@ -20,9 +20,10 @@ const { url: databaseUrl, kind: urlKind, host: urlHost, warning } = pickMigratio
 // A migration's DDL takes ACCESS EXCLUSIVE; while it WAITS for that lock, every
 // new read of the table queues behind it. Cap the wait at 5 s so a busy table
 // fails the deploy loudly (rolled back, safe to re-run) instead of stalling prod
-// reads. Against a pooler, the direct URL keeps the startup parameter and the
-// migration transaction on one backend; ensureLockTimeout verifies the setting is
-// live and refuses to migrate otherwise.
+// reads. Neon ignores the startup parameter, so on a direct (non-"-pooler") host
+// ensureLockTimeout SETs it on this single session, which the migration transaction
+// inherits; on a pooled host it refuses. The startup parameter stays for hosts that
+// honour it (local Postgres).
 const sql = postgres(databaseUrl, { max: 1, connection: { lock_timeout: 5_000 } });
 const db = drizzle(sql);
 
@@ -34,7 +35,8 @@ async function runMigrations() {
     if (warning) console.warn(`migrate: WARNING ${warning}`);
     // Hostname only — never the URL, which carries credentials.
     console.log(`migrate: using ${urlKind} connection (${urlHost})`);
-    console.log(`lock_timeout: ${await ensureLockTimeout(sql)}`);
+    const direct = urlKind !== "DATABASE_URL" || !urlHost.includes("-pooler");
+    console.log(`lock_timeout: ${await ensureLockTimeout(sql, { direct })}`);
     await migrate(db, { migrationsFolder });
     console.log("✅ Migrations completed successfully");
     process.exit(0);

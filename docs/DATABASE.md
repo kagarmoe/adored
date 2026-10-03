@@ -177,9 +177,12 @@ plus `meta/_journal.json`. Code comments elsewhere may cite migration numbers th
 
 **Lock timeout and retry.** `scripts/migrate.ts` sets `lock_timeout = 5s` as a connection startup
 parameter; `ensureLockTimeout` (`scripts/lock-timeout.ts`) reads it back and refuses to migrate unless it
-is `5s`. Neon's pooler silently drops `lock_timeout` as a startup parameter (observed 2026-10-03), so
-migrations must run on the direct endpoint. There is no session `SET` fallback (under PgBouncer a `SET`
-can stick to a pooled backend that later serves app traffic). It logs
+is `5s`. Neon silently drops `lock_timeout` as a startup parameter on **both** its pooled and direct
+endpoints (observed 2026-10-03), so on a direct (non-`-pooler`) host the migrator falls back to a session
+`SET lock_timeout = '5s'` on its single (`max: 1`) session, which the migration transaction inherits —
+`lock_timeout: applied-after-set` is the normal line on Vercel (`applied` where the startup parameter is
+honoured, e.g. local Postgres). On a pooled host it refuses instead (under PgBouncer a `SET` can stick to
+a pooled backend that later serves app traffic). It logs
 `migrate: using <DATABASE_URL|non-pooling|derived-direct> connection (<hostname>)` first — hostname only,
 never the URL. `pickMigrationUrl` (`scripts/migration-url.ts`) only leaves `DATABASE_URL` when its host
 contains `-pooler`, so a pulled Vercel var never overrides a local/test URL. For a `-pooler`
@@ -374,6 +377,7 @@ things the repo does itself:
 session-scoped feature the pooler does not support belongs on the direct (non-`-pooler`) host. `db:reset`
 uses whatever URL you hand it; `db:migrate` does too, except that a `-pooler` `DATABASE_URL` migrates
 over the direct host (a matching `POSTGRES_URL_NON_POOLING`, else the host derived by dropping `-pooler`;
-a mismatched var is ignored with a warning), because Neon's pooler silently drops `lock_timeout` as a
-startup parameter (observed 2026-10-03) (§2). Pass the same string the app uses unless you have a
+a mismatched var is ignored with a warning). Neon drops `lock_timeout` as a startup parameter on both
+endpoints (observed 2026-10-03); the migrator sets it per session on the direct one and refuses on a
+pooled one (§2). Pass the same string the app uses unless you have a
 specific reason not to — and see §3 on the grant trap if you hand-assemble one.
