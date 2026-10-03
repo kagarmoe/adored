@@ -14,6 +14,7 @@ import { CollectionPreferenceItemRepository } from "@/server/repositories/implem
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
 import { loadCuratorDecisionEvents } from "@/server/services/decision-log";
+import { lockCollectionCurators } from "@/server/services/purge-lock";
 import { deriveUsage, type UsageAnswer } from "@/lib/derive-usage";
 import {
   rankPreferencesToItems,
@@ -153,8 +154,8 @@ export class SortResultService {
    * The ranking writers run here — pin, unpin, save, revision, finalize, delete and
    * the legacy create: one transaction holding the (collection, curator) advisory
    * lock, so they serialize and the open-draft index is a backstop, never a 500.
-   * (Still unlocked, tracked in purses-w7ss.6: the result rename and the owner's
-   * purge-prep.) The (collection, number) race — another curator saving in the same
+   * (The owner's purge-prep crosses curators and takes all of them:
+   * lockCollectionCurators.) The (collection, number) race — another curator saving in the same
    * collection — aborts the transaction, so it is retried at this boundary.
    */
   private async inCuratorTx<T>(
@@ -341,13 +342,6 @@ export class SortResultService {
     return { result, items };
   }
 
-  async updateResultName(id: string, name: string): Promise<SortResult> {
-    return this.sortResultRepo.update(id, {
-      name,
-      updatedAt: new Date(),
-    });
-  }
-
   /**
    * Finalize a draft into an immutable snapshot AND close the pass it belongs
    * to (spec §E, "sessions as invisible bookkeeping"): both writes commit or
@@ -452,15 +446,23 @@ export class SortResultService {
    * Invariant: every write inside the transaction goes to the tx-bound repo, not
    * the injected `this.sortResultItemRepo`. The finalized count runs in the same
    * transaction so `removed`/`remainingInFinalized` are a consistent snapshot.
+   * Takes every curator's lock for the collection (purge-lock), like the purge itself.
    */
   async removeItemFromDraftResults(
+    collectionId: string,
     itemId: string,
   ): Promise<{ removed: number; remainingInFinalized: number }> {
-    return withTransaction(this.db, async (tx) => {
-      const repo = new SortResultItemRepository(tx);
-      const removed = await repo.deleteByItemInDraftResults(itemId);
-      const remainingInFinalized = await repo.countByItemInFinalizedResults(itemId);
-      return { removed, remainingInFinalized };
-    });
+    return withTransaction(
+      this.db,
+      async (tx) => {
+        // Crosses curators, so it serializes with EVERY curator's pin/save/revision.
+        await lockCollectionCurators(tx, collectionId);
+        const repo = new SortResultItemRepository(tx);
+        const removed = await repo.deleteByItemInDraftResults(itemId);
+        const remainingInFinalized = await repo.countByItemInFinalizedResults(itemId);
+        return { removed, remainingInFinalized };
+      },
+      { op: "remove_item_from_draft_results", ctx: { collectionId } },
+    );
   }
 }

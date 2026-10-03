@@ -26,7 +26,7 @@ export async function POST(
 
     const service = SortResultService.fromDb(db);
     const { removed, remainingInFinalized } =
-      await service.removeItemFromDraftResults(item.id);
+      await service.removeItemFromDraftResults(item.collectionId, item.id);
 
     return NextResponse.json({ removed, remainingInFinalized });
   } catch (error) {
