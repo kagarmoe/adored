@@ -4,6 +4,7 @@ import { UnauthorizedError } from "@/lib/auth";
 import {
   DeleteResultStateError,
   SupersedeStateError,
+  RevisionDiscardsPinsError,
   FinalizeStateError,
   PinTargetError,
   NothingToSaveError,
@@ -47,6 +48,7 @@ export class HttpError extends Error {
  *   | ItemInResultError        → 409 (error.message)
  *   NothingToSaveError
  *   | SaveKeyConflictError    → 409 (error.message + error.code, so the client can tell them apart)
+ *   RevisionDiscardsPinsError → 409 (error.message + code + pinCount)
  *   PoolGroupError            → 409 if code "conflict", else 400 (error.message)
  *   HttpError
  *   | InvitationAcceptError   → error.status (error.message)
@@ -70,6 +72,9 @@ export function errorResponse(error: unknown): NextResponse {
       { error: "Invalid input", details: error.flatten() },
       { status: 400 },
     );
+  }
+  if (error instanceof RevisionDiscardsPinsError) {
+    return NextResponse.json({ error: error.message, code: error.code, pinCount: error.pinCount }, { status: 409 });
   }
   if (error instanceof NothingToSaveError || error instanceof SaveKeyConflictError) {
     return NextResponse.json({ error: error.message, code: error.code }, { status: 409 });

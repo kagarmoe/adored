@@ -7,6 +7,7 @@ import {
   placePin,
   savedOrderPositions,
   pinsFromRows,
+  pinsLostToRevision,
   type Pin,
 } from "./sortResultMaterialization";
 import type { CollectionPreferenceItem, SortResultItem } from "@/types";
@@ -231,5 +232,17 @@ describe("pinsFromRows (manualRank stays 0-based; a Pin is 1-based)", () => {
       sortResultItem({ itemId: "c", manualRank: null }),
     ];
     expect(pinsFromRows(rows).map((p) => [p.itemId, p.position])).toEqual([["a", 1], ["b", 3]]);
+  });
+});
+
+describe("pinsLostToRevision (a revision asks before moving hand placements)", () => {
+  const row = (itemId: string, manualRank: number | null) => sortResultItem({ itemId, manualRank });
+  const saved = new Map([["a", 0], ["b", 1]]);
+
+  it("counts pins the revision would move or drop", () => {
+    expect(pinsLostToRevision([row("a", 1), row("b", 0), row("x", 2)], saved)).toBe(3);
+  });
+  it("ignores pins already at their saved slot and unpinned rows (no note right after Save)", () => {
+    expect(pinsLostToRevision([row("a", 0), row("b", null)], saved)).toBe(0);
   });
 });

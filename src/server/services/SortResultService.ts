@@ -23,6 +23,7 @@ import {
   pinsFromRows,
   placePin,
   savedOrderPositions,
+  pinsLostToRevision,
   type MaterializedItem,
   type Pin,
 } from "./sortResultMaterialization";
@@ -32,6 +33,15 @@ export class SupersedeStateError extends Error {
   constructor() {
     super("Can only supersede finalized results");
     this.name = "SupersedeStateError";
+  }
+}
+
+/** A revision would set the open draft's hand placements aside; the person confirms first → 409. */
+export class RevisionDiscardsPinsError extends Error {
+  readonly code = "revision_discards_pins";
+  constructor(readonly pinCount: number) {
+    super("Your hand-placed pieces would move. Start the revision anyway?");
+    this.name = "RevisionDiscardsPinsError";
   }
 }
 
@@ -382,7 +392,7 @@ export class SortResultService {
     });
   }
 
-  async supersedeResult(id: string): Promise<SortResult | null> {
+  async supersedeResult(id: string, opts: { discardPins?: boolean } = {}): Promise<SortResult | null> {
     const source = await this.sortResultRepo.findById(id);
     if (!source) return null;
     if (source.status !== "finalized") throw new SupersedeStateError();
@@ -394,19 +404,32 @@ export class SortResultService {
     // Spec §4.4 "Make a revision opens a new copy to adjust": the copy becomes THE open
     // draft (replacing any other) with the saved loved order pinned, so the live
     // Ranking shows the saved order until the person moves or unpins something.
+    // When that other draft holds hand placements the revision would move, the
+    // person confirms first (`discardPins`).
     const slots = savedOrderPositions(sourceItems);
-    return this.inCuratorTx(source.collectionId, source.curatorId, "supersede_result", async (tx) => {
+    const outcome = await this.inCuratorTx<{ pinsLost: number } | { revision: SortResult }>(source.collectionId, source.curatorId, "supersede_result", async (tx) => {
+      const itemRepo = new SortResultItemRepository(tx);
+      if (!opts.discardPins) {
+        // Checked before any write, so returning early commits nothing. A sentinel, not a
+        // throw: withTransaction logs every throw as a DB error, and this is a prompt.
+        let lost = 0;
+        for (const draft of await new SortResultRepository(tx).findDrafts(source.collectionId, source.curatorId)) {
+          lost += pinsLostToRevision(await itemRepo.findByResult(draft.id), slots);
+        }
+        if (lost > 0) return { pinsLost: lost };
+      }
       await this.deleteDrafts(tx, source.collectionId, source.curatorId);
       const revision = await this.insertResultWithItems(
         tx, source.collectionId, source.curatorId, `${source.name} (Revision)`, items, usageByItemId,
       );
-      const itemRepo = new SortResultItemRepository(tx);
       for (const row of await itemRepo.findByResult(revision.id)) {
         const slot = slots.get(row.itemId);
         if (slot !== undefined) await itemRepo.update(row.id, { manualRank: slot, manualBucket: null });
       }
-      return revision;
+      return { revision };
     });
+    if ("pinsLost" in outcome) throw new RevisionDiscardsPinsError(outcome.pinsLost);
+    return outcome.revision;
   }
 
   /**
