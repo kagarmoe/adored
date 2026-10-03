@@ -437,3 +437,25 @@
     scroll-padding-bottom: 9rem;
   }
 }
+
+/* PoolActionBar (the pool's selection bar) is fixed at EVERY width while photos are selected —
+   unlike ActionBar it never becomes an inline row — and on phone it carries a count row and a
+   2×2 button grid (plus the over-cap line when shown). Reserve that height below the page's end
+   and as scroll padding so the last tile, the footer and a focused tile clear it. A short
+   viewport (browser zoom) keeps the bar static, so nothing is reserved. */
+@media (min-height: 501px) {
+  html:has([data-selection-bar]) {
+    scroll-padding-bottom: 14rem;
+  }
+  [data-app-shell]:has([data-selection-bar]) {
+    padding-bottom: 14rem;
+  }
+}
+@media (width >= 40rem) and (min-height: 501px) {
+  html:has([data-selection-bar]) {
+    scroll-padding-bottom: 9rem;
+  }
+  [data-app-shell]:has([data-selection-bar]) {
+    padding-bottom: 9rem;
+  }
+}

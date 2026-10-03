@@ -225,6 +225,17 @@ for (const theme of ["light", "dark"] as const) {
       await page.getByRole("button", { name: "Keep my ranking" }).click();
     }
 
+    // UX redesign PR 5: the pool's selection bar (fixed at every width). Viewport-only shot:
+    // a full-page capture paints a fixed bar at the fold (memory phone-fullpage-capture-fixed-bar-artifact).
+    if (!only || only.includes("pool-selected")) {
+      await page.goto(`/collections/${workspacePoolFirstSlug}/pool`);
+      await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+      await page.getByRole("button", { name: "pool 1", exact: true }).click();
+      await page.getByRole("button", { name: "pool 2", exact: true }).click();
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: `pr-screenshots/pool-selected-${theme}-${proj}.png` });
+    }
+
     if (only && !only.includes("item-delete-confirm")) return;
 
     // purses-v7gv: the item ··· menu (owner sees Archive + Delete) and the
