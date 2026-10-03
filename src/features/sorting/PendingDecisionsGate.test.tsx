@@ -212,8 +212,7 @@ describe("PendingDecisionsGate", () => {
     gate();
 
     await waitFor(() => expect(screen.getByTestId("content")).toBeInTheDocument());
-    // The surface's PendingNotices hears the sticky notice in its mount effect.
-    expect(await screen.findAllByText(AUTH_REQUIRED_NOTICE)).toHaveLength(1);
+    expect(screen.getAllByText(AUTH_REQUIRED_NOTICE)).toHaveLength(1);
     // A second 401 after reveal still shows ONE line.
     await act(async () => {
       await triggerFlush(key);

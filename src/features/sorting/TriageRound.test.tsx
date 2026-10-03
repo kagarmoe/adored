@@ -14,11 +14,13 @@ vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push, replace }
 
 // The flusher is mocked (call counts / ordering); the queue module stays REAL so
 // persist-before-advance is asserted against actual localStorage writes.
+const NO_NOTICES: readonly never[] = []; // stable snapshot for useSyncExternalStore
 const flusher = vi.hoisted(() => ({
   triggerFlush: vi.fn<() => Promise<void>>(() => Promise.resolve()),
   drain: vi.fn(() => Promise.resolve()),
   useDecisionFlusher: vi.fn(),
-  subscribeNotices: vi.fn(() => () => {}),
+  subscribeNoticeSet: vi.fn(() => () => {}),
+  getNoticeSet: vi.fn(() => NO_NOTICES),
   awaitAck: vi.fn(() => new Promise(() => {})),
   isInFlight: vi.fn(() => false),
 }));

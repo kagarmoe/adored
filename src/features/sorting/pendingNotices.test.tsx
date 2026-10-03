@@ -16,7 +16,7 @@ import {
 } from "./decisionQueue";
 // REAL engine — these tests prove the wiring end-to-end (drain → notice → UI).
 import { dismissNotice, drain, type FlushNotice } from "./decisionFlusher";
-import { PendingNotices, QUARANTINE_NOTICE, REJECTED_NOTICE, SESSION_CONFLICT_NOTICE } from "./pendingNotices";
+import { AUTH_REQUIRED_NOTICE, PendingNotices, QUARANTINE_NOTICE, REJECTED_NOTICE, SESSION_CONFLICT_NOTICE } from "./pendingNotices";
 import { TriageRound } from "./TriageRound";
 
 const { refresh, push, replace } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }));
@@ -109,6 +109,52 @@ describe("PendingNotices — a sort closed elsewhere", () => {
       await drain([key]);
     });
     expect(screen.getByText(SESSION_CONFLICT_NOTICE)).toBeInTheDocument();
+  });
+});
+
+describe("PendingNotices — engine clears reach a mounted surface", () => {
+  it("a sign-in line leaves once answers save (2xx), and a dismissed notice leaves too", async () => {
+    global.fetch = vi.fn(async () => ({ ok: false, status: 401, json: async () => ({}) })) as unknown as typeof fetch;
+    render(<PendingNotices />);
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    expect(screen.getByText(AUTH_REQUIRED_NOTICE)).toBeInTheDocument();
+
+    global.fetch = vi.fn(async (_url: string, init: RequestInit = {}) => {
+      const body = JSON.parse(String(init.body)) as { decisions: Array<{ clientKey: string }> };
+      return {
+        ok: true,
+        status: 201,
+        json: async () => ({ results: body.decisions.map((d) => ({ clientKey: d.clientKey, status: "created" })) }),
+      } as unknown as Response;
+    }) as unknown as typeof fetch;
+    await act(async () => {
+      await drain([key]);
+    });
+    expect(screen.queryByText(AUTH_REQUIRED_NOTICE)).not.toBeInTheDocument();
+
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    expect(screen.getByText(SESSION_CONFLICT_NOTICE)).toBeInTheDocument();
+    act(() => dismissNotice("session_conflict"));
+    expect(screen.queryByText(SESSION_CONFLICT_NOTICE)).not.toBeInTheDocument();
   });
 });
 

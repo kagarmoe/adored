@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { subscribeNotices, type FlushNotice } from "./decisionFlusher";
+import { useState, useSyncExternalStore } from "react";
+import { getNoticeSet, subscribeNoticeSet, type FlushNotice } from "./decisionFlusher";
 
 // Person-side copy for flush notices (spec §3.2/F9). Exported constants so
 // tests assert the exact strings; TONE.md register — never "error"/"failed"/
@@ -36,20 +36,15 @@ function isNoticed(kind: FlushNotice["kind"]): kind is NoticeKind {
  * this is its only voice. `PendingDecisionsGate` reuses the same slot (Task 15).
  */
 export function PendingNotices() {
-  const [active, setActive] = useState<ReadonlySet<NoticeKind>>(new Set());
+  // The engine's sticky set: read at render (no mount-effect gap), and a clear
+  // (a 2xx, dismissNotice) removes the line from a mounted surface.
+  const notices = useSyncExternalStore(subscribeNoticeSet, getNoticeSet, getNoticeSet);
   const [dismissed, setDismissed] = useState<ReadonlySet<NoticeKind>>(new Set());
 
-  useEffect(
-    () =>
-      subscribeNotices((notice: FlushNotice) => {
-        if (!isNoticed(notice.kind)) return;
-        const kind = notice.kind;
-        setActive((prev) => (prev.has(kind) ? prev : new Set(prev).add(kind)));
-      }),
-    [],
-  );
-
-  const visible = [...active].filter((kind) => !dismissed.has(kind));
+  const visible = notices
+    .map((notice) => notice.kind)
+    .filter(isNoticed)
+    .filter((kind) => !dismissed.has(kind));
   if (visible.length === 0) return null;
 
   return (

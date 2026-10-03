@@ -89,8 +89,19 @@ function lockName(key: QueueKey): string {
   return `adored.flush.v1.${key.curatorId}.${key.sessionId}`;
 }
 
+// The current set as an immutable snapshot (useSyncExternalStore), so adds AND
+// clears reach a mounted surface.
+let noticeSet: readonly FlushNotice[] = [];
+const noticeSetListeners = new Set<() => void>();
+
+function publishNoticeSet(): void {
+  noticeSet = [...currentNotices.values()];
+  for (const listener of [...noticeSetListeners]) listener();
+}
+
 function emitNotice(notice: FlushNotice): void {
   currentNotices.set(notice.kind, notice);
+  publishNoticeSet();
   for (const subscriber of [...noticeSubscribers]) subscriber(notice);
 }
 
@@ -100,8 +111,17 @@ export function subscribeNotices(fn: (n: FlushNotice) => void): () => void {
   return () => void noticeSubscribers.delete(fn);
 }
 
+export function subscribeNoticeSet(listener: () => void): () => void {
+  noticeSetListeners.add(listener);
+  return () => void noticeSetListeners.delete(listener);
+}
+
+export function getNoticeSet(): readonly FlushNotice[] {
+  return noticeSet;
+}
+
 export function dismissNotice(kind: FlushNotice["kind"]): void {
-  currentNotices.delete(kind);
+  if (currentNotices.delete(kind)) publishNoticeSet();
 }
 
 function ackId(storageKey: string, clientKey: string): string {
@@ -265,7 +285,7 @@ async function flushDecisionRun(
 
     if (res.ok) {
       attempts.set(storageKey, 0); // success resets the backoff schedule
-      currentNotices.delete("auth_required"); // signed in again
+      dismissNotice("auth_required"); // signed in again
       let results: BatchResult[] = [];
       try {
         results = ((await res.json()) as { results?: BatchResult[] }).results ?? [];
@@ -374,7 +394,7 @@ async function flushDisposition(
 
   if (res.ok) {
     attempts.set(storageKey, 0);
-    currentNotices.delete("auth_required"); // signed in again
+    dismissNotice("auth_required"); // signed in again
     removeEntries(key, [entry.clientKey]);
     return "continue";
   }
