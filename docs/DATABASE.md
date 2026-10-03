@@ -177,16 +177,17 @@ plus `meta/_journal.json`. Code comments elsewhere may cite migration numbers th
 
 **Lock timeout and retry.** `scripts/migrate.ts` sets `lock_timeout = 5s` as a connection startup
 parameter; `ensureLockTimeout` (`scripts/lock-timeout.ts`) reads it back and refuses to migrate unless it
-is `5s` — the pooled URL may reject or drop startup parameters. There is no session `SET` fallback (under
-PgBouncer a `SET` can stick to a pooled backend that later serves app traffic); a refusal means run
-migrations against the direct URL (`POSTGRES_URL_NON_POOLING`). It logs
-`migrate: using <non-pooling|DATABASE_URL> connection (<hostname>)` first — hostname only, never the URL.
-`pickMigrationUrl` (`scripts/migration-url.ts`) switches to `POSTGRES_URL_NON_POOLING` **only** when
-`DATABASE_URL`'s host contains `-pooler`, so a pulled Vercel var never overrides a local/test URL, and
-**only** when the direct URL names the same Neon endpoint (the pooler host minus `-pooler`), database and
-user. On any mismatch, or an unparseable non-pooling URL, it ignores that URL with a warning (naming the
-mismatched part) and migrates via `DATABASE_URL`, whose `lock_timeout` `ensureLockTimeout` verifies; an
-unparseable `DATABASE_URL` still throws. A pooler `DATABASE_URL` with no non-pooling var is used as-is, still guarded by the read-back. A
+is `5s`. Neon's pooler silently drops `lock_timeout` as a startup parameter (observed 2026-10-03), so
+migrations must run on the direct endpoint. There is no session `SET` fallback (under PgBouncer a `SET`
+can stick to a pooled backend that later serves app traffic). It logs
+`migrate: using <DATABASE_URL|non-pooling|derived-direct> connection (<hostname>)` first — hostname only,
+never the URL. `pickMigrationUrl` (`scripts/migration-url.ts`) only leaves `DATABASE_URL` when its host
+contains `-pooler`, so a pulled Vercel var never overrides a local/test URL. For a `-pooler`
+`DATABASE_URL` it **derives the direct host** by dropping `-pooler` (Neon's convention: same credentials,
+database and params), so `POSTGRES_URL_NON_POOLING` is optional. A `POSTGRES_URL_NON_POOLING` naming the
+same endpoint, database and user is used as-is; a mismatched or unparseable one is ignored with a warning
+(naming the mismatched part) and the derived host is used instead. An unparseable `DATABASE_URL` still
+throws, and `ensureLockTimeout` still refuses if the setting is not applied. A
 migration that cannot get its lock within 5 s fails with SQLSTATE 55P03 and rolls back (drizzle applies
 pending migrations in one transaction), so the Vercel build fails loudly instead of queueing reads behind it.
 **Retry:** redeploy (or re-run `db:migrate`) once the blocking traffic has passed; there is no automatic
@@ -202,14 +203,13 @@ the only way to target another database is to set it explicitly:
 DATABASE_URL=<prod-url> npm run db:migrate
 ```
 
-If `<prod-url>` is a `-pooler` host, the migrator switches to `POSTGRES_URL_NON_POOLING` — and dotenv
-fills that from `.env.local` when it is set there (e.g. by `vercel env pull` — the **dev** direct URL) and
-not in the shell. That mismatch is now
-**ignored with a warning** (`POSTGRES_URL_NON_POOLING points at a different endpoint than DATABASE_URL —
-ignoring it and migrating via DATABASE_URL`) and the migrator uses `DATABASE_URL`, instead of silently
-switching databases; `ensureLockTimeout` still verifies the pooled URL's `lock_timeout`. Pass the matching direct URL too
-(`POSTGRES_URL_NON_POOLING=<prod-direct-url>`), or hand it the direct URL as `DATABASE_URL`; the
-`migrate: using …` line names the host it took.
+If `<prod-url>` is a `-pooler` host, the migrator migrates over the direct host derived from it (same
+credentials and database). dotenv may fill `POSTGRES_URL_NON_POOLING` from `.env.local` (e.g. by
+`vercel env pull` — the **dev** direct URL) when it is not set in the shell; that mismatch is **ignored
+with a warning** (`POSTGRES_URL_NON_POOLING points at a different endpoint than DATABASE_URL — ignoring
+it — using the direct host derived from DATABASE_URL instead`), never a silent database switch, and
+`ensureLockTimeout` still refuses if `lock_timeout` is not applied. The `migrate: using …` line names the
+host it took.
 
 The symptom of forgetting is nasty, because the build never touches the DB: **the build passes, and every
 page using the new column 500s at runtime with `column X does not exist`** (memory:
@@ -372,6 +372,8 @@ things the repo does itself:
 **Pooled vs direct endpoint.** The app connects through Neon's **pooled** endpoint — the `-pooler` host in
 `.env.local` (§4) — because serverless functions open many short-lived connections. Anything needing a
 session-scoped feature the pooler does not support belongs on the direct (non-`-pooler`) host. `db:reset`
-uses whatever URL you hand it; `db:migrate` does too, except that a `-pooler` `DATABASE_URL` with a
-matching `POSTGRES_URL_NON_POOLING` migrates over the direct URL, and a mismatched one is ignored with a warning (§2). Pass the same string the app uses unless you have a
+uses whatever URL you hand it; `db:migrate` does too, except that a `-pooler` `DATABASE_URL` migrates
+over the direct host (a matching `POSTGRES_URL_NON_POOLING`, else the host derived by dropping `-pooler`;
+a mismatched var is ignored with a warning), because Neon's pooler silently drops `lock_timeout` as a
+startup parameter (observed 2026-10-03) (§2). Pass the same string the app uses unless you have a
 specific reason not to — and see §3 on the grant trap if you hand-assemble one.
