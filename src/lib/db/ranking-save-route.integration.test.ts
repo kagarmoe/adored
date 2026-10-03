@@ -127,16 +127,20 @@ describeDb("save and share (route -> service -> DB)", () => {
     lockSpy.mockRestore();
   });
 
-  it("a retry with the same key returns the same link and creates nothing new", async () => {
+  it("a retry with the same key returns the same link and creates nothing new — pins and the carried draft included", async () => {
     const { db } = getTestDb();
     const s = await seedSorting();
+    const service = SortResultService.fromDb(db);
+    await service.pinItem(s.collectionId, ownerId, s.a, 1);
     const first = await (await save(saveReq({ name: "Once", saveKey: KEY }), ctx(s.collectionId))).json();
     const again = await save(saveReq({ name: "Once", saveKey: KEY }), ctx(s.collectionId));
     expect(again.status).toBe(200);
     expect(await again.json()).toEqual(first);
     const results = await new SortResultRepository(db).findByCollection(s.collectionId);
-    expect(results).toHaveLength(1);
-    expect(await new SortResultShareRepository(db).findByResult(results[0].id)).toHaveLength(1);
+    expect(results.map((r) => r.status).sort()).toEqual(["draft", "finalized"]); // one saved, one draft carrying the pin
+    const finalized = results.find((r) => r.status === "finalized")!;
+    expect(await new SortResultShareRepository(db).findByResult(finalized.id)).toHaveLength(1);
+    expect((await service.listPins(s.collectionId, ownerId)).map((p) => [p.itemId, p.position])).toEqual([[s.a, 1]]);
   });
 
   it("a key already used in another collection is a 409", async () => {

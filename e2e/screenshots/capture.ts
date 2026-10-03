@@ -22,6 +22,8 @@ import { CollectionPreferenceItemRepository } from "@/server/repositories/implem
 import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { SortResultService } from "@/server/services/SortResultService";
 
 // A real photo so the shots show a real rendered image, not a labeled test card.
 const FIXTURE = "public/onboarding/blue-mixing-bowl.webp";
@@ -43,7 +45,10 @@ const only = process.env.SHOTS?.split(",");
 
 test.beforeAll(async () => {
   ownerId = await seedBaseline();
-  ({ slug, finalizedResultNumber } = await seedSortScenario(ownerId));
+  const sorted = await seedSortScenario(ownerId);
+  ({ slug, finalizedResultNumber } = sorted);
+  // UX redesign PR 5: one hand-placed piece, so the ranking shot shows Unpin (the word, at phone width too).
+  await SortResultService.fromDb(getTestDb().db).pinItem(sorted.collectionId, ownerId, sorted.itemIds[1], 1);
   // A collection with real owner + curator membership rows so the members shot
   // shows the RoleBadge (the baseline seed inserts collections without them).
   ({ slug: membersSlug } = await seedMembersScenario(ownerId));
@@ -76,6 +81,10 @@ test.beforeAll(async () => {
   await new ItemRepository(db).update(waiting.itemIds[0], {
     story:
       "To my niece, who always borrowed it for weekend trips — I hope it carries her somewhere good.",
+  });
+  await new PhotoRepository(db).create({
+    itemId: waiting.itemIds[0], collectionId: waiting.collectionId, blobKey: "e2e-placeholder",
+    filename: "second-look.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: ownerId, isHero: false,
   });
 
   // The Ranking's Set aside group. A 2-item journey where one item carries a
