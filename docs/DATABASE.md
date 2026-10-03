@@ -175,13 +175,17 @@ Migrations are **append-only**: to change the schema, add a new `.sql`; never ed
 plus `meta/_journal.json`. Code comments elsewhere may cite migration numbers that are not files on disk —
 `drizzle/` is the truth.
 
-**Lock timeout and retry.** `scripts/migrate.ts` sets `lock_timeout = 5s` (startup parameter, then
-`ensureLockTimeout` in `scripts/lock-timeout.ts` reads it back, falls back to `SET`, and refuses to migrate
-if neither took — the pooled URL may drop startup parameters; a `SET` is only trustworthy on a session-mode
-or direct connection, so if the build logs `lock_timeout: applied-after-set` or refuses, run migrations
-against the direct URL). It logs `migrate: using <non-pooling|DATABASE_URL> connection` first:
-`pickMigrationUrl` (`scripts/migration-url.ts`) uses `POSTGRES_URL_NON_POOLING` **only** when
-`DATABASE_URL`'s host contains `-pooler`, so a pulled Vercel var never overrides a local/test URL. A
+**Lock timeout and retry.** `scripts/migrate.ts` sets `lock_timeout = 5s` as a connection startup
+parameter; `ensureLockTimeout` (`scripts/lock-timeout.ts`) reads it back and refuses to migrate unless it
+is `5s` — the pooled URL may reject or drop startup parameters. There is no session `SET` fallback (under
+PgBouncer a `SET` can stick to a pooled backend that later serves app traffic); a refusal means run
+migrations against the direct URL (`POSTGRES_URL_NON_POOLING`). It logs
+`migrate: using <non-pooling|DATABASE_URL> connection (<hostname>)` first — hostname only, never the URL.
+`pickMigrationUrl` (`scripts/migration-url.ts`) switches to `POSTGRES_URL_NON_POOLING` **only** when
+`DATABASE_URL`'s host contains `-pooler`, so a pulled Vercel var never overrides a local/test URL, and
+**only** when the direct URL names the same Neon endpoint (the pooler host minus `-pooler`), database and
+user. Any mismatch, or either URL failing to parse, refuses to migrate (the message names the mismatched
+part). A pooler `DATABASE_URL` with no non-pooling var is used as-is, still guarded by the read-back. A
 migration that cannot get its lock within 5 s fails with SQLSTATE 55P03 and rolls back (drizzle applies
 pending migrations in one transaction), so the Vercel build fails loudly instead of queueing reads behind it.
 **Retry:** redeploy (or re-run `db:migrate`) once the blocking traffic has passed; there is no automatic
@@ -198,9 +202,12 @@ DATABASE_URL=<prod-url> npm run db:migrate
 ```
 
 If `<prod-url>` is a `-pooler` host, the migrator switches to `POSTGRES_URL_NON_POOLING` — and dotenv
-fills that from `.env.local` when it is not set in the shell. Pass the matching direct URL too
+fills that from `.env.local` when it is set there (e.g. by `vercel env pull` — the **dev** direct URL) and
+not in the shell. That mismatch now
+**refuses** (`POSTGRES_URL_NON_POOLING points at a different endpoint than DATABASE_URL — refusing to
+migrate`) instead of silently switching databases. Pass the matching direct URL too
 (`POSTGRES_URL_NON_POOLING=<prod-direct-url>`), or hand it the direct URL as `DATABASE_URL`; the
-`migrate: using …` line says which one it took.
+`migrate: using …` line names the host it took.
 
 The symptom of forgetting is nasty, because the build never touches the DB: **the build passes, and every
 page using the new column 500s at runtime with `column X does not exist`** (memory:
@@ -363,6 +370,6 @@ things the repo does itself:
 **Pooled vs direct endpoint.** The app connects through Neon's **pooled** endpoint — the `-pooler` host in
 `.env.local` (§4) — because serverless functions open many short-lived connections. Anything needing a
 session-scoped feature the pooler does not support belongs on the direct (non-`-pooler`) host. `db:reset`
-uses whatever URL you hand it; `db:migrate` does too, except that a `-pooler` `DATABASE_URL` with
-`POSTGRES_URL_NON_POOLING` set migrates over the direct URL (§2). Pass the same string the app uses unless you have a
+uses whatever URL you hand it; `db:migrate` does too, except that a `-pooler` `DATABASE_URL` with a
+matching `POSTGRES_URL_NON_POOLING` migrates over the direct URL, and a mismatched one refuses (§2). Pass the same string the app uses unless you have a
 specific reason not to — and see §3 on the grant trap if you hand-assemble one.
