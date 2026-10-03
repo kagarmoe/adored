@@ -19,14 +19,11 @@ describe("ensureLockTimeout (purses-w7ss.8)", () => {
     expect(calls).toHaveLength(1);
   });
 
-  it("falls back to SET when the pooler dropped the startup parameter", async () => {
+  it("refuses loudly, without a session SET, when the startup parameter did not take", async () => {
     const { sql, calls } = fakeSql([{ lock_timeout: "0" }], [], [{ lock_timeout: "5s" }]);
-    await expect(ensureLockTimeout(sql)).resolves.toBe("applied-after-set");
-    expect(calls[1]).toMatch(/set lock_timeout = '5s'/);
-  });
-
-  it("refuses loudly when neither took", async () => {
-    const { sql } = fakeSql([{ lock_timeout: "0" }], [], [{ lock_timeout: "0" }]);
-    await expect(ensureLockTimeout(sql)).rejects.toThrow(/lock_timeout not applied through this connection — run migrations against the direct URL/);
+    await expect(ensureLockTimeout(sql)).rejects.toThrow(
+      "lock_timeout not applied through this connection — run migrations against the direct URL (POSTGRES_URL_NON_POOLING)",
+    );
+    expect(calls).toHaveLength(1);
   });
 });
