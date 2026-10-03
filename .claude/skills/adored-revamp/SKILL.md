@@ -23,22 +23,26 @@ loop, it is drift: name the step it belongs to before doing it, or don't do it.
 4. Check for in-flight artifacts from a cut-off session (an uncommitted file, a report without a ledger line) and reconcile them into the ledger before dispatching anything.
 
 ## The loop (per PR; do not skip or reorder)
-1. **Plan exists?** No → `superpowers:writing-plans` via one subagent from the spec section for this PR; then `adversarial-review` the plan's "spec-silent decisions" (scale personas to the diff), fold findings in, commit the plan.
-2. **Beads**: one task bead per plan task under `purses-w7ss.N`; claim as you go; close only after the task's review is clean.
-3. **Execute**: `superpowers:subagent-driven-development`. One implementer at a time (shared git index — see `bd memories sdd-never-overlap-implementers`). A reviewer may overlap an implementer. TDD inside every task. Fix loop ≤5 rounds, scoped re-reviews, rulings written to the ledger as `Ruling: what — why — cost if wrong`.
-4. **Whole-branch gate**: `adversarial-review` with all personas that have something to bite on → ONE fix wave → ONE scoped re-review → park residuals with rulings + a bead.
-5. **Pre-PR**: full local gate (lint, test:ci, build, auth:verify, test:db, test:e2e tablet, phone journeys), `/sync-docs`, `graphify update .`, `/pr-screenshots` (light + dark, tablet + phone). Push, PR with: what changed, owner-veto items, deploy notes, gate table, rulings list, follow-up beads, screenshots.
-6. **Merge**: the OWNER merges when the PR deploys a migration or a data change; otherwise merge after CI is green. Then `/close-out` (bead, lessons → `bd remember`, scratch). Update the handoff. Next PR.
-7. **Epic close**: only when every child bead (plan, tasks, follow-ups) is closed. List them and prove it.
+0. **Isolate**: one git worktree per PR off `origin/main` (`npm ci`, copy the `.env*` files). One PR executes at a time; the next may be planned while this one waits on the owner.
+1. **Plan**: `superpowers:writing-plans` via one subagent. If the plan depends on environment behaviour (migrations, pooling, env vars, CI filters), run one read-only check against the real environment first and record it. Then `adversarial-review` the plan's spec-silent decisions with personas scaled to the diff; fold; commit.
+2. **Beads**: one task bead per plan task; claim as you go; close only after the task's review is clean.
+3. **Execute**: `superpowers:subagent-driven-development`. Pre-flight scan finishes before Task 1. One implementer per worktree; reviewers may overlap. TDD per task. Per-task review for tasks touching auth, data, money, or more than one file; the rest are covered by the whole-branch review. Never prime a reviewer. Fix loop ≤5 rounds; rulings in the ledger as `Ruling: what — why — cost if wrong`.
+4. **Whole-branch gate**: look at the screenshots, then `adversarial-review` (personas scaled to the diff) → one fix wave → one scoped re-review → park residuals with rulings + a bead.
+5. **Pre-PR**: full local gate (lint, test:ci, build, auth:verify, test:db, test:e2e tablet, mapped specs on phone). DB, e2e and screenshot runs hold `flock /tmp/adored-db.lock`; e2e recycles the test container first. Record every gate's exit code; never pipe a gate through `tail`. A copy, URL, endpoint or signature change runs the full e2e suite. Then `/sync-docs`, `graphify update .`, `SHOTS=<surfaces> npm run screenshots`. Push; PR body: what changed, owner-veto items, deploy notes, gate table, rulings, follow-up beads, screenshots. Watch CI with `gh run watch --exit-status`; read a failed preview build's log before changing code.
+6. **Merge**: after CI and the preview build are green. A PR with a migration or data step waits for the owner's go. If the agent cannot merge, hand the owner the command and start planning the next PR. Close beads and delete scratch only after `gh pr view N --json state` says MERGED, then `/close-out`, update the handoff, next PR.
+7. **Epic close**: only when every child bead is closed. List them and prove it.
 
 ## Non-negotiables (drift guards)
 - No new scope. A good idea that is not in the spec becomes a bead, not code.
-- Never two implementers at once. Never commit from the controller except path-scoped docs/ledger commits.
+- One implementer per worktree, never two. Never commit from the controller except path-scoped docs/ledger commits.
 - Never close a bead or delete scratch before the merge is verified (`gh pr view N --json state`).
 - Every milestone writes one status line to the handoff (newest first) **before** moving on. A session that ends without a status line is a failed session.
 - Rulings live in the ledger and the PR body, never only in chat.
-- Agents cannot write vault secrets or merge production deploys (classifier). Hand those to the owner with the exact command; keep working on everything else.
-- Report with `result:` only when the PR is open/merged as asked; otherwise keep going. "Should I continue?" is drift.
+- Infra behaviour is verified, never inferred: one read-only check against the real environment before a plan that depends on it.
+- Agents cannot write vault secrets, and may be unable to merge. Hand the owner the exact command; keep working on everything else.
+- Waiting on the owner is not idle time: plan the next PR; never execute two at once.
+- Review spend scalesl for mechanical tasks; capable model for auth, data, concurrency, and every whole-branch review.
+- Report with `resultn/merged as asked;otherwise keep going. "Should I continue?" is drift.
 
 ## Stop only for
 An irreversible or destructive operation; a security-sensitive action; a merge/push to a shared branch that norms say the owner does; a plan so broken every path is a guess. Otherwise rule, ledger it, continue.
