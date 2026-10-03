@@ -76,7 +76,7 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.primaryInk, t.primary, 4.5, "primary-ink on primary"],
     [t.primary, t.ground, 4.5, "primary text/link on ground"],
     [t.primary, t.surface, 3.0, "primary border on surface"],
-    [t.primary, t.surface, 4.5, "primary ghost text on surface (notice Undo/Done)"],
+    [t.primary, t.surface, 4.5, "primary ghost text on surface (notice Undo/Done; revision note ghost button + quiet link)"],
     // The sort progress line: its track edge must show the bar's extent on ground,
     // and the fill must read against the track's inside (SC 1.4.11).
     [t.track, t.ground, 3.0, "progress track edge on ground"],
@@ -84,11 +84,10 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     // a:hover recolors live link text to primary-hover (globals.css) — a real
     // text role that had no guard (QA review, purses-9oxh.6).
     [t.primaryHover, t.ground, 4.5, "primary-hover link text on ground"],
-    [t.primaryHover, t.surface, 4.5, "primary-hover link text on surface"],
+    [t.primaryHover, t.surface, 4.5, "primary-hover link text on surface (incl. revision note quiet link)"],
     [t.sparkInk, t.spark, 4.5, "text on spark"],
     [t.ink, t.contentSoft, 4.5, "ink on content-soft (chips/cards)"],
-    [t.primary, t.contentSoft, 4.5, "primary text on content-soft (revision note buttons)"],
-    [t.primaryHover, t.contentSoft, 4.5, "primary-hover link text on content-soft (revision note link)"],
+    [t.primary, t.contentSoft, 4.5, "primary text on content-soft (ghost button hover)"],
     [t.ink, t.contentMid, 4.5, "ink on content-mid (Not yet banner + paused badge)"],
     // Pending badge uses bg-content-mid + text-ink (was bg-hairline, ~3.9:1 in dark).
     // Dedicated guard so a future token change can't silently regress the pending chip.

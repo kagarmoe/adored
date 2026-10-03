@@ -73,7 +73,7 @@ export function MakeRevisionButton({ resultId, rankingHref }: { resultId: string
       <div
         role="group"
         aria-label="Before you revise"
-        className="flex max-w-prose flex-col items-start gap-3 rounded-control bg-content-soft px-4 py-3"
+        className="flex max-w-prose flex-col items-start gap-3 rounded-control border border-hairline bg-surface px-4 py-3"
       >
         <p ref={note} tabIndex={-1} className="text-sm text-ink focus:outline-hidden">
           {revisionNote(phase.pinCount)}
