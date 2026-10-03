@@ -15,7 +15,7 @@ import {
   type QueueKey,
 } from "./decisionQueue";
 // REAL engine — these tests prove the wiring end-to-end (drain → notice → UI).
-import { drain } from "./decisionFlusher";
+import { dismissNotice, drain, type FlushNotice } from "./decisionFlusher";
 import { PendingNotices, QUARANTINE_NOTICE, REJECTED_NOTICE, SESSION_CONFLICT_NOTICE } from "./pendingNotices";
 import { TriageRound } from "./TriageRound";
 
@@ -78,6 +78,9 @@ let key: QueueKey;
 beforeEach(() => {
   vi.clearAllMocks();
   installStorage();
+  // Engine notices are sticky and module-level: never let one leak into the next test.
+  const kinds: FlushNotice["kind"][] = ["rejected_unknown_item", "quarantined", "session_conflict", "disposition_superseded", "auth_required"];
+  for (const kind of kinds) dismissNotice(kind);
   // A fresh queue key per test: the engine's module state is keyed by storage key.
   sessionSeq += 1;
   key = { curatorId: "u1", sessionId: `sess_${sessionSeq}`, collectionId: "coll_1" };

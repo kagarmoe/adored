@@ -12,11 +12,13 @@ export const QUARANTINE_NOTICE =
   "A few answers from before didn't reach us — those pieces will simply come around again";
 export const SESSION_CONFLICT_NOTICE =
   "This sort was wrapped up somewhere else — reload to carry on from there";
+export const AUTH_REQUIRED_NOTICE = "Sign in again and your answers will finish saving on their own";
 
 const NOTICE_COPY = {
   rejected_unknown_item: REJECTED_NOTICE,
   quarantined: QUARANTINE_NOTICE,
   session_conflict: SESSION_CONFLICT_NOTICE,
+  auth_required: AUTH_REQUIRED_NOTICE,
 } as const;
 
 type NoticeKind = keyof typeof NOTICE_COPY;

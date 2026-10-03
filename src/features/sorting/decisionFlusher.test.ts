@@ -566,7 +566,7 @@ describe("drain — failure taxonomy", () => {
     await enqueue(keyA, triage());
     await engine.drain([keyA]);
 
-    expect(notices).toEqual([{ kind: "session_conflict" }]);
+    expect(notices).toEqual([{ kind: "session_conflict", sessionId: "sess_1" }]);
     expect(readQueue(keyA)).toHaveLength(1);
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
@@ -580,7 +580,7 @@ describe("drain — failure taxonomy", () => {
     await enqueue(keyA, triage());
     await engine.drain([keyA], { recovery: true });
 
-    expect(notices).toEqual([{ kind: "session_conflict" }]);
+    expect(notices).toEqual([{ kind: "session_conflict", sessionId: "sess_1" }]);
     expect(window.localStorage.getItem(pendingStorageKey(keyA))).toBeNull();
   });
 
@@ -607,6 +607,31 @@ describe("drain — failure taxonomy", () => {
     expect(notices.filter((n) => n.kind === "rejected_unknown_item")).toEqual([
       { kind: "rejected_unknown_item", count: 1 },
     ]);
+  });
+});
+
+describe("notices are sticky (a surface that mounts later still hears them)", () => {
+  it("a late subscriber receives the current notice; dismissNotice clears it; a later 2xx clears auth_required", async () => {
+    const engine = await loadEngine();
+    const heardOnSubscribe = (): FlushNotice[] => {
+      const notices: FlushNotice[] = [];
+      engine.subscribeNotices((n) => notices.push(n))();
+      return notices;
+    };
+    global.fetch = vi.fn(async () => jsonRes(401)) as unknown as typeof fetch;
+    await enqueue(keyA, triage());
+    await engine.drain([keyA]);
+
+    expect(heardOnSubscribe()).toEqual([{ kind: "auth_required" }]);
+    engine.dismissNotice("auth_required");
+    expect(heardOnSubscribe()).toEqual([]);
+
+    await engine.drain([keyA]); // still signed out: raised again
+    expect(heardOnSubscribe()).toEqual([{ kind: "auth_required" }]);
+    global.fetch = vi.fn(async (_url: string, init: RequestInit = {}) => respondCreated(init)) as unknown as typeof fetch;
+    await engine.drain([keyA]); // signed back in: the 2xx resolves it
+    expect(heardOnSubscribe()).toEqual([]);
+    expect(readQueue(keyA)).toEqual([]);
   });
 });
 

@@ -7,8 +7,8 @@ import {
   PendingDecisionsGate,
   GATE_CATCHUP_LINE,
   GATE_REVEAL_BOUND_MS,
-  GATE_SIGNIN_LINE,
 } from "./PendingDecisionsGate";
+import { AUTH_REQUIRED_NOTICE, PendingNotices } from "./pendingNotices";
 import {
   GC_TTL_MS,
   enqueue,
@@ -18,11 +18,12 @@ import {
   type PendingEntry,
   type QueueKey,
 } from "./decisionQueue";
-import { subscribeNotices, triggerFlush, type FlushNotice } from "./decisionFlusher";
+import { dismissNotice, drain, subscribeNotices, triggerFlush, type FlushNotice } from "./decisionFlusher";
 
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh }),
+  usePathname: () => "/collections/c1/sort",
 }));
 
 // jsdom in this setup does not expose a working localStorage on file:// URLs —
@@ -74,8 +75,18 @@ beforeEach(() => {
   key = { curatorId: "u1", sessionId: `sess_gate_${++seq}`, collectionId: "coll_1" };
 });
 
+const NOTICE_KINDS: FlushNotice["kind"][] = [
+  "rejected_unknown_item",
+  "quarantined",
+  "session_conflict",
+  "disposition_superseded",
+  "auth_required",
+];
+
 afterEach(() => {
   cleanup();
+  // Engine notices are sticky and module-level: never let one leak into the next test.
+  for (const kind of NOTICE_KINDS) dismissNotice(kind);
   vi.clearAllTimers();
   vi.useRealTimers();
   vi.restoreAllMocks();
@@ -84,6 +95,7 @@ afterEach(() => {
 function gate(curatorId = "u1") {
   return render(
     <PendingDecisionsGate curatorId={curatorId}>
+      <PendingNotices />
       <div data-testid="content">the surface</div>
     </PendingDecisionsGate>,
   );
@@ -200,10 +212,31 @@ describe("PendingDecisionsGate", () => {
     gate();
 
     await waitFor(() => expect(screen.getByTestId("content")).toBeInTheDocument());
-    expect(screen.getByText(GATE_SIGNIN_LINE)).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /sign in/i })).toHaveAttribute("href", "/login");
+    // The surface's PendingNotices hears the sticky notice in its mount effect.
+    expect(await screen.findAllByText(AUTH_REQUIRED_NOTICE)).toHaveLength(1);
+    // A second 401 after reveal still shows ONE line.
+    await act(async () => {
+      await triggerFlush(key);
+    });
+    expect(screen.getAllByText(AUTH_REQUIRED_NOTICE)).toHaveLength(1);
     expect(readQueue(key)).toHaveLength(1); // preserved across re-login
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("a sign-in notice left over from an earlier drain never skips the refresh after a recovery that lands", async () => {
+    const earlier: QueueKey = { ...key, sessionId: `${key.sessionId}_earlier` };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonRes(401)));
+    await enqueue(earlier, triage());
+    await drain([earlier]); // auth_required now stands in the engine
+    window.localStorage.removeItem(pendingStorageKey(earlier));
+    vi.stubGlobal("fetch", vi.fn((_url: string, init: RequestInit) => Promise.resolve(respondCreated(init))));
+    await enqueue(key, triage());
+
+    gate();
+
+    await waitFor(() => expect(screen.getByTestId("content")).toBeInTheDocument());
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(readQueue(key)).toHaveLength(0);
   });
 
   it("recovery-409 → ONE session_conflict surface, terminal queue deleted, children mount", async () => {

@@ -143,6 +143,7 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
                 />
               </div>
             )}
+            {sortPhase.kind === "done" && <PendingNotices />}
             {sortPhase.kind === "done" ? (
               <section className="space-y-4 text-center">
                 <SortDoneHeading>That&rsquo;s everything for now</SortDoneHeading>

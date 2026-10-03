@@ -15,6 +15,11 @@
 // ack-removal can never clobber another tab's concurrent enqueue (enqueue
 // stays synchronous and lock-free; removal re-reads under the lock). Backoff
 // waits happen OUTSIDE the lock so a stalled tab never starves the others.
+//
+// Notices are sticky per tab: the engine keeps the current one of each kind,
+// and a surface that subscribes later hears it on subscribe. An entry stands
+// until dismissed (dismissNotice) or resolved (a 2xx clears auth_required); a
+// reload clears them all.
 import { useEffect } from "react";
 import { withWebLock } from "@/lib/web-lock";
 import { BatchEntrySchema, type BatchResult } from "@/lib/decision-batch-schema";
@@ -42,7 +47,7 @@ export type AckOutcome =
 export type FlushNotice =
   | { kind: "rejected_unknown_item"; count: number }
   | { kind: "quarantined"; count: number }
-  | { kind: "session_conflict" } // batch-route 409 mid-round
+  | { kind: "session_conflict"; sessionId: string } // batch-route 409; names its sort so it never holds another
   | { kind: "disposition_superseded" } // disposition POST 409 (PreferenceExistsError)
   | { kind: "auth_required" };
 
@@ -72,6 +77,7 @@ const attempts = new Map<string, number>();
 const backoffPreempts = new Map<string, () => void>();
 const keepaliveNext = new Set<string>();
 const noticeSubscribers = new Set<(n: FlushNotice) => void>();
+const currentNotices = new Map<FlushNotice["kind"], FlushNotice>();
 const ackWaiters = new Map<string, Array<(o: AckOutcome) => void>>();
 const ackOutcomes = new Map<string, AckOutcome>();
 const ACK_OUTCOME_BUFFER = 200;
@@ -84,12 +90,18 @@ function lockName(key: QueueKey): string {
 }
 
 function emitNotice(notice: FlushNotice): void {
+  currentNotices.set(notice.kind, notice);
   for (const subscriber of [...noticeSubscribers]) subscriber(notice);
 }
 
 export function subscribeNotices(fn: (n: FlushNotice) => void): () => void {
   noticeSubscribers.add(fn);
+  for (const notice of [...currentNotices.values()]) fn(notice);
   return () => void noticeSubscribers.delete(fn);
+}
+
+export function dismissNotice(kind: FlushNotice["kind"]): void {
+  currentNotices.delete(kind);
 }
 
 function ackId(storageKey: string, clientKey: string): string {
@@ -253,6 +265,7 @@ async function flushDecisionRun(
 
     if (res.ok) {
       attempts.set(storageKey, 0); // success resets the backoff schedule
+      currentNotices.delete("auth_required"); // signed in again
       let results: BatchResult[] = [];
       try {
         results = ((await res.json()) as { results?: BatchResult[] }).results ?? [];
@@ -310,7 +323,7 @@ function handleBatchFailure(
     return "stop"; // preserve for this queue; retained until GC, never deleted live
   }
   if (status === 409) {
-    emitNotice({ kind: "session_conflict" });
+    emitNotice({ kind: "session_conflict", sessionId: key.sessionId });
     if (opts.recovery) {
       deleteQueue(key); // terminal-session disposal: surface once, then discard
       return "done";
@@ -361,6 +374,7 @@ async function flushDisposition(
 
   if (res.ok) {
     attempts.set(storageKey, 0);
+    currentNotices.delete("auth_required"); // signed in again
     removeEntries(key, [entry.clientKey]);
     return "continue";
   }
