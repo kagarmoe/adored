@@ -45,6 +45,6 @@ An irreversible or destructive operation; a security-sensitive action; a merge/p
 
 ## Current map (update this block at each PR boundary)
 - PR 1 item panel — merged #369. PR 2 sort/ranking/save — merged #370 (migration 0003).
-- PR 3 lists and home — branch `feat/ux-redesign-pr3`, plan `docs/superpowers/plans/2026-10-02-ux-redesign-pr3-lists-home.md` (verify it exists; else re-dispatch the writer).
-- Follow-up beads: purses-w7ss.4–.11 (see `bd list --parent purses-w7ss`).
+- PR 3 lists and home — merged #371 (6d7eeb1f7). All three spec PRs are shipped.
+- Follow-up beads: purses-w7ss.4–.17 (see `bd list --parent purses-w7ss`); owner decisions .10 and .14. The epic closes only when all are closed — next sessions work the follow-ups as small PRs through the same loop.
 - Prod health check (`swamp workflow run adored-health`) is red until the owner re-stores VERCEL_TOKEN — command in the handoff.
