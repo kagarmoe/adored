@@ -87,6 +87,8 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.primaryHover, t.surface, 4.5, "primary-hover link text on surface"],
     [t.sparkInk, t.spark, 4.5, "text on spark"],
     [t.ink, t.contentSoft, 4.5, "ink on content-soft (chips/cards)"],
+    [t.primary, t.contentSoft, 4.5, "primary text on content-soft (revision note buttons)"],
+    [t.primaryHover, t.contentSoft, 4.5, "primary-hover link text on content-soft (revision note link)"],
     [t.ink, t.contentMid, 4.5, "ink on content-mid (Not yet banner + paused badge)"],
     // Pending badge uses bg-content-mid + text-ink (was bg-hairline, ~3.9:1 in dark).
     // Dedicated guard so a future token change can't silently regress the pending chip.
