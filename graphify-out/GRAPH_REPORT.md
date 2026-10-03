@@ -1,16 +1,16 @@
 # Graph Report - purseinator-app  (2026-10-02)
 
 ## Corpus Check
-- 704 files · ~756,866 words
+- 712 files · ~770,654 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4531 nodes · 10326 edges · 283 communities (254 shown, 29 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 261 edges (avg confidence: 0.8)
+- 4577 nodes · 10399 edges · 286 communities (259 shown, 27 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 262 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e553b19c`
+- Built from commit: `c157fa44`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -244,6 +244,7 @@
 - [[_COMMUNITY_Community 233|Community 233]]
 - [[_COMMUNITY_Community 235|Community 235]]
 - [[_COMMUNITY_Community 237|Community 237]]
+- [[_COMMUNITY_Community 238|Community 238]]
 - [[_COMMUNITY_Community 239|Community 239]]
 - [[_COMMUNITY_Community 240|Community 240]]
 - [[_COMMUNITY_Community 241|Community 241]]
@@ -252,6 +253,8 @@
 - [[_COMMUNITY_Community 244|Community 244]]
 - [[_COMMUNITY_Community 245|Community 245]]
 - [[_COMMUNITY_Community 246|Community 246]]
+- [[_COMMUNITY_Community 247|Community 247]]
+- [[_COMMUNITY_Community 248|Community 248]]
 - [[_COMMUNITY_Community 249|Community 249]]
 - [[_COMMUNITY_Community 250|Community 250]]
 - [[_COMMUNITY_Community 251|Community 251]]
@@ -260,6 +263,8 @@
 - [[_COMMUNITY_Community 255|Community 255]]
 - [[_COMMUNITY_Community 256|Community 256]]
 - [[_COMMUNITY_Community 257|Community 257]]
+- [[_COMMUNITY_Community 258|Community 258]]
+- [[_COMMUNITY_Community 259|Community 259]]
 - [[_COMMUNITY_Community 260|Community 260]]
 - [[_COMMUNITY_Community 261|Community 261]]
 - [[_COMMUNITY_Community 262|Community 262]]
@@ -277,12 +282,10 @@
 - [[_COMMUNITY_Community 278|Community 278]]
 - [[_COMMUNITY_Community 279|Community 279]]
 - [[_COMMUNITY_Community 281|Community 281]]
-- [[_COMMUNITY_Community 282|Community 282]]
 - [[_COMMUNITY_Community 283|Community 283]]
 - [[_COMMUNITY_Community 285|Community 285]]
 - [[_COMMUNITY_Community 286|Community 286]]
 - [[_COMMUNITY_Community 287|Community 287]]
-- [[_COMMUNITY_Community 291|Community 291]]
 - [[_COMMUNITY_Community 292|Community 292]]
 - [[_COMMUNITY_Community 294|Community 294]]
 - [[_COMMUNITY_Community 298|Community 298]]
@@ -290,15 +293,15 @@
 - [[_COMMUNITY_Community 309|Community 309]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `getTestDb()` - 181 edges
+1. `getTestDb()` - 182 edges
 2. `getDb()` - 169 edges
-3. `generateId()` - 116 edges
+3. `generateId()` - 117 edges
 4. `getSession()` - 102 edges
 5. `errorResponse()` - 99 edges
 6. `Database` - 98 edges
 7. `ItemRepository` - 91 edges
 8. `seedBaseline()` - 78 edges
-9. `closeDb()` - 73 edges
+9. `closeDb()` - 74 edges
 10. `Item` - 73 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -308,8 +311,8 @@
   DESIGN.md → docs/ARCHITECTURE.md
 - `resolveSpec()` --calls--> `resolve()`  [INFERRED]
   scripts/static-coverage.mjs → docs/design-system/support.js
-- `addCurator()` --calls--> `getTestDb()`  [EXTRACTED]
-  src/lib/db/collection-access-page.integration.test.ts → e2e/fixtures/db.ts
+- `rawUserRow()` --calls--> `getTestDb()`  [EXTRACTED]
+  src/lib/db/account-deletion.integration.test.ts → e2e/fixtures/db.ts
 - `makeService()` --calls--> `getTestDb()`  [EXTRACTED]
   src/lib/db/move-photos.integration.test.ts → e2e/fixtures/db.ts
 
@@ -325,15 +328,15 @@
 - **Photo pool integrity flow (no-txn guard + blob client-upload + reassign)** — architecture_photo_pool, architecture_neon_no_txn_guard, architecture_blob_client_upload, architecture_reassign_one_op [INFERRED 0.85]
 - **TONE guardrails realized in deferred-metadata UX** — tone_object_is_story, tone_unpressured_forgiving, architecture_deferred_metadata_guardrails [INFERRED 0.85]
 
-## Communities (283 total, 29 thin omitted)
+## Communities (286 total, 27 thin omitted)
 
 ### Community 0 - "Domain types & barrels"
-Cohesion: 0.10
-Nodes (29): Home(), POST(), authorizeSession(), GET(), PATCH(), getDevBypassSession(), getSession(), isDevAuthBypassEnabled() (+21 more)
+Cohesion: 0.13
+Nodes (24): Home(), EditCollectionPage(), ItemEditRedirect(), authorizeSession(), PATCH(), getSession(), isDevAuthBypassEnabled(), requireCollectionOwnerPage() (+16 more)
 
 ### Community 1 - "Sort results & ranking"
-Cohesion: 0.10
-Nodes (27): DeleteCollectionSection(), DeleteCollectionSectionProps, props, push, refresh, EditCollectionPage(), EditPageProps, ItemEditRedirect() (+19 more)
+Cohesion: 0.13
+Nodes (12): DeleteCollectionSection(), DeleteCollectionSectionProps, props, push, refresh, SharePanel(), revoked, share (+4 more)
 
 ### Community 2 - "DB access layer"
 Cohesion: 0.06
@@ -341,27 +344,27 @@ Nodes (32): Coverage audit — every spec-§5 obligation → exactly one owning 
 
 ### Community 3 - "Authorization guards"
 Cohesion: 0.09
-Nodes (35): chains, LockCallback, LockManagerLike, loadWithWebLock(), withWebLock(), ackOutcomes, ackWaiters, attempts (+27 more)
+Nodes (38): chains, LockCallback, LockManagerLike, loadWithWebLock(), withWebLock(), ackId(), ackOutcomes, ackWaiters (+30 more)
 
 ### Community 4 - "Architecture & project docs"
 Cohesion: 0.06
 Nodes (55): Visual regression & UI screenshots exploration, Deterministic e2e seed (pinned IDs, frozen clock) prerequisite, VRT options: hosted (Argos/Chromatic) vs Playwright-native toHaveScreenshot, Capture rationale before deleting (sequencing rule), Docs audit + cleanup design, Docs ARCHITECTURE.md + cleanup implementation plan (v2), Keep legacy purseinator_* specs (post adversarial-review), Adored (curatorial collection sorting app) (+47 more)
 
 ### Community 5 - "Collections domain"
-Cohesion: 0.11
-Nodes (19): compareByCreatedAtThenId(), Ordered, at(), corpus(), ev(), canonicalSequence(), ComparisonEvent, DecisionEventLike (+11 more)
+Cohesion: 0.14
+Nodes (14): COLLECTION_PILLS, collectionsEmptyState(), CollectionsView, collectionsViewFrom(), collectionsViewHref(), filterCollections(), list, CollectionsPage() (+6 more)
 
 ### Community 6 - "Database / Drizzle schema"
-Cohesion: 0.10
-Nodes (10): CreateShareSchema, ShareController, UpdateShareSchema, SortResultShareRepository, SharePanelProps, revoked, share, GET() (+2 more)
+Cohesion: 0.11
+Nodes (8): CreateShareSchema, ShareController, UpdateShareSchema, SortResultShareRepository, SharePanelProps, GET(), { mockGetDb, mockViewSharedResult }, SortResultShare
 
 ### Community 7 - "Sort sessions"
 Cohesion: 0.09
 Nodes (22): 0. Review folds (changelog), 10. Screenshots (hard rule), 11. Out of scope / deferred, 12. Risks (post-fold), 1. Purpose, 2. Owner decisions (settled 2026-06-23), 3. Decomposition & sequencing, 4.1 RoleBadge — a thin wrapper over EXISTING Badge variants (used by A) (+14 more)
 
 ### Community 8 - "App Router pages"
-Cohesion: 0.10
-Nodes (23): formatTransportError(), hasNestedErrors(), step(), signInFresh(), apiContextFor(), ApiUser, PlaywrightFixture, authSecret() (+15 more)
+Cohesion: 0.08
+Nodes (32): mockDel, { mockGetSession }, rawUserRow(), account, auditLogTable, collectionsTable, invitationsTable, photosTable (+24 more)
 
 ### Community 9 - "Auth & sessions"
 Cohesion: 0.31
@@ -371,9 +374,13 @@ Nodes (5): getSnapshot(), subscribe(), supported(), Listener, useReducedMotion()
 Cohesion: 0.08
 Nodes (24): 0. Review folds (changelog), 10. Out of scope / follow-ups, 11. Risks & residual, 1. Purpose, 2. Owner decisions & settled invariants, 3.1 Event-sourced results; materialized triage queue; **pairing is NOT auto-safe**, 3.2 Session lifecycle exists; two read-path constraints, 3.3 `sessions_active_unique` over-enforces (purses-4bhh — fix OUT OF SCOPE, exposure mitigated here) (+16 more)
 
+### Community 11 - "ID generation"
+Cohesion: 0.07
+Nodes (12): CreateMemberSchema, MemberController, CopyInviteLinkButton(), CopyInviteLinkButtonProps, MemberList(), MemberListProps, MemberRemoveButton(), MemberRemoveButtonProps (+4 more)
+
 ### Community 12 - "PoolUpload.tsx"
-Cohesion: 0.14
-Nodes (15): buildItemPatch(), fieldsFromItem(), isDirty(), ItemPatch, Measure, MEASURES, PanelFields, base (+7 more)
+Cohesion: 0.08
+Nodes (24): buildItemPatch(), fieldsFromItem(), isDirty(), ItemPatch, Measure, MEASURES, PanelFields, base (+16 more)
 
 ### Community 13 - "seed.ts"
 Cohesion: 0.24
@@ -392,8 +399,8 @@ Cohesion: 0.08
 Nodes (25): compilerOptions, allowJs, allowSyntheticDefaultImports, esModuleInterop, forceConsistentCasingInFileNames, incremental, isolatedModules, jsx (+17 more)
 
 ### Community 17 - "User"
-Cohesion: 0.40
-Nodes (5): env, EnvConfig, envSchema, previewTrustedOrigins(), validateEnv()
+Cohesion: 0.18
+Nodes (10): { GET, POST }, auth, getClient(), InvitationArgs, send(), env, EnvConfig, envSchema (+2 more)
 
 ### Community 18 - "devDependencies"
 Cohesion: 0.08
@@ -416,12 +423,12 @@ Cohesion: 0.14
 Nodes (13): 1. Caching — `max-age` + `must-revalidate` + a variant ETag, 2. On-demand resize (`sharp`) — guarded, 3. URL helpers + per-surface widths, 4. De-duplicate the serving path, Components / files, Data flow, Error handling, Image Performance — caching + on-demand resize (sub-project A) (+5 more)
 
 ### Community 23 - "index.ts"
-Cohesion: 0.11
-Nodes (19): canvasToJpegBlob(), convertHeifToJpeg(), loadImage(), buildJpegFileName(), HEIF_MIME_TYPES, isHeifFile(), partitionPoolFiles(), POOL_ALLOWED_CONTENT_TYPES (+11 more)
+Cohesion: 0.06
+Nodes (28): canvasToJpegBlob(), convertHeifToJpeg(), loadImage(), buildJpegFileName(), HEIF_MIME_TYPES, isHeifFile(), partitionPoolFiles(), POOL_ALLOWED_CONTENT_TYPES (+20 more)
 
 ### Community 24 - "members.ts"
-Cohesion: 0.25
-Nodes (4): buildService(), scoreByItem(), PairwiseResult, TriageResult
+Cohesion: 0.12
+Nodes (15): Decisions this plan takes where the spec is silent, File Structure, Global Constraints, Owner-veto list (behaviour changes), Rejected review findings, Review Focus, Rulings (controller), Task 1: Creation-ordered ids — purses-w7ss.16 (+7 more)
 
 ### Community 25 - "scripts"
 Cohesion: 0.09
@@ -432,8 +439,8 @@ Cohesion: 0.11
 Nodes (18): Adored UX redesign — PR 3 (lists and home) implementation plan, Affordances on the surfaces that change (PR 1 lesson: rule on each, nothing lost silently), Decisions this plan takes where the spec is silent (call them out in review), File map, Global Constraints (from the spec and the governing docs), Owner veto (data-changing or route-retiring — flag in the PR body), Rejected review findings, Review Focus — five uncovered input classes (each pinned in its owning task) (+10 more)
 
 ### Community 27 - "Invitation"
-Cohesion: 0.18
-Nodes (9): Answered, CompareChoiceProps, CompareSubmit, Pair, Result, FetchMock, item(), refresh (+1 more)
+Cohesion: 0.15
+Nodes (12): Answered, answerLabel(), CompareChoice(), CompareChoiceProps, CompareSubmit, Pair, Result, FetchMock (+4 more)
 
 ### Community 28 - "invitations.ts"
 Cohesion: 0.06
@@ -464,12 +471,12 @@ Cohesion: 0.06
 Nodes (34): Adored Deployment Guide, Auto-Configured by Vercel, Build Failures, CI gates that stand between a merge and a deploy, Database Backup & Recovery, Development, Email Not Sending, Email (Transactional) (+26 more)
 
 ### Community 35 - "Community 35"
-Cohesion: 0.08
-Nodes (46): DecisionController, DispositionController, SetDispositionSchema, CreateItemSchema, ItemController, measure, toNumeric(), UpdateItemSchema (+38 more)
+Cohesion: 0.06
+Nodes (59): DispositionController, CreateItemSchema, ItemController, measure, toNumeric(), UpdateItemSchema, CreateSessionSchema, UpdateSessionSchema (+51 more)
 
 ### Community 36 - "AppLayout.tsx"
 Cohesion: 0.03
-Nodes (64): { mockGetSession }, addCurator(), { mockRedirect }, seedCollection(), addMember(), { mockGetSession, UnauthorizedError }, seedInvitation(), { mockGetSession, UnauthorizedError } (+56 more)
+Nodes (63): { mockGetSession }, addCurator(), { mockGetSession }, { mockGetSession }, { mockRedirect }, addMember(), { mockGetSession, UnauthorizedError }, { mockGetSession, UnauthorizedError } (+55 more)
 
 ### Community 37 - "append-history.mjs"
 Cohesion: 0.14
@@ -487,6 +494,10 @@ Nodes (9): Definition of done (PR2), Global Constraints, PR2 — o93 results "le
 Cohesion: 0.26
 Nodes (12): Bucket Assign Screen (4 ranked buckets + Skip), Compare Head-to-Head Screen (variation A), Compare the Line / Love Boundary Screen (variation B), DecisionEvent Sorting Data Model, Finalize Results Screen, Manual Re-rank by Hand Screen, Viewer Sees Output Only, Never Raw Decisions (sharing rationale), Review Results Draft Screen (+4 more)
 
+### Community 41 - "items.ts"
+Cohesion: 0.18
+Nodes (3): isResultNumberConflict(), MaterializedItem, SortResultService
+
 ### Community 42 - "ui.ts"
 Cohesion: 0.20
 Nodes (9): Global Constraints, Image Performance Implementation Plan, Self-Review notes, Task 1: `servePhotoFile` helper + `sharp` (the serving core), Task 2: URL helpers append `?w=`, Task 3: Item `/file` route delegates to `servePhotoFile`, Task 4: Pool `/file` route delegates to `servePhotoFile`, Task 5: Per-surface widths at every URL-build site + lazy grid images (+1 more)
@@ -495,13 +506,21 @@ Nodes (9): Global Constraints, Image Performance Implementation Plan, Self-Revie
 Cohesion: 0.22
 Nodes (11): PurseInator MVP App & Infrastructure Spec, Internal buckets: top/high/medium/low, CollectionMembership — authorization source of truth, DecisionEvent — append-only source of truth, CollectionPreferenceItem — derived curator preference state, Runtime stack — Next.js, Neon Postgres, Drizzle, Vercel Blob, Scoring Model — triage seed + pairwise adjustment, Server-side authorization rules (+3 more)
 
+### Community 44 - "layout.tsx"
+Cohesion: 0.06
+Nodes (13): FindByCollectionOptions, ItemForm(), back, controlFor(), push, type(), selectTriageQueue(), TriageQueueEntry (+5 more)
+
+### Community 45 - "ScoringService.ts"
+Cohesion: 0.16
+Nodes (8): QUESTION, PHONE, SeededCollectionRef, seedJourneyScenario(), seedNamedCollection(), seedSortScenario(), seedWorkspaceStates(), only
+
 ### Community 46 - "MostLovedHero.tsx"
-Cohesion: 0.29
-Nodes (4): COLLECTION, ITEM, { mockGetSession, mockRequireAccess, itemRepo, photoRepo, decisions, sessions }, renderPage()
+Cohesion: 0.09
+Nodes (16): ItemDetailPage(), ItemDetailPageProps, COLLECTION, ITEM, { mockGetSession, mockRequireAccess, itemRepo, photoRepo, decisions, sessions }, renderPage(), InYourLifeChip(), JSON_HEADERS (+8 more)
 
 ### Community 47 - "ItemController"
 Cohesion: 0.05
-Nodes (48): { mockGetSession }, { mockGetSession }, { mockGetSession }, { mockGetSession, mockBlobDel }, { mockGetSession }, { mockGetSession }, seedSorting(), { mockGetSession } (+40 more)
+Nodes (50): DecisionController, SetDispositionSchema, PreferenceController, decisionReq(), { mockGetSession }, postDecision(), { mockGetSession }, { mockGetSession } (+42 more)
 
 ### Community 48 - "InviteForm.tsx"
 Cohesion: 0.12
@@ -512,8 +531,8 @@ Cohesion: 0.11
 Nodes (17): 1. Schema conventions, 2. Migration workflow, 3. `db:reset` — destructive, owner-only, on purpose, 4. Environments, 5. Testing tiers, 6. Backup / restore, and monitoring, CHECK constraints, Database (+9 more)
 
 ### Community 50 - "ItemFilters.tsx"
-Cohesion: 0.12
-Nodes (16): QueueKey, DeferControl(), KEY, refresh, { triggerFlush, isInFlight }, SetAsideButton(), KEY, refresh (+8 more)
+Cohesion: 0.09
+Nodes (27): useDecisionFlusher(), PendingEntry, QueueKey, DeferControl(), DeferControlProps, KEY, refresh, { triggerFlush, isInFlight } (+19 more)
 
 ### Community 51 - "validation.ts"
 Cohesion: 0.10
@@ -544,8 +563,8 @@ Cohesion: 0.09
 Nodes (22): §0 — Corrections to the parent design (verified against code), §1 — Scope, §2.1 Thread the usage fold to the render, §2.2 The chip (TONE item), §2.3 Usage-only collections (F5), §2.4 Test floor (A), §2 — Two-axis Standing: per-item chip (deliverable A, read-side, no migration), §3.1 Migration (additive) (+14 more)
 
 ### Community 58 - "SessionCompleteScreen.tsx"
-Cohesion: 0.17
-Nodes (9): ItemOverflowMenu(), ItemOverflowMenuProps, Step, DirtyForm(), props, push, confirmLeave(), Harness() (+1 more)
+Cohesion: 0.23
+Nodes (7): dismissWelcome(), isDismissedInCookieString(), isWelcomeDismissed(), shouldShowWelcome(), TRIAGE_ITEMS, assign, User
 
 ### Community 59 - "CompareChoice.tsx"
 Cohesion: 0.18
@@ -596,8 +615,8 @@ Cohesion: 0.25
 Nodes (7): Coverage Phase 0 — "Make coverage honest" (vitest 4 native merge), Global Constraints, Task 1: Per-tier blob coverage + artifacts, Task 2: Merge job (union coverage + floor), Task 3: Point the dashboard at the merged report, Task 4: Local end-to-end verify + docs + PR, Verification
 
 ### Community 71 - "page.test.tsx"
-Cohesion: 0.08
-Nodes (17): CollectionController, CreateCollectionSchema, UpdateCollectionSchema, CreateMemberSchema, CollectionFormProps, ARCHIVED, MINE, { mockGetSession, collectionController, photoController, mockRedirect } (+9 more)
+Cohesion: 0.11
+Nodes (11): CollectionController, CreateCollectionSchema, UpdateCollectionSchema, CollectionFormProps, RESERVED_COLLECTION_SLUGS, slugifyName(), CollectionRepository, isSlugConflict() (+3 more)
 
 ### Community 73 - "Impeccable critique — /collections"
 Cohesion: 0.67
@@ -640,16 +659,16 @@ Cohesion: 0.15
 Nodes (12): Accessibility, responsive, visual, Account and access, Adored — feature inventory, Collections, Items (objects), Onboarding and tutorials, Operations, Photos (+4 more)
 
 ### Community 91 - ".eslintrc.js"
-Cohesion: 0.07
-Nodes (49): COMPARABLE_BUCKETS, selectComparableItems(), generateOrderedIdFactory(), deriveOrder(), RankItem, toComparisonEvents(), chooseSortPhase(), SortPhase (+41 more)
+Cohesion: 0.06
+Nodes (49): compareByCreatedAtThenId(), Ordered, at(), corpus(), ev(), generateOrderedIdFactory(), canonicalSequence(), ComparisonEvent (+41 more)
 
 ### Community 97 - "Community 97"
 Cohesion: 0.12
 Nodes (15): A. Hosted VRT (Argos / Chromatic / Percy) — recommended if a service is acceptable, B. Playwright-native `toHaveScreenshot()` — recommended if staying in-house, C. Hand-rolled branch-diff (the original idea) — not recommended, Open decisions (for the bead), Options, Prior art in this repo, Recommendation, Sharp edge 1 — cross-environment rendering (+7 more)
 
 ### Community 98 - "Community 98"
-Cohesion: 0.13
-Nodes (5): ResultItemController, SortResultItemRepository, notAvailable(), GET(), SortResultItem
+Cohesion: 0.14
+Nodes (3): ResultItemController, SortResultItemRepository, SortResultItem
 
 ### Community 99 - "Community 99"
 Cohesion: 0.13
@@ -668,8 +687,8 @@ Cohesion: 0.14
 Nodes (13): Bulk Upload → Photo Pool → Grouped Items — Design Spec, Catalog numbers + URL routing, Deferred metadata, Goal, Grouping into items, Migration mechanics (Neon), Phasing (one spec, phased build), Resolved decisions (+5 more)
 
 ### Community 103 - "Community 103"
-Cohesion: 0.12
-Nodes (8): FinalizeStateError, ResultNumberExhaustedError, SaveKeyConflictError, txDb, { txPrefRepo }, { txResultRepo, txItemRepo, txSessionRepo, isResultNumberConflict }, { txShareRepo }, fakeTxDb()
+Cohesion: 0.10
+Nodes (11): FinalizeStateError, PinTargetError, ResultNumberExhaustedError, SaveKeyConflictError, { loadCuratorDecisionEvents }, txDb, { txLiveItemRepo }, { txPrefRepo } (+3 more)
 
 ### Community 104 - "Community 104"
 Cohesion: 0.14
@@ -793,7 +812,7 @@ Nodes (13): Epic C · PR1 — Item Dispositions + "Not Yet" — Implementation P
 
 ### Community 137 - "Community 137"
 Cohesion: 0.15
-Nodes (14): isResultNumberConflict(), applyPins(), BUCKET_PRIORITY, buildRanking(), cloneItemsFrom(), LovedBucket, Pin, pinsFromRows() (+6 more)
+Nodes (15): applyPins(), BUCKET_PRIORITY, buildRanking(), cloneItemsFrom(), LovedBucket, Pin, pinsFromRows(), pinsLostToRevision() (+7 more)
 
 ### Community 138 - "Community 138"
 Cohesion: 0.33
@@ -804,8 +823,8 @@ Cohesion: 0.33
 Nodes (6): 2.1 Shared objects, private judgment, 2.2 DecisionEvents are the source of truth, 2.3 Sessions are bounded work periods, 2.4 Top-tier discovery matters most, 2.5 Tap-first, accessible interaction, 2. MVP Product Principles
 
 ### Community 140 - "Community 140"
-Cohesion: 0.06
-Nodes (15): PhotoController, PhotoPoolPreviewProps, PhotoRepository, PooledPhotoInput, recordPooledPhoto(), MoveDestination, MoveTarget, PoolActionBar() (+7 more)
+Cohesion: 0.09
+Nodes (6): PhotoController, PhotoPoolPreviewProps, PhotoRepository, PooledPhotoInput, recordPooledPhoto(), Photo
 
 ### Community 141 - "Community 141"
 Cohesion: 0.18
@@ -840,12 +859,8 @@ Cohesion: 0.12
 Nodes (16): Adversarial review — round 1 record (2026-07-12), Adversarial review — round 2, Craftsman/ponytail (2026-07-12), Cross-cutting rules, Get on latest: every major dep — epic design (purses-9oxh), Ground truth this spec was written against, Open facts to verify during execution (not guesses to carry), PR 1 — `9oxh.3`: route async-params migration + test-oracle hardening (P0), ~~PR 2 — `9oxh.1`: Node version truth~~ — FOLDED INTO PR 7 (round 2) (+8 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.12
-Nodes (21): CAPABILITIES, Operation, resolveEffectiveRole(), Role, roleSatisfies(), requireApiResultAccess(), { collectionRepo, membershipRepo }, db (+13 more)
-
-### Community 150 - "Community 150"
-Cohesion: 0.14
-Nodes (7): CreateInvitationSchema, InvitationController, UpdateInvitationSchema, getClient(), InvitationArgs, send(), sendInvitation()
+Cohesion: 0.15
+Nodes (18): CAPABILITIES, Operation, resolveEffectiveRole(), Role, roleSatisfies(), requireApiCollectionOwner(), requireApiItemCapability(), { collectionRepo, membershipRepo } (+10 more)
 
 ### Community 151 - "Community 151"
 Cohesion: 0.40
@@ -864,16 +879,16 @@ Cohesion: 0.67
 Nodes (3): 3.1 Runtime, 3.2 Supported clients, 3. Target Platform
 
 ### Community 155 - "Community 155"
-Cohesion: 0.07
-Nodes (39): ItemDetailPage(), ArchivedItemCard(), InYourLifeChip(), JSON_HEADERS, OPTIONS, Props, refresh, bucketDots (+31 more)
+Cohesion: 0.08
+Nodes (38): UpdateResultSchema, CollectionPage(), ArchivedItemCard(), bucketDots, ItemCard(), ItemCardProps, viewerPhoto, usageChipLabel() (+30 more)
 
 ### Community 157 - "Community 157"
-Cohesion: 0.12
-Nodes (4): { mockGetSession }, seedRanked(), CollectionPreferenceItemRepository, CollectionPreferenceItem
+Cohesion: 0.08
+Nodes (18): CollectionPreferenceItemRepository, COMPARABLE_BUCKETS, selectComparableItems(), deriveOrder(), toComparisonEvents(), chooseSortPhase(), SortPhase, SortPhaseInput (+10 more)
 
 ### Community 158 - "Community 158"
-Cohesion: 0.40
-Nodes (3): assertPhotosWrite(), POST(), { mockGetSession, mockGetDb, mockRequireApiCapability, mockHandleUpload, mockRecordPooled }
+Cohesion: 0.18
+Nodes (7): MakeRevisionButton(), Phase, revisionNote(), fetchMock, { push }, SaveAndShare(), SaveAndShareProps
 
 ### Community 159 - "Community 159"
 Cohesion: 0.20
@@ -892,20 +907,20 @@ Cohesion: 0.12
 Nodes (15): Epic 0 — Binary-Insertion Ranking Engine — Implementation Plan, File Structure, Global Constraints, Self-Review, Task 10: Finalize — read `orderRank`, bucket priority, keep the unranked-but-loved, Task 11: Clean reset of Elo-era drafts + delete dead `PairingService`, Task 1: Pure engine — comparison normalization, Task 2: Pure engine — place one item (binary search, bound, tie/skip) (+7 more)
 
 ### Community 163 - "Community 163"
-Cohesion: 0.18
-Nodes (15): ackId(), AckOutcome, awaitAck(), isInFlight(), useDecisionFlusher(), removeQueued(), triageDecisions(), TriageResult (+7 more)
+Cohesion: 0.20
+Nodes (12): SAMPLE_COMPARISON, SAMPLE_WIN, COMPARE_PAIR, RESULT_TO_TIER, WelcomeHandoff(), WelcomeHandoffProps, WelcomePurpose(), WelcomePurposeProps (+4 more)
 
 ### Community 164 - "Community 164"
-Cohesion: 0.11
-Nodes (15): Engine, FakeLocks, FetchMock, jsonRes(), keyA, loadEngine(), respondCreated(), setAside() (+7 more)
+Cohesion: 0.13
+Nodes (10): Engine, FakeLocks, FetchMock, jsonRes(), keyA, loadEngine(), respondCreated(), setAside() (+2 more)
 
 ### Community 165 - "Community 165"
-Cohesion: 0.15
+Cohesion: 0.14
 Nodes (8): PinSchema, RankingController, SaveSchema, controller, pinItem, saveAndShare, saver, SavedRanking
 
 ### Community 166 - "Community 166"
-Cohesion: 0.50
-Nodes (3): MemberRemoveButton(), MemberRemoveButtonProps, refresh
+Cohesion: 0.24
+Nodes (5): comparePairsFor(), Beat, WalkthroughShell(), SortTutorialPage(), TutorialPage()
 
 ### Community 168 - "Community 168"
 Cohesion: 0.12
@@ -920,8 +935,8 @@ Cohesion: 0.18
 Nodes (9): FlushNotice, subscribeNotices(), jsonRes(), refresh, respondCreated(), triage(), NOTICE_COPY, NoticeKind (+1 more)
 
 ### Community 171 - "Community 171"
-Cohesion: 0.06
-Nodes (29): CollectionCardMenu(), CollectionCardMenuProps, props, push, refresh, CollectionHomeMenu(), SharePanel(), BadgeProps (+21 more)
+Cohesion: 0.07
+Nodes (27): CollectionCardMenu(), CollectionCardMenuProps, props, push, refresh, CollectionHomeMenu(), PhotoPoolPreview(), InvitationPage() (+19 more)
 
 ### Community 173 - "Community 173"
 Cohesion: 0.50
@@ -940,8 +955,8 @@ Cohesion: 0.27
 Nodes (9): entry(), flusher, item(), KEY, props(), { refresh, push, replace }, renderRound(), renderWithUndo() (+1 more)
 
 ### Community 178 - "Community 178"
-Cohesion: 0.18
-Nodes (5): UpdateUserSchema, UserController, UserRepository, AccountDeletionService, User
+Cohesion: 0.23
+Nodes (4): UpdateUserSchema, UserController, UserRepository, User
 
 ### Community 179 - "Community 179"
 Cohesion: 0.29
@@ -956,12 +971,12 @@ Cohesion: 0.18
 Nodes (10): A. Results images — the MUST (purses-21x5.1), B. Per-sort progress on the session hub (and the workspace card), C. The ranking after every round, Changes, D. Language sweep + first-order amendments (owner-signed), E. Sessions as invisible bookkeeping, Out of scope, Sort orientation Phase 1 — design (+2 more)
 
 ### Community 182 - "Community 182"
-Cohesion: 0.50
-Nodes (4): back, controlFor(), push, type()
+Cohesion: 0.42
+Nodes (4): hasHorizontalOverflow(), LOGGED_OUT, ROUTE, sessionEmail()
 
 ### Community 183 - "Community 183"
-Cohesion: 0.05
-Nodes (33): CollectionForm(), collectionSchema, InviteForm(), InviteFormProps, inviteSchema, refresh, ItemForm(), itemSchema (+25 more)
+Cohesion: 0.07
+Nodes (28): collectionSchema, InviteForm(), InviteFormProps, inviteSchema, refresh, itemSchema, apiFetch(), apiGet() (+20 more)
 
 ### Community 185 - "Community 185"
 Cohesion: 0.20
@@ -1009,7 +1024,7 @@ Nodes (12): Global Constraints, Task 10: Full gates + branch review, Task 1: Rin
 
 ### Community 197 - "Community 197"
 Cohesion: 0.16
-Nodes (4): ResultController, UpdateResultSchema, SortResultRepository, SortResult
+Nodes (3): ResultController, SortResultRepository, SortResult
 
 ### Community 199 - "Community 199"
 Cohesion: 0.12
@@ -1071,17 +1086,13 @@ Nodes (12): AppLayoutProps, BreadcrumbItem, BreadcrumbItem, Breadcrumbs(), Bread
 Cohesion: 0.29
 Nodes (6): Done =, Global constraints (bind every task + review), Out of scope, Plan — Onboarding walkthrough (bead purses-ka23), Task 1 — The walkthrough flow (`/welcome`), Task 2 — Trigger, re-open, dismissal
 
-### Community 214 - "Community 214"
-Cohesion: 0.07
-Nodes (6): Database, InvitationAcceptService, ItemPurgeService, item, { mockDel, mockDeleteVariants, mockHardDeleteByItem }, ItemSoftDeleteService
-
 ### Community 215 - "Community 215"
 Cohesion: 0.23
 Nodes (9): BlobEntry, deleteRefusal(), findOrphans(), main(), PhotoRow, now, old, photos (+1 more)
 
 ### Community 216 - "Community 216"
-Cohesion: 0.04
-Nodes (90): rawUserRow(), { mockGetSession, mockBlobDel }, photoRowCount(), prefRowCount(), seedItemWithChildren(), seedUserRow(), addCurator(), { mockGetSession } (+82 more)
+Cohesion: 0.05
+Nodes (79): { mockGetSession, mockBlobDel }, photoRowCount(), prefRowCount(), seedItemWithChildren(), seedUserRow(), seedCollection(), insertEvent(), insertPreference() (+71 more)
 
 ### Community 217 - "Community 217"
 Cohesion: 0.22
@@ -1100,8 +1111,8 @@ Cohesion: 0.25
 Nodes (7): Epic S — Implementation Plan (Standing usage chip · snapshot/revision · bulk re-rank + UI), Global constraints, Order, PR S1 — Standing usage chip (deliverable A; read-only, no migration), PR S2 — `sort_result_items.usage` snapshot + revision (deliverable B; migration), PR S3a — Transactional bulk re-rank endpoint (deliverable C backend; F1), PR S3b — Re-rank UI (deliverable C frontend; depends on S3a)
 
 ### Community 221 - "Community 221"
-Cohesion: 0.06
-Nodes (52): usageChipLabel(), bootstrapDevSampleCollection(), ensureDevSampleCollection(), inFlight, selectRandomSampleItems(), SAMPLE_COMPARISON, SAMPLE_WIN, dismissWelcome() (+44 more)
+Cohesion: 0.14
+Nodes (20): selectRandomSampleItems(), buildStanding(), buildTriageStanding(), CompareOutcome, CompareRoundResult, SAMPLE_ITEMS, SampleItem, Standing (+12 more)
 
 ### Community 222 - "Community 222"
 Cohesion: 0.18
@@ -1121,7 +1132,7 @@ Nodes (14): buildStrangerCases(), discoverAllRoutes(), methodsFromRoute(), { moc
 
 ### Community 228 - "Community 228"
 Cohesion: 0.06
-Nodes (41): { GET, POST }, AuditController, mockDel, { mockGetSession }, FullSeed, { mockGetSession, mockBlobDel, mockBlobList }, { mockGetSession, mockBlobGet }, rawUserRow() (+33 more)
+Nodes (33): AuditController, FullSeed, { mockGetSession, mockBlobDel, mockBlobList }, sortResultsTable, seedRankedItem(), seedUsage(), service(), AuditLogRepository (+25 more)
 
 ### Community 229 - "Community 229"
 Cohesion: 0.17
@@ -1143,6 +1154,10 @@ Nodes (9): 1. One-tap "Start sorting" (purses-znkt.1), 1b. Null-goal fallout (re
 Cohesion: 0.18
 Nodes (10): 1. Layout, 2. Test image set, 3. Label overlay (diagnosability), 4. Spec migration, Alternatives considered, Design, Out of scope, Problem (+2 more)
 
+### Community 238 - "Community 238"
+Cohesion: 0.25
+Nodes (3): Finding, TAGS, THEMES
+
 ### Community 239 - "Community 239"
 Cohesion: 0.20
 Nodes (9): Global Constraints, Post-plan (not tasks, workflow gates), Task 1: Image-generation prompts doc, Task 2: Scaffold sample-images home with interim base photos, Task 3: Label script + global-setup wiring, Task 4: Unit fixtures + photo-serving migration, Task 5: Migrate the 18 specs + screenshot harness, Task 6: Delete legacy fixtures and run all gates (+1 more)
@@ -1155,33 +1170,45 @@ Nodes (11): collectProps(), compileAttr(), contentKey(), walk(), walkChildren(),
 Cohesion: 0.22
 Nodes (8): Open Questions, Plan: Independent Compare sort, Task 1: Comparable item selector and pair selection, Task 2: Recompute assigns orderRank for Compare-only rows, Task 3: Result materialization makes Compare order visible, Task 4: Route and page behavior for Compare without Triage, Task 5: Recommendation copy and tutorial reality, Task 6: Whole-slice verification and review
 
+### Community 242 - "Community 242"
+Cohesion: 0.21
+Nodes (8): ensureLockTimeout(), db, migrationsFolder, runMigrations(), { url: databaseUrl, kind: urlKind, host: urlHost }, MigrationUrl, parse(), pickMigrationUrl()
+
 ### Community 243 - "Community 243"
 Cohesion: 0.20
 Nodes (9): 1. Copy-link on pending invitation rows (purses-puuj.1), 2. Email transport is never silently absent (purses-puuj.1), 3. Accept screen enrichment (purses-puuj.3) — no schema change, Changes, Facts this design stands on (verified), Invitation journey: link-first, welcoming, resilient — design, Out of scope, Security notes (+1 more)
 
 ### Community 244 - "Community 244"
-Cohesion: 0.12
-Nodes (9): batchReq(), { mockGetSession }, runScoring(), scoreSnapshot(), seedSession(), triage(), usage(), ItemDispositionRepository (+1 more)
+Cohesion: 0.11
+Nodes (10): batchReq(), { mockGetSession }, runScoring(), scoreSnapshot(), seedSession(), triage(), usage(), itemDispositionsTable (+2 more)
 
 ### Community 245 - "Community 245"
-Cohesion: 0.22
-Nodes (3): COLLECTION, { mockGetSession, mockRequireAccess, preferences, dispositions, items, photos, decisions, ranking, sessions }, renderPage()
+Cohesion: 0.20
+Nodes (4): RankingPage(), COLLECTION, { mockGetSession, mockRequireAccess, preferences, dispositions, items, photos, decisions, ranking, sessions }, renderPage()
 
 ### Community 246 - "Community 246"
-Cohesion: 0.14
-Nodes (11): POST(), { mockGetSession, mockGetDb, mockAccept }, POST(), normalizeEmail(), BodyTooLargeError, readJsonWithLimit(), encoder, withTransaction() (+3 more)
+Cohesion: 0.30
+Nodes (6): POST(), { mockGetSession, mockGetDb, mockAccept }, normalizeEmail(), InvitationAcceptError, InvitationPreview, InvitationStatus
+
+### Community 247 - "Community 247"
+Cohesion: 0.32
+Nodes (3): BodyTooLargeError, readJsonWithLimit(), encoder
+
+### Community 248 - "Community 248"
+Cohesion: 0.29
+Nodes (6): TIERS, Tier, TIER_META, TierBadge, TierBadgeProps, tierBadgeVariants
 
 ### Community 249 - "Community 249"
-Cohesion: 0.10
-Nodes (30): ItemPhotoFileParams, serveItemPhotoFile(), requireApiCapability(), bufferResult(), DEMO_IMAGE_DIRS, devDemoFallback(), fetchOriginal(), readStreamCapped() (+22 more)
+Cohesion: 0.09
+Nodes (32): ItemPhotoFileParams, serveItemPhotoFile(), requireApiCapability(), bufferResult(), DEMO_IMAGE_DIRS, devDemoFallback(), fetchOriginal(), readStreamCapped() (+24 more)
 
 ### Community 250 - "Community 250"
 Cohesion: 0.33
 Nodes (5): Review Notes Folded, Sort Explanation Plan, Task 1: Tutorial Copy, Task 2: In-App Sort Hub Help, Task 3: Verification
 
 ### Community 251 - "Community 251"
-Cohesion: 0.14
-Nodes (19): allStorageKeys(), deleteQueue(), enqueue(), EnqueueResult, Envelope, listPendingKeysForCurator(), parseEnvelope(), PendingEntry (+11 more)
+Cohesion: 0.12
+Nodes (24): allStorageKeys(), enqueue(), EnqueueResult, Envelope, listPendingKeysForCurator(), newClientKey(), parseEnvelope(), quarantineEntries() (+16 more)
 
 ### Community 252 - "Community 252"
 Cohesion: 0.33
@@ -1199,6 +1226,10 @@ Nodes (6): Agent Guide, Keep This File Small, Project Shape, Start Here, Verific
 Cohesion: 0.20
 Nodes (10): boot(), dcNameFromPath(), getReactDOM(), parseDataProps(), parseDcDocument(), parseDcText(), Placeholder(), rootNameForDocument() (+2 more)
 
+### Community 258 - "Community 258"
+Cohesion: 0.50
+Nodes (3): connectionOptions(), loggerOption(), { mockDrizzle, mockPostgres }
+
 ### Community 260 - "Community 260"
 Cohesion: 0.67
 Nodes (3): `GET /api/collections/[id]/preferences/items`, `POST /api/collections/[id]/preferences/recalculate`, preferences
@@ -1212,8 +1243,8 @@ Cohesion: 0.25
 Nodes (7): #004a67 linear gradient to complementary #4b341c, #004a67 to black, #004a67 to white, Color Schemes - CIELab, Monochromatic Colors, Tints and Shades, Tones
 
 ### Community 263 - "Community 263"
-Cohesion: 0.09
-Nodes (18): BringBackButton(), KeepSortingButton(), KeepSortingButtonProps, fetchMock, push, refresh, AsyncActionButton(), BringBackControl() (+10 more)
+Cohesion: 0.33
+Nodes (5): DecisionControls(), DecisionControlsProps, DecisionSubmit, refresh, TRIAGE_DECISIONS
 
 ### Community 265 - "Community 265"
 Cohesion: 0.29
@@ -1228,12 +1259,12 @@ Cohesion: 0.40
 Nodes (3): betterAuthUseSession, signIn, signOut
 
 ### Community 269 - "Community 269"
-Cohesion: 0.38
-Nodes (5): itemRepo(), makeService(), photoRepo(), seedItem(), seedPhoto()
+Cohesion: 0.08
+Nodes (19): itemRepo(), makeService(), photoRepo(), seedItem(), seedPhoto(), itemRepo(), makeService(), photoRepo() (+11 more)
 
 ### Community 270 - "Community 270"
-Cohesion: 0.29
-Nodes (4): db, { selectWhere, insertReturning }, valuesSpy, CurrentSessionExistsError
+Cohesion: 0.40
+Nodes (3): db, { selectWhere, insertReturning }, valuesSpy
 
 ### Community 272 - "Community 272"
 Cohesion: 0.40
@@ -1248,24 +1279,20 @@ Cohesion: 0.50
 Nodes (3): Per-spec prompts, Shared style (prepend to every prompt), Test-image generation prompts
 
 ### Community 278 - "Community 278"
-Cohesion: 0.12
-Nodes (48): GET(), errorResponse(), POST(), GET(), GET(), POST(), requireApiCollectionAccess(), requireApiCollectionOwner() (+40 more)
+Cohesion: 0.08
+Nodes (64): GET(), describeError(), errorResponse(), PG_ERROR_FIELDS, CreateInvitationSchema, UpdateInvitationSchema, POST(), GET() (+56 more)
 
 ### Community 279 - "Community 279"
 Cohesion: 0.22
 Nodes (8): Decisions needed from you, Delivery, if approved, Part 1 — The orientation dashboard (the substance), Part 1b — First-order amendments (PRODUCT.md; exact wording for review, applied only through the workflow), Part 2 — The language of sorting (owner verdicts → proposed replacements), Part 3 — The URL collapse (demoted), PROPOSAL rev 2 (owner review): the sort hub as an orientation dashboard — and the language of sorting, What the owner discussion established
 
 ### Community 281 - "Community 281"
-Cohesion: 0.29
-Nodes (7): drain(), triggerFlush(), readQueue(), ResumeOnLoad(), patchSessionStatus(), preflushBounded(), SessionStatus
-
-### Community 282 - "Community 282"
-Cohesion: 0.17
-Nodes (6): CopyInviteLinkButton(), CopyInviteLinkButtonProps, MemberList(), MemberListProps, RoleBadge(), RoleBadgeProps
+Cohesion: 0.21
+Nodes (9): drain(), triggerFlush(), readQueue(), PauseControl(), push, ResumeOnLoad(), patchSessionStatus(), preflushBounded() (+1 more)
 
 ### Community 283 - "Community 283"
 Cohesion: 0.08
-Nodes (25): CollectionCard(), CollectionCardProps, collection, CarouselPhoto, ItemPhotoCarousel(), ItemPhotoCarouselProps, signature(), currentImgSrc() (+17 more)
+Nodes (26): CollectionCard(), CollectionCardProps, collection, CarouselPhoto, ItemPhotoCarousel(), ItemPhotoCarouselProps, signature(), currentImgSrc() (+18 more)
 
 ### Community 285 - "Community 285"
 Cohesion: 0.40
@@ -1279,17 +1306,13 @@ Nodes (5): Global Constraints, Pool Polish Implementation Plan, Task 1: Cover cu
 Cohesion: 0.33
 Nodes (5): Changes, Out of scope, Pool polish: visible cover cue, actionable handoff, visible cap — design, Testing, Verified current state
 
-### Community 291 - "Community 291"
-Cohesion: 0.50
-Nodes (6): Bucket, effectiveBucket(), isOnward(), LOVED_BUCKETS, partitionRanked(), RankedRow
-
 ### Community 292 - "Community 292"
 Cohesion: 0.27
 Nodes (8): classifyDbError(), DbErrorClass, DbErrorContext, logDbError(), readPgCode(), bucketMs(), logDbSlow(), TransactionOptions
 
 ### Community 294 - "Community 294"
 Cohesion: 0.07
-Nodes (34): BroughtBackNotice(), COLLECTION_PILLS, collectionsEmptyState(), CollectionsView, collectionsViewFrom(), collectionsViewHref(), filterCollections(), list (+26 more)
+Nodes (24): MODES, WorkspaceMode, WorkspaceModeChips(), WorkspaceModeChipsProps, CollectionPageProps, Param, ArchivedNotice(), ArchivedNoticeProps (+16 more)
 
 ### Community 298 - "Community 298"
 Cohesion: 0.29
@@ -1300,22 +1323,22 @@ Cohesion: 0.25
 Nodes (7): CoverageSchema, E2eFailure, E2eSchema, GlobalArgs, GlobalArgsSchema, model, Pct
 
 ### Community 309 - "Community 309"
-Cohesion: 0.10
-Nodes (12): PreferenceExistsError, describeError(), HttpError, PG_ERROR_FIELDS, { UnauthorizedError }, UnauthorizedError, ItemInResultError, PoolGroupError (+4 more)
+Cohesion: 0.09
+Nodes (11): PreferenceExistsError, HttpError, { UnauthorizedError }, POST(), POST(), ItemInResultError, PoolGroupError, ReassignDest (+3 more)
 
 ## Knowledge Gaps
-- **1937 isolated node(s):** `cov`, `e2e`, `sha`, `ts`, `histPath` (+1932 more)
+- **1959 isolated node(s):** `cov`, `e2e`, `sha`, `ts`, `histPath` (+1954 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **29 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **27 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `h` connect `Community 257` to `Community 254`?**
-  _High betweenness centrality (0.023) - this node is a cross-community bridge._
-- **Why does `CollectionPreferenceItemRepository` connect `Community 157` to `Community 98`, `Community 35`, `Community 228`, `AppLayout.tsx`, `Community 103`, `Community 137`, `ItemController`, `Community 244`, `Community 149`, `Community 214`, `Community 278`, `Community 216`, `.eslintrc.js`?**
-  _High betweenness centrality (0.019) - this node is a cross-community bridge._
-- **Why does `getTestDb()` connect `Community 216` to `Community 227`, `Community 228`, `AppLayout.tsx`, `App Router pages`, `Community 269`, `ItemController`, `Community 244`, `Community 149`, `Community 157`?**
+- **Why does `h` connect `Community 257` to `layout.tsx`?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+- **Why does `Item` connect `layout.tsx` to `Community 35`, `Community 228`, `Invitation`, `Community 204`, `Community 269`, `PoolUpload.tsx`, `ItemController`, `Community 251`, `Community 177`, `ItemFilters.tsx`, `Community 211`, `Community 149`, `Community 183`, `Community 216`, `Community 221`, `Community 155`, `Community 157`?**
+  _High betweenness centrality (0.017) - this node is a cross-community bridge._
+- **Why does `getTestDb()` connect `Community 216` to `Community 227`, `AppLayout.tsx`, `Community 228`, `App Router pages`, `Community 269`, `ScoringService.ts`, `ItemController`, `Community 244`, `Community 278`?**
   _High betweenness centrality (0.014) - this node is a cross-community bridge._
 - **Are the 37 inferred relationships involving `getDb()` (e.g. with `EditCollectionPage()` and `ItemEditRedirect()`) actually correct?**
   _`getDb()` has 37 INFERRED edges - model-reasoned connections that need verification._
