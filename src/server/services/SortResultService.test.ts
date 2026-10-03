@@ -54,12 +54,12 @@ vi.mock("@/server/repositories/implementations/SessionRepository", () => ({
   SessionRepository: vi.fn(function () { return txSessionRepo; }),
 }));
 // Epic S: the service reads the curator's decision log to snapshot usage at
-// materialization. This unit test isolates the tx wiring, so stub the log empty
-// → every item is stamped usage:null (the real usage-fold proof is the un-mocked
-// sort-results-usage-snapshot.integration.test.ts).
-vi.mock("@/server/services/decision-log", () => ({
-  loadCuratorDecisionEvents: async () => [],
-}));
+// materialization. Stubbed empty by default → items stamped usage:null; the
+// saveAndShare test feeds one usage event to prove its usage mapping. The DB tier
+// (sort-results-usage-snapshot.integration.test.ts) covers the draft and revision
+// paths, not saveAndShare.
+const { loadCuratorDecisionEvents } = vi.hoisted(() => ({ loadCuratorDecisionEvents: vi.fn() }));
+vi.mock("@/server/services/decision-log", () => ({ loadCuratorDecisionEvents }));
 
 import {
   SortResultService,
@@ -143,6 +143,7 @@ beforeEach(() => {
   // clearAllMocks wipes the hoisted predicate's implementation too; restore the
   // default (no conflict) so only the exhaustion test opts into retries.
   isResultNumberConflict.mockReturnValue(false);
+  loadCuratorDecisionEvents.mockResolvedValue([]);
   txResultRepo.getNextResultNumber.mockResolvedValue(1);
   txResultRepo.insertWithNumber.mockResolvedValue(sortResult());
   txResultRepo.delete.mockResolvedValue(undefined);
@@ -544,6 +545,9 @@ describe("SortResultService.saveAndShare writes", () => {
     // b was hand-placed first.
     txItemRepo.findByResult.mockResolvedValue([sortResultItem({ sortResultId: "draft-1", itemId: "b", manualRank: 0 })]);
     txShareRepo.create.mockResolvedValue(undefined);
+    loadCuratorDecisionEvents.mockResolvedValue([
+      { id: "ev-1", sessionId: "s-1", type: "usage", decision: { itemId: "a", result: "uses" }, createdAt: new Date(1) },
+    ]);
 
     const service = new SortResultService(
       {} as unknown as SortResultRepository,
@@ -558,6 +562,7 @@ describe("SortResultService.saveAndShare writes", () => {
     expect(txItemRepo.createMany).toHaveBeenCalledTimes(2);
     const [saved] = txItemRepo.createMany.mock.calls[0];
     expect(saved.map((r: { itemId: string; computedRank: number }) => [r.itemId, r.computedRank])).toEqual([["b", 0], ["a", 1], ["c", 2]]);
+    expect(saved.map((r: { itemId: string; usage: string | null }) => [r.itemId, r.usage])).toEqual([["b", null], ["a", "uses"], ["c", null]]);
     expect(txItemRepo.createMany.mock.calls[1][0]).toEqual([
       { sortResultId: "draft-2", itemId: "b", computedRank: 0, computedBucket: "top", manualRank: 0 },
     ]);

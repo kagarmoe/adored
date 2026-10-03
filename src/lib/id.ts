@@ -11,11 +11,9 @@ export function generateId(prefix: string): string {
   return `${prefix}_${nextUlid().toLowerCase()}`;
 }
 
-// Batch-insert ids: monotonic WITHIN one factory instance (base ulid() is not
-// monotonic within a millisecond), preserving the `event_` + lowercase
-// convention — lowercasing is order-preserving for Crockford base32, and the
-// prefix keeps new ids in the same code-unit ordering regime as existing rows
-// (spec §2.3.5). One factory per request/batch; generateId's process-wide factory gives no per-batch guarantee across instances.
+// Batch-insert ids with the `event_` + lowercase convention (spec §2.3.5).
+// Redundant since purses-w7ss.16 made generateId process-wide monotonic;
+// consolidation onto generateId("event") is purses-w7ss.20.
 export function generateOrderedIdFactory(): () => string {
   const next = monotonicFactory();
   return () => `event_${next().toLowerCase()}`;
