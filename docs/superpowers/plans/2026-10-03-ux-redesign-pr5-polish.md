@@ -9,7 +9,9 @@
 **Goal:** Close the epic's polish beads: no inline alpha tints left, the pool's selection bar
 matches the PR 3 bottom bar, the archived card's Bring back no longer looks misaligned or overflows,
 the PR 2 residual minors are fixed, dead and duplicated sort-client plumbing is removed, the CI e2e
-map is fixed, and `eslint-config-next` matches `next`.
+map is fixed, and `eslint-config-next` matches `next`. Appended at pre-flight: the collection home
+drops the mode chips (`.14`), and the local test infra is hardened. That means one DB lock, a fresh
+DB for e2e, a Homebrew fallback, doc-check skipping tests, and the charter's CI rules (`.24`–`.27`).
 
 **Architecture:** No schema, no migration, no new route, no new colour token. The inline-tint ban
 gets a source-scan guard, plus one new `Card` variant (`danger`, built from existing tokens). The
@@ -26,11 +28,15 @@ Drizzle/Postgres (one DB test edited), Playwright (WebKit tablet project in CI).
 "Per-component inline tints are banned"; glass-strong ≥ 0.85 + blur for text-carrying bars; a
 fixed bottom action bar on phone), §7 (every test runs in CI at the cheapest tier), §8
 (light/dark/phone screenshots). Bead texts: `purses-w7ss.4`, `.13`, `.17`, `.11`, `.9`, `.15`,
-`purses-ejvl`. Context: `docs/superpowers/plans/2026-10-02-ux-redesign-pr3-lists-home.md` (Task 4,
+`.14`, `.24`, `.25`, `.26`, `.27`, `purses-ejvl`. Context: `docs/superpowers/plans/2026-10-02-ux-redesign-pr3-lists-home.md` (Task 4,
 `ActionBar`; Task 7, the phone-bar geometry pattern) and
 `docs/superpowers/plans/2026-10-01-ux-redesign-pr2-sort.md` (the queue, `PendingNotices`,
-`RankingList`). PR 4 (#373) is open in parallel and **not** on this branch: `ActionBar`,
-`ArchivedItemCard`, `AsyncActionButton` and the rest are as on `main` (`b85d93d9a`).
+`RankingList`). PR 4 (#373, merge `820fb647c`) **is** on this branch (rebased onto `bee445411`;
+pre-flight re-verified every reference below against it). PR 4 did not touch `ActionBar`,
+`ArchivedItemCard`, `AsyncActionButton`, `BringBackButton` or any `src/features/sorting/` file. It
+did add the `result-revision-note` beat to `e2e/screenshots/capture.ts` (Tasks 2 and 4 edit around
+it), relabel rows in `contrast.test.ts`, delete `updateResultName`, add `createMany` /
+`findBySessions`, and add decision 44 to ARCHITECTURE.md.
 
 ## Global Constraints
 
@@ -147,7 +153,8 @@ costs more than the check is worth.
     so it goes as well. `SetAsideUndo.test.tsx` keeps every provider test, driven by a three-line
     test consumer of `useTriageUndo()` instead of the deleted session button.
 11. **`getDraftResult` is deleted.** Its only reference is its own definition (grep across `src`,
-    `e2e`, `scripts`). `updateResultName` is already gone in PR 4 and out of scope here.
+    `e2e`, `scripts`). `updateResultName` was already deleted on `main` by PR 4 (`820fb647c`) and
+    is out of scope here.
 12. **`eslint-config-next`:** `npm install -D eslint-config-next@^16.3.8` (rather than a bare
     `npm update`). The range floor then matches `next`'s `^16.3.8`, so the two can't drift apart
     again within 16.x. The `braces` osv ignore stays: no fixed version exists, and the transitive
@@ -179,6 +186,10 @@ costs more than the check is worth.
   Okay (signing in is the way to clear it).
 - **Sort closed elsewhere:** after a sort is closed elsewhere the compare cards dim and hold, and
   Reload is offered (in place of Okay) beside "This sort was wrapped up somewhere else…".
+- **Collection home without mode chips** (`purses-w7ss.14`, owner decision 2026-10-03): the
+  Build / Sort / Decide chips are gone from the collection home. The home keeps Start/Keep sorting,
+  the Add photos pill and See your ranking (tablet). The chips stay on the Photos and Decide
+  section pages.
 
 ## Rulings (controller)
 
@@ -224,13 +235,24 @@ costs more than the check is worth.
 | 7 | `.9` (B) | `src/features/sorting/directSubmit.ts`, `src/features/sorting/directSubmit.test.ts` | `CompareChoice.tsx`, `useOptimisticRound.ts`, `TriageRound.tsx`, `TriageRound.test.tsx`, `TriageUndoProvider.tsx`, `decisionFlusher.ts` (header comment) | — |
 | 8 | `.15` | — | `.github/workflows/ci.yml` | — |
 | 9 | `ejvl` | — | `package.json`, `package-lock.json`, `src/features/onboarding/WalkthroughShell.tsx` (one disable comment) | — |
-| 10 | all | — | `DESIGN.md`, `docs/ARCHITECTURE.md`, `graphify-out/` | — |
+| 10 | `.14` | — | `src/app/collections/[id]/page.tsx`, `src/app/collections/[id]/page.test.tsx`, `e2e/lists-and-home.spec.ts`, `DESIGN.md` (§5 Wayfinding chip sentence) | — |
+| 11 | `.24` | `scripts/db-lock.ts`, `scripts/db-lock.test.ts`, `scripts/with-db-lock.ts` | `e2e/global-setup.ts`, `e2e/global-teardown.ts`, `package.json` (`test:db` script), `docs/ARCHITECTURE.md` (stale "Worktree-derived ports" paragraph), `docs/DATABASE.md` (test:db paragraph) | — |
+| 12 | `.25` | — | `e2e/fixtures/test-db.sh`, `e2e/fixtures/run-db-tests.sh`, `docs/DATABASE.md` (same paragraph) | — |
+| 13 | `.26` | — | `scripts/hooks/doc-check.mjs`, `scripts/hooks/doc-check.test.ts` | — |
+| 14 | `.27` | — | `.claude/skills/adored-revamp/SKILL.md` | — |
+| 15 | all | — | `DESIGN.md`, `docs/ARCHITECTURE.md`, `graphify-out/` | — |
 
 Order: the tasks run in sequence. Tasks 4 and 8 both edit `ci.yml` (different lines). Task 7 depends
 on Task 6 (`TriageUndoProvider.defer` must be gone first). Task 5 and Task 7 both touch
 `CompareChoice.tsx` (different blocks) and `decisionFlusher.ts` (Task 5 the notice state, Task 7
 the header comment). Task 5 runs as two commits/reviews: **5a** engine + gate (Steps 1–4 and 6–7's
-engine/gate parts) and **5b** the notice copy, links and Reload (Step 5's rendering).
+engine/gate parts) and **5b** the notice copy, links and Reload (Step 5's rendering). Task 10 edits
+`e2e/lists-and-home.spec.ts` after Tasks 2 and 3 (different tests) and `DESIGN.md` before Task 15
+(different lines). Task 11 edits `package.json` after Task 9 (the `scripts` block, not deps). Task
+12 runs after Task 11 (both change how the local test DB starts; Task 11's `reset` relies on Task
+12's `down` wiping the Homebrew cluster) and both edit the same `DATABASE.md` paragraph. Task 14
+runs after Task 11 (it names Task 11's lock in the charter). Tasks 11–13 change no product code and
+need no screenshots.
 
 ---
 
@@ -287,7 +309,8 @@ describe("no inline alpha tints", () => {
   `ThemeToggle.tsx: hover:bg-content-soft/40` (shown as `bg-content-soft/40`),
   `MostLovedHero.tsx: text-ink-soft/70`, and `CollectionCard.tsx` / `PhotoPoolPreview.tsx:
   text-ink-soft/50`. (Checked at plan time: the widened regex finds the same 10 on this branch and
-  no arbitrary-colour hits.) If the list differs, stop and re-read Decision 2 before going on.
+  no arbitrary-colour hits. Re-checked after the PR 4 rebase: still exactly these 10;
+  `MakeRevisionButton`'s new note adds none.) If the list differs, stop and re-read Decision 2 before going on.
 
 - [ ] **Step 3: Add the contrast row** for the danger rim in `pairings()` in
   `src/lib/design/contrast.test.ts`, after the `primary link on card` row:
@@ -489,7 +512,8 @@ test("pool: the selection bar is pinned at phone and tablet widths and never hid
   old classes; `PoolActionBar.test.tsx:125` checks only the hint's `hidden sm:block`).
 
 - [ ] **Step 7: Add a screenshot beat** for the bar. In `e2e/screenshots/capture.ts`, insert this
-  before `if (only && !only.includes("item-delete-confirm")) return;`:
+  after PR 4's `if (!only || only.includes("result-revision-note")) { … }` block and before
+  `if (only && !only.includes("item-delete-confirm")) return;`:
 
 ```ts
     // UX redesign PR 5: the pool's selection bar (fixed at every width). Viewport-only shot:
@@ -669,7 +693,7 @@ git commit -m "fix(items): archived card's Bring back is a secondary pill that f
 - [ ] **Step 4: Run and see it pass.** Run the Step 2 command again and expect PASS; then
   `npx vitest run src/features/results/RankingList.test.tsx` and expect PASS. The word needs no
   unit test (its accessible name is already pinned); the phone `ranking` screenshot shows it
-  (Task 10, Step 8).
+  (Task 15, Step 8).
 
 - [ ] **Step 5: The replay DB test seeds a pin.** In
   `src/lib/db/ranking-save-route.integration.test.ts`, replace the test "a retry with the same key
@@ -693,8 +717,9 @@ git commit -m "fix(items): archived card's Bring back is a secondary pill that f
   });
 ```
 
-  Run `npm run test:db -- src/lib/db/ranking-save-route.integration.test.ts`. If the script does
-  not forward a path, run `npm run test:db`. This adds coverage, so it may pass on the first run.
+  Run `npm run test:db -- src/lib/db/ranking-save-route.integration.test.ts`. (`run-db-tests.sh`
+  forwards the path but after its own `src/lib/db` filter, and vitest ORs filters, so this runs
+  every DB file. That is fine.) This adds coverage, so it may pass on the first run.
   If it fails, that is a real replay bug: stop and use `superpowers:systematic-debugging` before
   touching `SortResultService.saveAndShare`.
 
@@ -739,7 +764,11 @@ describe("ci.yml changes filters", () => {
   await SortResultService.fromDb(getTestDb().db).pinItem(sorted.collectionId, ownerId, sorted.itemIds[1], 1);
 ```
 
-  Add `import { SortResultService } from "@/server/services/SortResultService";`. Also add a
+  Add `import { SortResultService } from "@/server/services/SortResultService";`. This pin also
+  feeds PR 4's `result-revision-note` beat (same `slug`). The beat finds an `Unpin` button and
+  skips its own Move-down pin. The seeded pin (`itemIds[1]` to slot 1, `manualRank` 0, saved slot
+  1) is off its saved slot, so `pinsLostToRevision` is 1 and the note still opens. Do not pin
+  `itemIds[0]` at slot 1: that sits on its saved slot, and the beat would time out. Also add a
   second photo to the story item, so the `item-detail-story` shot shows the carousel dots from
   Task 1. After the `story` update, add:
 
@@ -1083,9 +1112,11 @@ git commit -m "fix(sort): one live notice region; Sign in back to the round; Rel
     mocks, `installStorage`, `beforeEach` and the provider import. Keep two tests, rendered as
     `<DeferControl onDecision={onDecision} />`: "a tap calls onDecision once" (only that assert;
     the old no-fetch / empty-queue / enabled / label asserts can no longer fail once the component
-    has no fetch or queue code, so they go), and the title/aria-label assertions from "renders the
-    same visual button … as session mode", retitled "conveys 'Keeps it for later' for hover and
-    assistive tech".
+    has no fetch or queue code, so they go), and the existing "conveys 'Keeps it for later' for
+    hover and assistive tech without shouting it visually" (`DeferControl.test.tsx:83`), rendered
+    as `<DeferControl onDecision={vi.fn()} />` instead of `<SessionHarness />`. Delete its
+    local-mode twin "local mode renders the same visual button (title + aria-label) as session
+    mode" (`:155`).
   - `SetAsideUndo.test.tsx`: replace the `SetAsideButton` import with
     `import { useTriageUndo } from "./TriageUndoProvider";` (merge it into the existing provider
     import). Add the consumer below the imports:
@@ -1503,7 +1534,488 @@ git commit -m "chore(deps): eslint-config-next ^16.3.8 to match next (purses-ejv
 
 ---
 
-## Task 10: Docs, full gate, graphify, screenshots
+## Task 10: The collection home drops the mode chips (`purses-w7ss.14`)
+
+Owner decision (2026-10-03): the Build / Sort / Decide chips come off the collection home only.
+The home keeps Start/Keep sorting, the Add photos pill and See your ranking (tablet). The chips
+stay on the section pages: `src/app/collections/[id]/pool/page.tsx` (Photos, `activeMode="build"`)
+and `src/app/collections/[id]/results/page.tsx` (Decide). The sort page renders none today, and
+that does not change.
+
+**Files:** `src/app/collections/[id]/page.tsx`, `src/app/collections/[id]/page.test.tsx`,
+`e2e/lists-and-home.spec.ts`, `DESIGN.md`.
+
+**Interfaces:** none. `WorkspaceModeChips` (`src/features/collections/WorkspaceModeChips.tsx`) and
+its test stay as they are. The home was its only `activeExact` (default `true`) caller, and the
+pool page still passes `activeExact={false}`.
+
+- [ ] **Step 1: Write the failing unit test** in `src/app/collections/[id]/page.test.tsx`, inside
+  `describe("header: See your ranking and the ··· menu")`:
+
+```ts
+  it("the home carries no Build / Sort / Decide chips (they live on the section pages)", async () => {
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    await renderPage();
+    expect(screen.queryByRole("navigation", { name: "Workspace mode" })).not.toBeInTheDocument();
+  });
+```
+
+- [ ] **Step 2: Run it and see it fail.** `npx vitest run "src/app/collections/[id]/page.test.tsx"`.
+  Expected: FAIL. The `Workspace mode` nav is found, because the home renders
+  `<WorkspaceModeChips base={base} activeMode="build" />` at `page.tsx:105`.
+
+- [ ] **Step 3: Implement** in `src/app/collections/[id]/page.tsx`. Delete the
+  `WorkspaceModeChips` import (line 17). Replace the chip row:
+
+```tsx
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <WorkspaceModeChips base={base} activeMode="build" />
+            {hasEverSorted && (
+              <Link href={`${base}/results`} className={`${quietLink} max-md:hidden`}>
+                See your ranking
+              </Link>
+            )}
+          </div>
+```
+
+  with:
+
+```tsx
+          {hasEverSorted && (
+            <div className="max-md:hidden">
+              <Link href={`${base}/results`} className={quietLink}>
+                See your ranking
+              </Link>
+            </div>
+          )}
+```
+
+  Change the comment above the header group to
+  `{/* The header group: title, ··· and (tablet) See your ranking held together; the action row breaks after it. */}`.
+
+- [ ] **Step 4: Update the e2e** in `e2e/lists-and-home.spec.ts`. Retitle the keyboard-order test
+  to `"keyboard order on the home: trail → menu → primary → pill → search → cards"`, and replace
+
+```ts
+  expect(idx("Decide"), seen).toBeGreaterThan(idx("More for E2E Workspace items-only"));
+  expect(idx("Start sorting"), seen).toBeGreaterThan(idx("Decide"));
+```
+
+  with
+
+```ts
+  expect(idx("Start sorting"), seen).toBeGreaterThan(idx("More for E2E Workspace items-only"));
+```
+
+  (The chips' absence is pinned by the unit test in Step 1, and the e2e does not repeat it.) In
+  `beforeAll`, change the comment on `ranked = await seedSortScenario(ownerId);` from "so the chip
+  row carries See your ranking" to "so the header carries See your ranking".
+
+- [ ] **Step 5: DESIGN.md §5 (Wayfinding).** Change "Mode chips appear on the collection home and
+  the section index pages (Photos, Decide)" to "Mode chips appear on the section index pages
+  (Photos, Decide), not on the collection home, whose one primary action and Add photos pill
+  already lead there (owner decision, `purses-w7ss.14`)". Keep the rest of the sentence.
+
+- [ ] **Step 6: Run and see it pass.** Run
+  `npx vitest run "src/app/collections/[id]" src/features/collections` and expect PASS. Then run
+  `npx playwright test e2e/lists-and-home.spec.ts --project=tablet` and expect PASS. Run the whole
+  file, because the phone ranking-link test and Tasks 2 and 3 also load the home.
+
+- [ ] **Step 7: Commit.**
+
+```bash
+git add "src/app/collections/[id]/page.tsx" "src/app/collections/[id]/page.test.tsx" e2e/lists-and-home.spec.ts DESIGN.md
+git commit -m "feat(home): drop the mode chips from the collection home; they stay on the section pages (purses-w7ss.14)"
+```
+
+  Screenshots: Task 15 Step 8 captures `home` (has a ranking: See your ranking under the title on
+  tablet, nothing on phone) and `home-items-first`.
+
+---
+
+## Task 11: One lock for the local test DB; e2e starts on a fresh DB (`purses-w7ss.24`)
+
+`test:db`, Playwright e2e and the screenshot capture all use one local Postgres (`pi-e2e-db` on
+`:5433`, `e2e/fixtures/test-db.sh`). Two of these running at once TRUNCATE each other's data or
+deadlock (memories `db-test-parallel-deadlock` and `orchestration-log-marker-races`). An e2e run
+after `test:db` on a container that was left up fails `auth.setup` (memory
+`e2e-needs-fresh-container-after-test-db`).
+
+**Ruling candidate (lock mechanism):** the bead and the charter name `flock /tmp/adored-db.lock`,
+but macOS has no `flock` binary (`command -v flock` prints nothing on the dev Mac; checked at
+pre-flight). So the lock is a ~40-line TypeScript module, run with the `tsx` already in
+`dependencies`. It makes an atomic directory (`rename` of a pid-carrying temp dir onto
+`/tmp/adored-db.lock`) and takes over a lock whose holder pid is dead. It is taken in two places:
+the `test:db` script (through a CLI wrapper) and Playwright's `globalSetup`. `globalSetup` covers
+`npm run test:e2e`, any direct `npx playwright test …` and `npm run screenshots`, because the
+screenshot config spreads the base config. The other option was to require `brew install flock`.
+That is a per-machine prerequisite, CI does not need it, and a forgotten install fails open.
+
+**Files:** create `scripts/db-lock.ts`, `scripts/db-lock.test.ts` and `scripts/with-db-lock.ts`.
+Modify `e2e/global-setup.ts`, `e2e/global-teardown.ts`, `package.json` (the `test:db` script only),
+`docs/ARCHITECTURE.md` and `docs/DATABASE.md`.
+
+**Interfaces:**
+- Produces: `export const DB_LOCK = "/tmp/adored-db.lock"`,
+  `export async function acquireDbLock(opts?: { path?: string; timeoutMs?: number; pollMs?: number }): Promise<void>`
+  and `export function releaseDbLock(path?: string): void`.
+
+- [ ] **Step 1: Write the failing test** `scripts/db-lock.test.ts` (vitest includes
+  `scripts/**/*.test.ts`, so `test:ci` runs it):
+
+```ts
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { describe, expect, it } from "vitest";
+import { acquireDbLock, releaseDbLock } from "./db-lock";
+
+const freshPath = () => join(mkdtempSync(join(tmpdir(), "db-lock-")), "lock");
+function heldBy(path: string, pid: number) {
+  mkdirSync(path);
+  writeFileSync(join(path, "pid"), String(pid));
+}
+
+describe("the local test-DB lock", () => {
+  it("a live holder blocks: a second run waits, then gives up naming the holder", async () => {
+    const path = freshPath();
+    heldBy(path, process.ppid); // alive, and not us
+    await expect(acquireDbLock({ path, timeoutMs: 50, pollMs: 10 })).rejects.toThrow(`pid ${process.ppid}`);
+  });
+
+  it("a lock left by a dead run (crash, ^C) is taken over, and release frees it", async () => {
+    const path = freshPath();
+    heldBy(path, spawnSync("true").pid!); // exited and reaped: dead
+    await acquireDbLock({ path, timeoutMs: 1_000, pollMs: 10 });
+    expect(readFileSync(join(path, "pid"), "utf8")).toBe(String(process.pid));
+    releaseDbLock(path);
+    expect(existsSync(path)).toBe(false);
+  });
+});
+```
+
+- [ ] **Step 2: Run it and see it fail.** `npx vitest run scripts/db-lock.test.ts`. Expected: FAIL,
+  "Cannot find module './db-lock'".
+
+- [ ] **Step 3: Implement** `scripts/db-lock.ts`:
+
+```ts
+import { mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+
+// One lock for every run on the shared local test Postgres (pi-e2e-db, :5433): test:db, Playwright
+// e2e and the screenshot capture. Concurrent runs TRUNCATE each other or deadlock (memories
+// db-test-parallel-deadlock, orchestration-log-marker-races). macOS has no flock(1), so the lock
+// is a directory that appears atomically with its holder's pid inside; a dead holder's lock is
+// taken over. (Two runs taking over the same stale lock in the same instant is a two-syscall
+// window; accepted for a dev-machine lock.)
+export const DB_LOCK = "/tmp/adored-db.lock";
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+function alive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return (e as NodeJS.ErrnoException).code === "EPERM"; // exists, owned by someone else
+  }
+}
+function holder(path: string): number | null {
+  try {
+    return Number(readFileSync(join(path, "pid"), "utf8"));
+  } catch {
+    return null; // released between our attempt and this read
+  }
+}
+
+export async function acquireDbLock({ path = DB_LOCK, timeoutMs = 30 * 60_000, pollMs = 2_000 } = {}): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  let said = false;
+  for (;;) {
+    const tmp = `${path}.${process.pid}`;
+    mkdirSync(tmp, { recursive: true });
+    writeFileSync(join(tmp, "pid"), String(process.pid));
+    try {
+      renameSync(tmp, path); // fails while the lock dir exists (it is never empty)
+      return;
+    } catch {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+    const pid = holder(path);
+    if (pid !== null && !alive(pid)) {
+      rmSync(path, { recursive: true, force: true });
+      continue;
+    }
+    if (Date.now() >= deadline) throw new Error(`test DB is busy: ${path} is held by pid ${pid}`);
+    if (!said) console.error(`test DB is busy (pid ${pid}); waiting for ${path}…`);
+    said = true;
+    await sleep(pollMs);
+  }
+}
+
+export function releaseDbLock(path = DB_LOCK): void {
+  if (holder(path) === process.pid) rmSync(path, { recursive: true, force: true });
+}
+```
+
+  And the CLI wrapper `scripts/with-db-lock.ts` (separate, so the module has no main-check):
+
+```ts
+import { spawnSync } from "node:child_process";
+import { acquireDbLock, releaseDbLock } from "./db-lock";
+
+// tsx scripts/with-db-lock.ts <cmd> [args…]: run one command holding the test-DB lock.
+async function main(): Promise<number> {
+  const [cmd, ...args] = process.argv.slice(2);
+  await acquireDbLock();
+  try {
+    return spawnSync(cmd, args, { stdio: "inherit" }).status ?? 1;
+  } finally {
+    releaseDbLock();
+  }
+}
+main().then((code) => process.exit(code));
+```
+
+- [ ] **Step 4: Run it and see it pass.** Run the Step 2 command again and expect PASS.
+
+- [ ] **Step 5: Wire it in.**
+  - `package.json`: `"test:db": "bash e2e/fixtures/run-db-tests.sh"` →
+    `"test:db": "tsx scripts/with-db-lock.ts bash e2e/fixtures/run-db-tests.sh"`. (`npm run test:db
+    -- <path>` still forwards the path, because the wrapper passes argv through. CI's `db-tests`
+    job calls vitest directly, so the change does not touch it.)
+  - `e2e/global-setup.ts`: add `import { acquireDbLock } from "../scripts/db-lock";`. As the first
+    line of `globalSetup()`, add
+    `await acquireDbLock(); // one run at a time on the shared test DB (purses-w7ss.24)`. Change
+    `[script, "up"]` to `[script, "reset"]` and add the comment
+    `// recycle: e2e always starts on a fresh DB, never test:db's leftovers (memory e2e-needs-fresh-container-after-test-db)`.
+  - `e2e/global-teardown.ts`: add `import { releaseDbLock } from "../scripts/db-lock";` and call
+    `releaseDbLock();` after the `down`. (If a run dies before teardown, its pid is dead and the
+    next run takes the lock over.)
+
+- [ ] **Step 6: Prove the serialization for real.** Run, from two shells:
+  `npm run test:db > /tmp/lock-db.log 2>&1; echo exit=$?` and, while it runs,
+  `npx playwright test e2e/smoke.spec.ts --project=tablet > /tmp/lock-e2e.log 2>&1; echo exit=$?`.
+  Expected: both `exit=0`, and `/tmp/lock-e2e.log` contains `test DB is busy (pid …)` before any
+  test line. Record both exit codes in the ledger. Do not pipe either command through `tail`.
+
+- [ ] **Step 7: Docs.**
+  - `docs/ARCHITECTURE.md` decision 11 has a stale bullet. The *Worktree-derived ports* bullet
+    describes per-worktree slots, `pi-e2e-db-<slot>` and `test-db.sh url`, but `test-db.sh` never
+    shipped them: it still uses `pi-e2e-db` on `:5433`, and `e2e/fixtures/db.ts` defaults to that
+    URL. Replace the bullet with: "*One test DB, one lock (`purses-w7ss.24`):* every worktree shares
+    `pi-e2e-db` on `:5433`, so `test:db`, e2e and the screenshot capture take
+    `/tmp/adored-db.lock` (`scripts/db-lock.ts`; an atomic lock directory with the holder's pid,
+    because macOS has no `flock`; a dead holder's lock is taken over). `test:db` takes it through
+    `scripts/with-db-lock.ts`, and Playwright's `globalSetup` takes it and then runs
+    `test-db.sh reset`, so e2e always starts on a fresh DB."
+  - `docs/DATABASE.md`, the `npm run test:db` paragraph: append "It holds the shared test-DB lock
+    (`scripts/with-db-lock.ts`, ARCHITECTURE decision 11), so it waits for a running e2e or
+    screenshot run instead of truncating under it."
+
+- [ ] **Step 8: Commit.**
+
+```bash
+git add scripts/db-lock.ts scripts/db-lock.test.ts scripts/with-db-lock.ts e2e/global-setup.ts e2e/global-teardown.ts \
+  package.json docs/ARCHITECTURE.md docs/DATABASE.md
+git commit -m "test(infra): one lock for the local test DB; e2e recycles it first (purses-w7ss.24)"
+```
+
+---
+
+## Task 12: `test-db.sh` falls back to Homebrew Postgres when Docker is down (`purses-w7ss.25`)
+
+When Docker Desktop is blocked, the DB tier and e2e still run on a throwaway Homebrew
+`postgresql@15` cluster on `127.0.0.1:5433` (memory `db-e2e-without-docker`). Today that takes a
+hand-built `docker` shim on `PATH`. After this task, `test-db.sh` picks the backend itself.
+
+**Files:** `e2e/fixtures/test-db.sh`, `e2e/fixtures/run-db-tests.sh`, `docs/DATABASE.md`.
+
+**Interfaces:**
+- Produces: `test-db.sh running` (exit 0 when the test DB is up, on either backend).
+  `TEST_DB_BACKEND=docker|brew` overrides detection. That override is how the fallback is verified
+  on a machine where Docker works.
+
+**No automated test:** CI always has Docker, so a fallback-path test could never run in the CI gate
+(global testing rule: a test only counts if CI runs it). Step 4 is the recorded manual proof.
+
+- [ ] **Step 1: Backend detection** in `test-db.sh`, after `export DATABASE_URL_TEST=…`:
+
+```bash
+# Docker when its daemon answers; otherwise a throwaway Homebrew postgresql@15 cluster on the same
+# port, user and password (memory db-e2e-without-docker). TEST_DB_BACKEND forces one.
+BACKEND="${TEST_DB_BACKEND:-$(docker info >/dev/null 2>&1 && echo docker || echo brew)}"
+PGDATA_DIR="${TMPDIR:-/tmp}/adored-test-pg"
+```
+
+- [ ] **Step 2: The brew path.** Rename today's `up`/`down` to `docker_up`/`docker_down`
+  (unchanged bodies, except that `docker_up` no longer runs the migrate lines; see below). Add:
+
+```bash
+brew_bin() {
+  local bin
+  bin="$(brew --prefix postgresql@15 2>/dev/null)/bin"
+  if [ ! -x "${bin}/pg_ctl" ]; then
+    echo "test-db: Docker is not running and Homebrew postgresql@15 is missing — start Docker or 'brew install postgresql@15'" >&2
+    exit 1
+  fi
+  echo "${bin}"
+}
+
+brew_up() {
+  local bin; bin="$(brew_bin)"
+  if ! "${bin}/pg_ctl" -D "${PGDATA_DIR}" status >/dev/null 2>&1; then
+    echo "test-db: Docker unavailable — starting Homebrew postgresql@15 on 127.0.0.1:${PORT}…"
+    [ -f "${PGDATA_DIR}/PG_VERSION" ] || "${bin}/initdb" -D "${PGDATA_DIR}" -U postgres --auth=trust >/dev/null
+    # Loopback only, like the container (guessable credentials).
+    "${bin}/pg_ctl" -D "${PGDATA_DIR}" -l "${PGDATA_DIR}/server.log" -w \
+      -o "-p ${PORT} -k ${PGDATA_DIR} -c listen_addresses=127.0.0.1,::1" start >/dev/null
+    "${bin}/createdb" -h 127.0.0.1 -p "${PORT}" -U postgres "${DB}"
+  fi
+}
+
+brew_down() {
+  local bin; bin="$(brew --prefix postgresql@15 2>/dev/null)/bin"
+  [ -x "${bin}/pg_ctl" ] && "${bin}/pg_ctl" -D "${PGDATA_DIR}" status >/dev/null 2>&1 &&
+    "${bin}/pg_ctl" -D "${PGDATA_DIR}" -m fast stop >/dev/null
+  rm -rf "${PGDATA_DIR}" # like docker rm: down means the data is gone, so reset is a clean slate
+  echo "test-db: Homebrew cluster removed"
+}
+
+running() {
+  if [ "${BACKEND}" = docker ]; then
+    docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"
+  else
+    "$(brew --prefix postgresql@15 2>/dev/null)/bin/pg_ctl" -D "${PGDATA_DIR}" status >/dev/null 2>&1
+  fi
+}
+
+up() {
+  "${BACKEND}_up"
+  echo "test-db: applying schema (drizzle migrate)…"
+  DATABASE_URL="${DATABASE_URL_TEST}" npm run db:migrate
+  echo "test-db: up at ${DATABASE_URL_TEST}"
+}
+down() { "${BACKEND}_down"; }
+```
+
+  Move the two migrate lines and the final `echo` out of `docker_up` into the shared `up`, as
+  above. Add `running) running ;;` to the `case`, and update the usage line and header comment
+  (`up|down|reset|running`; "Docker, or a Homebrew postgresql@15 fallback when Docker is down").
+  (`--auth=trust` accepts the URL's password `test` unchecked; the cluster listens only on
+  loopback, and `db.ts`'s host allowlist still applies.)
+
+- [ ] **Step 3: `run-db-tests.sh`.** Delete the `command -v docker` guard. `test-db.sh` now reports
+  the missing-backend case itself. Replace the `docker ps … grep` STARTED_HERE check with
+  `if ! bash "${DB_SCRIPT}" running; then STARTED_HERE=1; fi`. Delete the now-unused `CONTAINER=`
+  line.
+
+- [ ] **Step 4: Verify both backends, recording each exit code** (no `tail`):
+  - `bash e2e/fixtures/test-db.sh reset > /tmp/tdb-docker.log 2>&1; echo exit=$?` → `exit=0`,
+    with the log showing `postgres:16` (Docker path unchanged). Then
+    `bash e2e/fixtures/test-db.sh down`.
+  - `TEST_DB_BACKEND=brew npm run test:db > /tmp/tdb-brew.log 2>&1; echo exit=$?` → `exit=0`,
+    with the log showing "starting Homebrew postgresql@15". Afterwards
+    `TEST_DB_BACKEND=brew bash e2e/fixtures/test-db.sh running; echo running=$?` prints
+    `running=1`: `run-db-tests.sh` started the cluster, so it tore it down.
+  - `TEST_DB_BACKEND=brew npx playwright test e2e/smoke.spec.ts --project=tablet > /tmp/tdb-brew-e2e.log 2>&1; echo exit=$?`
+    → `exit=0`. This runs through Task 11's `globalSetup` `reset` and teardown `down`.
+  - If Homebrew `postgresql@15` is not installed on the machine, record that and skip the brew
+    bullets. Do not install it as part of this task.
+
+- [ ] **Step 5: Docs.** In `docs/DATABASE.md`'s `npm run test:db` paragraph, change "which
+  **self-manages Docker**" to "which **self-manages the test DB** (Docker, or a throwaway Homebrew
+  `postgresql@15` cluster on the same port when Docker is down; `TEST_DB_BACKEND=docker|brew`
+  forces one)". Change `test-db.sh up` "if it is not already running" to
+  `test-db.sh running` / `up`.
+
+- [ ] **Step 6: Commit.**
+
+```bash
+git add e2e/fixtures/test-db.sh e2e/fixtures/run-db-tests.sh docs/DATABASE.md
+git commit -m "test(infra): test-db.sh falls back to Homebrew postgresql@15 when Docker is down (purses-w7ss.25)"
+```
+
+---
+
+## Task 13: doc-check ignores test files (`purses-w7ss.26`)
+
+`scripts/hooks/doc-check.mjs` maps every file under `src/app/api/` to `docs/API.md` by prefix. So a
+test-only change to a `route.test.ts` soft-blocks the pre-push doc-sync step, although no documented
+fact moved (memory `doc-check-overbroad-api`).
+
+**Ruling candidate (scope):** the bead says "from the API.md mapping". This task skips test files
+for **every** mapping, with one line in `checkDocSync`. A test file never states a documented fact;
+the source it tests carries the mapping. An API-only skip would need per-entry special-casing for
+no gain. The cost if this is wrong: a test-only change under `src/lib/design/` (for example a new
+`contrast.test.ts` row) no longer nudges DESIGN.md. The nudge is soft, and Task 15's `/sync-docs`
+still reads the whole diff.
+
+**Files:** `scripts/hooks/doc-check.mjs`, `scripts/hooks/doc-check.test.ts` (exists; it runs in
+`test:ci` through vitest's `scripts/**` include).
+
+- [ ] **Step 1: Write the failing test.** Append to `describe("checkDocSync")` in
+  `scripts/hooks/doc-check.test.ts`:
+
+```ts
+  it("ignores test files: a test-only change under a mapped prefix needs no doc", () => {
+    expect(checkDocSync(["src/app/api/items/[id]/restore/route.test.ts"], entries)).toHaveLength(0);
+    expect(checkDocSync(["src/app/api/items/[id]/restore/route.ts"], entries)).toHaveLength(1); // the source still maps
+  });
+```
+
+- [ ] **Step 2: Run it and see it fail.** `npx vitest run scripts/hooks/doc-check.test.ts`.
+  Expected: FAIL. The first assertion gets 1 finding (`docs/API.md` missing).
+
+- [ ] **Step 3: Implement.** In `checkDocSync`, first line of the `for (const f of changedFiles)`
+  loop:
+
+```js
+    if (/\.(test|spec)\.[cm]?[jt]sx?$/.test(f)) continue; // a test states no documented fact
+```
+
+- [ ] **Step 4: Run and see it pass.** Run the Step 2 command again and expect PASS.
+
+- [ ] **Step 5: Commit.**
+
+```bash
+git add scripts/hooks/doc-check.mjs scripts/hooks/doc-check.test.ts
+git commit -m "chore(hooks): doc-check skips test files (purses-w7ss.26)"
+```
+
+---
+
+## Task 14: Charter — CI reruns and the DB lock (`purses-w7ss.27`)
+
+The charter (`.claude/skills/adored-revamp/SKILL.md`, loop step 5) already says "Record every
+gate's exit code; never pipe a gate through `tail`" and "Watch CI with `gh run watch
+--exit-status`". This task adds only what is missing (memories `shell-exit-codes-zsh` and
+`ci-watch-and-graph-conflicts`), and it renames the lock to match Task 11. Doc-only, no tests.
+
+**Files:** `.claude/skills/adored-revamp/SKILL.md`.
+
+- [ ] **Step 1: Edit loop step 5.**
+  - Change "DB, e2e and screenshot runs hold `flock /tmp/adored-db.lock`; e2e recycles the test
+    container first." to "DB, e2e and screenshot runs hold `/tmp/adored-db.lock` (`test:db` and
+    Playwright's `globalSetup` take it; `scripts/db-lock.ts`), and e2e resets the test DB first."
+  - After "never pipe a gate through `tail`.", add "Capture it as
+    `cmd > /tmp/<gate>.log 2>&1; echo exit=$?` (zsh has no `PIPESTATUS`)."
+  - After "Watch CI with `gh run watch --exit-status`;", add "a red run gets
+    `gh run rerun <id> --failed` once before any diagnosis (runner flakes: DB `ECONNRESET`, one flaky
+    spec); never push to re-trigger CI;".
+- [ ] **Step 2: Check.** `grep -n "rerun <id> --failed\|never push to re-trigger\|adored-db.lock" .claude/skills/adored-revamp/SKILL.md`
+  prints the three edits, and `grep -c flock .claude/skills/adored-revamp/SKILL.md` prints `0`.
+- [ ] **Step 3: Commit.**
+
+```bash
+git add .claude/skills/adored-revamp/SKILL.md
+git commit -m "docs(charter): rerun a red CI once before diagnosing; never re-push to re-trigger; the DB lock (purses-w7ss.27)"
+```
+
+---
+
+## Task 15: Docs, full gate, graphify, screenshots
 
 **Files:** `DESIGN.md`, `docs/ARCHITECTURE.md`, `graphify-out/`.
 
@@ -1534,12 +2046,17 @@ git commit -m "chore(deps): eslint-config-next ^16.3.8 to match next (purses-ejv
   deploy change; the `ci.yml` edits are path-filter hygiene that DEPLOYMENT doesn't list).
 - [ ] **Step 3: `/sync-docs`.** It reads `docs/doc-ownership.md`. This branch touches
   `src/app/globals.css` and `src/lib/design/` (→ DESIGN.md, done in Step 1) and
-  `.github/workflows/` (→ ARCHITECTURE/DEPLOYMENT; confirm no listed fact moved). Commit:
+  `.github/workflows/` (→ ARCHITECTURE/DEPLOYMENT; confirm no listed fact moved). Tasks 10–12
+  already edited their own docs (DESIGN.md Wayfinding, ARCHITECTURE decision 11, DATABASE.md
+  test:db). Confirm README's and CLAUDE.md's "`test:db` (Docker…)" lines still read true after Task
+  12 (they do: Docker stays the default). Commit:
   `git add DESIGN.md docs/ARCHITECTURE.md && git commit -m "docs: danger card, selection bar, tint scan (PR 5)"`.
 - [ ] **Step 4: Full gate.** Record each command and its result for the PR body:
-  `npm run lint && npm run test:ci && npm run build && npm run auth:verify && npm run test:db`,
-  then `npm run test:e2e`. The change touches `src/components/ui/**`, `**/*.css`, `package.json`
-  and `e2e/**`, which are broad paths, so CI runs the full suite. Catch failures locally first.
+  `npm run lint`, `npm run test:ci`, `npm run build`, `npm run auth:verify`, `npm run test:db`,
+  then `npm run test:e2e`, each run as `<cmd> > /tmp/<gate>.log 2>&1; echo exit=$?` (the Task 14
+  charter rule; never `| tail`). Task 11's lock and `reset` make `test:db` followed by `test:e2e`
+  safe in one session. The change touches `src/components/ui/**`, `**/*.css`, `package.json` and
+  `e2e/**`, which are broad paths, so CI runs the full suite. Catch failures locally first.
 - [ ] **Step 5: Phone run of the mapped specs** (without `--project`; the phone project is the
   only one active under `PW_VIEWPORT`):
   `PW_VIEWPORT=phone npx playwright test e2e/lists-and-home.spec.ts e2e/sort-journey.spec.ts e2e/item-panel.spec.ts e2e/layout.spec.ts e2e/profile.spec.ts e2e/delete-collection.spec.ts`.
@@ -1554,7 +2071,7 @@ git commit -m "chore(deps): eslint-config-next ^16.3.8 to match next (purses-ejv
   `git add e2e/screenshots/capture.ts && git commit -m "test(shots): collection settings surface"`.
 - [ ] **Step 8: Capture** with the `pr-screenshots` skill (`docs/cookbook/add-images-to-pr.md`;
   memory `pr-screenshots-time-limit`: SHOTS keeps it under the tool ceiling):
-  `SHOTS=pool-selected,home-archived,profile,collection-settings,item-detail-story,ranking,collections,home-pool-first npx playwright test -c playwright.screenshots.config.ts --project=tablet`,
+  `SHOTS=pool-selected,home,home-items-first,home-archived,profile,collection-settings,item-detail-story,ranking,collections,home-pool-first npx playwright test -c playwright.screenshots.config.ts --project=tablet`,
   then the same with `PW_VIEWPORT=phone` in place of `--project=tablet`. That is light and dark ×
   tablet and phone. **Look at every PNG before the final review** (memory
   `ux-redesign-pr1-lessons`). Check that the pool bar has the hairline edge and shadow, and does not
@@ -1564,10 +2081,13 @@ git commit -m "chore(deps): eslint-config-next ^16.3.8 to match next (purses-ejv
   name. On the archived card, the busy pill reads "One moment…" on one line. The dots show one wider current dot. The placeholder glyphs on the collections and pool
   previews must not shout in dark mode. A full-page phone shot paints the fixed bar at the fold
   (memory `phone-fullpage-capture-fixed-bar-artifact`); judge the bar from `pool-selected` (a
-  viewport shot). There is no dialog scrim to capture (Decision 1).
+  viewport shot). There is no dialog scrim to capture (Decision 1). On `home` and
+  `home-items-first` (Task 10), no Build / Sort / Decide chip row shows. On tablet, `home` shows See
+  your ranking under the title, and on phone nothing sits between the title and the bar.
 - [ ] **Step 9: PR body.** Include the gate results, the screenshot table (light | dark per
   surface, tablet and phone), the owner-veto list above verbatim, and "Closes" lines for
-  `purses-w7ss.4`, `.13`, `.17`, `.11`, `.9`, `.15` and `purses-ejvl`. Beads close only in
+  `purses-w7ss.4`, `.13`, `.17`, `.11`, `.9`, `.15`, `.14`, `.24`, `.25`, `.26`, `.27` and
+  `purses-ejvl`. Beads close only in
   `/close-out`, after the merge is confirmed.
 
 ---
@@ -1583,7 +2103,9 @@ Task 3. `.11` → Task 4 (UX4 `scrollWidth`, phone ordinal, Unpin word, replay s
 `PendingNotices` live region):
 all eight items. `.9` → Task 6 (dead `session` arms, `getDraftResult`; `updateResultName` skipped
 per the bead note) + Task 7 (the `needs_fallback` copies → `directSubmit`). `.15` → Task 8.
-`purses-ejvl` → Task 9. Docs/gates/screenshots → Task 10.
+`purses-ejvl` → Task 9. `.14` → Task 10 (home chips). `.24` → Task 11 (one DB lock, e2e
+recycles). `.25` → Task 12 (Homebrew fallback). `.26` → Task 13 (doc-check skips tests). `.27` →
+Task 14 (charter CI rules). Docs/gates/screenshots → Task 15.
 
 **Placeholder scan.** No TBD. Every code step carries its code. The two conditional branches
 (Task 9 Step 3's disable comment only if lint flags the line; Task 5 Step 11's
@@ -1599,6 +2121,9 @@ edited in Task 6. `directSubmit({ sessionId, collectionId }, entry)` (Task 7) ru
 deletes `defer`, so it replaces exactly five copies (four awaited, plus `TriageRound`'s
 best-effort one).
 `data-selection-bar` / `data-app-shell` (Task 2) match the `globals.css` selectors.
+`acquireDbLock` / `releaseDbLock` (Task 11) are used by `with-db-lock.ts`, `global-setup.ts` and
+`global-teardown.ts`; `test-db.sh running` (Task 12) is used by `run-db-tests.sh`; Task 11's
+`reset` is `down` + `up` on either backend (Task 12's `brew_down` wipes the cluster).
 
 **Review Focus.** Lines 1 to 5 are pinned in Tasks 2, 3, 5, 5 and 7 respectively. The over-cap
 height is accepted, with its arithmetic in Task 2 Step 3.
