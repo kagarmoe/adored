@@ -26,3 +26,10 @@ describe("generateOrderedIdFactory", () => {
     expect(a.id < b.id).toBe(true);
   });
 });
+
+describe("generateId", () => {
+  it("ids minted in the same millisecond strictly increase, so createdAt ties break in creation order (purses-w7ss.16)", () => {
+    const ids = Array.from({ length: 200 }, () => generateId("item")); // a tight loop guarantees same-ms runs
+    for (let i = 1; i < ids.length; i++) expect(ids[i] > ids[i - 1]).toBe(true);
+  });
+});

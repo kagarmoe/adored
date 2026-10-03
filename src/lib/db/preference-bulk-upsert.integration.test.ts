@@ -1,6 +1,7 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterAll, vi } from "vitest";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { itemsTable } from "@/lib/db/schema";
 import { getTestDb, resetDb, closeDb } from "@/../e2e/fixtures/db";
 import { seedBaseline, seedBareCollection } from "@/../e2e/fixtures/seed";
 import { generateId } from "@/lib/id";
@@ -59,6 +60,10 @@ describeDb("recalculate — bulk recompute permutes order_rank with NO unique vi
     const a = await itemRepo.create({ collectionId });
     const b = await itemRepo.create({ collectionId });
     const c = await itemRepo.create({ collectionId });
+    // orderRank seeds from (createdAt, id); pin distinct createdAt so the seed order is A, B, C.
+    for (const [i, item] of [a, b, c].entries()) {
+      await db.update(itemsTable).set({ createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, i)) }).where(eq(itemsTable.id, item.id));
+    }
     const session = await new SessionRepository(db).create({ collectionId, curatorId: ownerId });
 
     // All three "top". First establish an initial order via comparisons: A>B>C.
