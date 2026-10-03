@@ -14,7 +14,9 @@ function runMigrate(deadlineMs: number): Promise<{ code: number | null; output: 
     // One process (node + the tsx loader), so SIGKILL reaches the migrator itself.
     const child = spawn(process.execPath, ["--import", "tsx", "scripts/migrate.ts"], {
       cwd: process.cwd(),
-      env: { ...process.env, DATABASE_URL: TEST_DATABASE_URL },
+      // Both URLs: migrate.ts prefers POSTGRES_URL_NON_POOLING, so a real one in the
+      // developer's shell must never leak into the test.
+      env: { ...process.env, DATABASE_URL: TEST_DATABASE_URL, POSTGRES_URL_NON_POOLING: TEST_DATABASE_URL },
     });
     let output = "";
     child.stdout.on("data", (d) => (output += d));
