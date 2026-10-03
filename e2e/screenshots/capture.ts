@@ -101,7 +101,7 @@ test.beforeAll(async () => {
   if (!pausedSession) throw new Error("capture: paused seed had no active session to pause");
   await new SessionRepository(db).update(pausedSession.id, { status: "paused" });
 
-  // Task 6 (adaptive workspace): the two adaptive shapes reviewers compare —
+  // Collection home: the two shapes reviewers compare —
   // pool-first (loose pool photos drive the page) and items-first (no pool, items
   // only). Placeholder blobKeys ride the same /file intercept as every other shot.
   const workspace = await seedWorkspaceStates(ownerId);

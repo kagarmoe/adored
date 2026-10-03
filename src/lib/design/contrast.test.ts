@@ -76,6 +76,7 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.primaryInk, t.primary, 4.5, "primary-ink on primary"],
     [t.primary, t.ground, 4.5, "primary text/link on ground"],
     [t.primary, t.surface, 3.0, "primary border on surface"],
+    [t.primary, t.surface, 4.5, "primary ghost text on surface (notice Undo/Done)"],
     // The sort progress line: its track edge must show the bar's extent on ground,
     // and the fill must read against the track's inside (SC 1.4.11).
     [t.track, t.ground, 3.0, "progress track edge on ground"],

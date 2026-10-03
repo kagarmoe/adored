@@ -3,7 +3,6 @@ import "@testing-library/jest-dom";
 import { render } from "@testing-library/react";
 import { expect, it, vi } from "vitest";
 import { AppLayout } from "./AppLayout";
-import { ActionBar } from "./ActionBar";
 
 vi.mock("@/lib/auth-client", () => ({
   useSession: () => ({ data: { user: { name: "Tessa", email: "a@b.c" } } }),
@@ -46,26 +45,4 @@ it("stacks page chrome actions on phone and restores the row on tablet", () => {
   expect(actionWrap?.className).toContain("w-full");
   expect(actionWrap?.className).toContain("sm:w-auto");
   expect(actionWrap?.className).toContain("sm:justify-end");
-});
-
-it("reserveActionBar pads for the bar, released where the bar goes static", () => {
-  const { container } = render(
-    <AppLayout reserveActionBar>
-      <p>content</p>
-    </AppLayout>,
-  );
-  expect((container.firstChild as HTMLElement).className).toContain(
-    "pb-36 md:pb-0 [@media(max-height:500px)]:pb-0",
-  );
-});
-
-// A fixed bar must not inherit its stack's space-y margin, or it floats above the
-// viewport bottom on phones (the e2e phone-bar test measures the real geometry).
-it("the fixed phone action bar drops any flow margin below md", () => {
-  const { container } = render(
-    <ActionBar label="Next step">
-      <button>Go</button>
-    </ActionBar>,
-  );
-  expect(container.querySelector("[data-action-bar]")!.className).toContain("max-md:mb-0");
 });

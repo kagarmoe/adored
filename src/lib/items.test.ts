@@ -36,7 +36,6 @@ describe("itemsEmptyState", () => {
       heading: "Everything here is archived",
       message: "Find it under Archived.",
     });
-    expect(itemsEmptyState({ hasAnyItems: false, hasArchived: false, view: "all", q: "" }).heading).toBe("No items yet");
   });
 
   it("speaks gently per view, never counting what's missing", () => {

@@ -176,7 +176,7 @@ export interface SeededCollectionRef {
 }
 
 /**
- * Seed the four adaptive-workspace shapes the `/collections/[id]` page renders
+ * Seed the four home primary-action shapes the `/collections/[id]` page renders
  * (Task 4): the page derives its state from the two bounded preview row counts,
  * so each fixture differs only in whether loose pool photos and/or items exist.
  *

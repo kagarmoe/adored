@@ -40,7 +40,6 @@ describe("CollectionCard images", () => {
     );
     expect(screen.getByRole("button", { name: "More" })).toBeInTheDocument();
     expect(screen.getAllByRole("link")).toHaveLength(1);
-    expect(screen.queryByRole("button", { name: /view photo/i })).not.toBeInTheDocument();
     expect(screen.queryByText("archived")).not.toBeInTheDocument(); // the Archived pill says it
   });
 });

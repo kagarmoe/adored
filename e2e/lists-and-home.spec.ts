@@ -75,6 +75,10 @@ test("collections: search, archive with Undo, Archived, Bring back", async ({ pa
   await page.waitForURL((u) => u.searchParams.get("status") === "archived");
   await page.getByRole("button", { name: `More for ${shelf.name}` }).click();
   await page.getByRole("menuitem", { name: "Bring back" }).click();
+  // The card leaves this list, so focus lands on the line that says where it went.
+  const broughtBack = page.getByRole("status").filter({ hasText: /^Brought back\. It.s under All\.$/ });
+  await expect(broughtBack).toBeVisible();
+  await expect(broughtBack).toBeFocused();
   await expect(card(page, shelf.name)).toHaveCount(0); // (other runs' archived shelves may remain)
   await page.getByRole("link", { name: "All", exact: true }).click();
   await page.getByRole("searchbox", { name: "Search your collections" }).fill(shelf.name);
@@ -145,6 +149,13 @@ test("phone: the bar is pinned to the bottom and never hides the last row", asyn
   expect(lastCard.y + lastCard.height).toBeLessThanOrEqual(barBox.y);
   const footer = (await footerText.boundingBox())!;
   expect(footer.y + footer.height).toBeLessThanOrEqual(barBox.y);
+
+  // Short (browser zoom): the bar goes static and the scroll padding is released with it.
+  await page.setViewportSize({ width: PHONE.width, height: 480 });
+  expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe("static");
+  expect(["0px", "auto"]).toContain(
+    await page.evaluate(() => getComputedStyle(document.documentElement).scrollPaddingBottom),
+  );
 
   // The same node is an inline row above the grid on tablet.
   await page.setViewportSize({ width: 1080, height: 810 });

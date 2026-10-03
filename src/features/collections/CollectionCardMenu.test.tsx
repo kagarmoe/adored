@@ -51,5 +51,8 @@ describe("CollectionCardMenu", () => {
     open();
     fireEvent.click(screen.getByRole("menuitem", { name: "Members" }));
     expect(push).toHaveBeenCalledWith("/collections/summer-bags/members");
+    open();
+    fireEvent.click(screen.getByRole("menuitem", { name: "Collection settings" }));
+    expect(push).toHaveBeenCalledWith("/collections/summer-bags/edit");
   });
 });
