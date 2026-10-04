@@ -192,7 +192,7 @@ Route-level analytics capture has been removed from the API surface; this does n
 | Method | Path | Access |
 |---|---|---|
 | POST | `/api/sort-results` | member |
-| GET·PATCH·DELETE | `/api/sort-results/[id]` | curator |
+| GET·DELETE | `/api/sort-results/[id]` | curator |
 | POST | `/api/sort-results/[id]/finalize` | curator |
 | POST | `/api/sort-results/[id]/supersede` | curator |
 | GET | `/api/sort-results/[id]/items/[rid]` | curator |
@@ -342,9 +342,11 @@ The live Ranking's writes (UX redesign PR 2, decision 42). Curator is always the
 and save — like revision, finalize, draft delete and the legacy create — run in one transaction holding
 the `(collection, curator)` advisory lock; the partial unique index `sort_results_open_draft_unique`
 (one `status = 'draft'` row per collection + curator) is the backstop. The owner's purge-prep (`remove-from-sorts`) takes every curator's lock for the
-collection (`lockCollectionCurators`, `purses-w7ss.6`). The result rename (`PATCH /api/sort-results/[id]`)
-runs outside the lock (`ResultController.updateResult` — a single-row `name` update on a draft; it never
-creates or deletes a draft).
+collection (`lockCollectionCurators`, `purses-w7ss.6`). The result rename (`PATCH /api/sort-results/[id]`), the last
+`sort_results` write outside the lock, had no caller and was removed (`purses-w7ss.21`). Share
+creation (`POST /api/sort-results/[id]/shares`) runs under the same lock
+(`SortResultService.createShare`, `purses-w7ss.18`), so a share never lands between a
+deletion's shares delete and its results delete.
 The API position is 1-based; `manualRank` stays 0-based and the service converts at the boundary.
 
 ### `PUT·DELETE /api/collections/[id]/ranking/pins/[itemId]`
@@ -413,8 +415,8 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 ### `POST /api/sort-results`
 `getSession` + `requireApiCollectionAccess(body.collectionId)`. **Body:** `{ collectionId, name }` (`400` if either missing, or invalid JSON). `curatorId` from session, `status: "draft"`. Delegates to `SortResultService.createDraftResult`, which reads the curator's `CollectionPreferenceItem` rows for the collection and **materializes one `SortResultItem` per preference** (ranked tier first, then pair order, carrying each row's bucket) before returning. Any open draft for the curator is deleted in the same locked transaction first (one open draft per collection + curator); no UI calls this route any more. **Materialization is atomic** — the result row + all item rows are written in one `withTransaction`, so a mid-materialization failure commits nothing (`purses-nea`). `201 SortResult` (the created draft; one item is readable via `GET …/[id]/items/[rid]`, and a saved ranking's items render on its results page).
 
-### `GET·PATCH·DELETE /api/sort-results/[id]`
-`requireAuth` + `requireApiResultAccess` (`401`/`403`/`404`). `GET` → `SortResult`; `PATCH` body → updated `SortResult` (`400` invalid JSON), but rejects a **finalized** result with **`409`** (`"Result is finalized"`) — a finalized result is immutable, name included (infra §11.3; `purses-gmn`, mirroring `purses-526`'s item-level guards). `DELETE` delegates to `SortResultService.deleteResult`, which **hard-deletes a draft result and its child items** (children first — the `sort_result_items → sort_results` FK has no `ON DELETE CASCADE`; **atomic** — both deletes in one `withTransaction`, a `purses-nea` follow-up): `200 { message }` when a draft was deleted; **`409`** (`"Can only delete draft results"`) if the result is finalized; **`404`** if absent.
+### `GET·DELETE /api/sort-results/[id]`
+`requireAuth` + `requireApiResultAccess` (`401`/`403`/`404`). `GET` → `SortResult`; `DELETE` delegates to `SortResultService.deleteResult`, which **hard-deletes a draft result and its child items** (children first — the `sort_result_items → sort_results` FK has no `ON DELETE CASCADE`; **atomic** — both deletes in one `withTransaction`, a `purses-nea` follow-up): `200 { message }` when a draft was deleted; **`409`** (`"Can only delete draft results"`) if the result is finalized; **`404`** if absent. (`PATCH`, the rename, was removed in UX redesign PR 6: no caller, and it wrote outside the curator lock.)
 
 ### `POST /api/sort-results/[id]/finalize`
 `requireApiResultAccess`. Finalizes a **draft** result → `200 SortResult`. **`409`** (`FinalizeStateError`, "Can only finalize draft results") if the result is already finalized — finalize is once-only, not idempotent (pv9 PR2, `purses-ydph`). **Sessions as invisible bookkeeping** (spec §E): the same call also closes the pass it belongs to — `SortResultService.finalizeResult` resolves the curator's **open** (`active`|`paused`) session for the result's collection and marks it `completed`, **atomically** with the finalize write (one `withTransaction`; either both land or neither does). `sort_results` carries no `sessionId`, so the open session is resolved by `(collectionId, curatorId)` at finalize time, not pinned to whichever session the draft was created from. No open session → the result still finalizes alone, no error.
@@ -428,7 +430,7 @@ Curator-private results, gated by `requireApiResultAccess` (member-or-owner **an
 ## shares
 
 ### `GET·POST /api/sort-results/[id]/shares`
-`requireAuth` + `requireApiResultAccess`. `GET` → the result's `SortResultShare[]`, scoped via `SortResultShareRepository.findByResult(id)`. `POST` body → `201` `SortResultShare` (e.g. `{ expiresAt? }`, per `createShare`). `400` invalid JSON.
+`requireAuth` + `requireApiResultAccess`. `GET` → the result's `SortResultShare[]`, scoped via `SortResultShareRepository.findByResult(id)`. `POST` body → `201` `SortResultShare` (`{ expiresAt? }`, `CreateShareSchema`; minted by `SortResultService.createShare` under the curator lock). `400` invalid JSON or body; `404` if the result is gone by the time the lock is held.
 
 ### `GET·PATCH·DELETE /api/sort-results/[id]/shares/[sid]`
 `requireApiResultAccess` + belongs-to-parent (`share.sortResultId !== id` → `404`). `GET` → share; `PATCH` body → updated share (`400` invalid JSON); `DELETE` → `{ message }`.

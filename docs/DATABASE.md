@@ -31,8 +31,8 @@ ids of a kind in one ordering regime.
 `generateId` mints from one process-wide ULID monotonic factory, so ids minted in one process sort in
 creation order even within a millisecond (bare `ulid()` randomizes within a millisecond, which ordered
 same-ms rows by chance — `purses-w7ss.16`). Ids minted concurrently on two instances are not ordered.
-`generateOrderedIdFactory()` (`src/lib/id.ts:19`) remains for batch inserts (one factory per request/batch;
-consolidating it is `purses-w7ss.20`). A module-level monotonic factory is safe because ids are not
+The decisions batch route mints with `generateId("event")` too, so a later array entry wins a
+shared `createdAt` (`purses-w7ss.20` retired the per-batch factory). A module-level monotonic factory is safe because ids are not
 capabilities: knowing or predicting one grants nothing — share and invite tokens come from `randomBytes`,
 and every access check is server-side authz.
 
