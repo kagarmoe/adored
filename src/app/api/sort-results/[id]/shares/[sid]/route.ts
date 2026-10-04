@@ -42,6 +42,9 @@ export async function PATCH(
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     const share = await ctrl.updateShare(sid, body);
+    if (!share) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     return NextResponse.json(share);
   } catch (error) {
     return errorResponse(error);
@@ -63,7 +66,9 @@ export async function DELETE(
     if (!existing) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
-    await ctrl.revokeShare(sid);
+    if (!(await ctrl.revokeShare(sid))) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
     return NextResponse.json({ message: "Share revoked" });
   } catch (error) {
     return errorResponse(error);

@@ -43,7 +43,7 @@ export class ShareController {
     return share;
   }
 
-  async updateShare(shareId: string, data: unknown): Promise<SortResultShare> {
+  async updateShare(shareId: string, data: unknown): Promise<SortResultShare | null> {
     const parsed = UpdateShareSchema.parse(data);
     const updateData: Partial<SortResultShare> = {
       status: parsed.status,
@@ -52,12 +52,9 @@ export class ShareController {
     return this.shareRepo.update(shareId, updateData);
   }
 
-  async revokeShare(shareId: string): Promise<void> {
-    const share = await this.shareRepo.findById(shareId);
-    if (!share) {
-      throw new Error("Share not found");
-    }
-    await this.shareRepo.update(shareId, { status: "revoked" });
+  // false when the share is already gone.
+  async revokeShare(shareId: string): Promise<boolean> {
+    return (await this.shareRepo.update(shareId, { status: "revoked" })) !== null;
   }
 
   async viewSharedResult(token: string): Promise<SortResultShare> {
