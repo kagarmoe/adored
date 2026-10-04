@@ -46,6 +46,18 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Swamp extensions (extensions/**) are Deno code that eslint, vitest and tsc skip.
+      # Same Deno as swamp ships (~/.swamp/deno); the pre-PR swamp workflow runs these
+      # locally via @swamp/deno-runner pinned to the same version.
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: 2.9.7
+
+      - name: Swamp extensions — type-check and test
+        run: |
+          deno check extensions/models/link_audit.ts extensions/models/test_suite.ts
+          deno test --no-check extensions/tests/
+
       - name: Unit tests (coverage → blob)
         run: npm run test:ci -- --coverage --reporter=blob --outputFile=.vitest-reports/blob-unit.json
 

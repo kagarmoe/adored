@@ -1,0 +1,9 @@
+type: '@swamp/deno-runner'
+typeVersion: 2026.08.23.1
+id: 6642c758-a5c3-48b3-8258-c7c123dcbfe4
+name: adored-deno
+version: 1
+tags: {}
+globalArguments:
+  version: 2.9.7
+methods: {}
