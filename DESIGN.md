@@ -185,8 +185,9 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
   "Back to {parent}" link. An item's trail is Collections / {collection} / {item} (no
   Items level). Trail labels come from one builder
   (`src/components/layout/breadcrumb-trails.ts`) and share the mode-chip vocabulary
-  (Build/Sort/Decide). Mode chips appear on the collection home and the section index pages
-  (Photos, Decide) — never on decision surfaces or leaf pages ("one decision at a time"); on
+  (Build/Sort/Decide). Mode chips appear on the section index pages
+  (Photos, Decide), not on the collection home, whose one primary action and Add photos pill
+  already lead there (owner decision, `purses-w7ss.14`) — never on decision surfaces or leaf pages ("one decision at a time"); on
   descendant pages the active chip marks the current *section* (`aria-current="true"`), not
   a false current page.
 - **Patient waiting (Not yet):** when a deferred ("Not yet") item resurfaces, a calm banner — a cool-blue benign chip (`content-mid`) with `ink` text (not `ink-soft`: ink-soft on sky fails light-theme AA) plus a non-state moon glyph so hue is never the sole signal. Crossfade in with `--ease-gentle`; instant under reduced-motion. Gentle, never urgent: no remaining count, no inbox or "resting place" framing — the item simply comes back when the person is ready.

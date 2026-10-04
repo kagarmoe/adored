@@ -42,7 +42,7 @@ test.beforeAll(async () => {
   const withArchived = await seedJourneyScenario(ownerId, 2);
   await new ItemRepository(getTestDb().db).softDelete(withArchived.itemIds[0]);
   archivedHome = `/collections/${withArchived.slug}?status=archived`;
-  ranked = await seedSortScenario(ownerId); // has a finalized ranking, so the chip row carries See your ranking
+  ranked = await seedSortScenario(ownerId); // has a finalized ranking, so the header carries See your ranking
 });
 
 test.afterAll(async () => {
@@ -264,7 +264,7 @@ test("pool: the selection bar is pinned at phone and tablet widths and never hid
   );
 });
 
-test("keyboard order on the home: trail → menu → chips → primary → pill → search → cards", async ({ page }, testInfo) => {
+test("keyboard order on the home: trail → menu → primary → pill → search → cards", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "tablet", "DOM order is viewport-independent; the phone trail collapses");
   await page.goto(`/collections/${itemsOnly.slug}`); // never sorted: no other test opens a sort here
   await expect(card(page, "E2E Workspace Tote")).toBeVisible();
@@ -273,8 +273,7 @@ test("keyboard order on the home: trail → menu → chips → primary → pill 
   const idx = (label: string) => order.indexOf(label);
   expect(idx("Collections"), seen).toBeGreaterThanOrEqual(0);
   expect(idx("More for E2E Workspace items-only"), seen).toBeGreaterThan(idx("Collections"));
-  expect(idx("Decide"), seen).toBeGreaterThan(idx("More for E2E Workspace items-only"));
-  expect(idx("Start sorting"), seen).toBeGreaterThan(idx("Decide"));
+  expect(idx("Start sorting"), seen).toBeGreaterThan(idx("More for E2E Workspace items-only"));
   expect(idx("Add photos"), seen).toBeGreaterThan(idx("Start sorting"));
   expect(idx("Search"), seen).toBeGreaterThan(idx("Add photos"));
   expect(idx("E2E Workspace Tote"), seen).toBeGreaterThan(idx("Search"));

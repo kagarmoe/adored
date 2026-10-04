@@ -14,7 +14,6 @@ import { Button, EmptyState, Input, buttonVariants } from "@/components/ui";
 import { viewHref } from "@/components/ui/viewHref";
 import { KeepSortingButton } from "@/features/sessions/KeepSortingButton";
 import { PhotoPoolPreview } from "@/features/collections/PhotoPoolPreview";
-import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { CollectionHomeMenu } from "@/features/collections/CollectionHomeMenu";
 import { ItemCard } from "@/features/items/ItemCard";
 import { ArchivedItemCard } from "@/features/items/ArchivedItemCard";
@@ -91,7 +90,7 @@ export default async function CollectionPage({ params, searchParams: searchParam
     <AppLayout breadcrumbs={trail.collection(collection)} reserveActionBar>
       {/* Tighter on phone so a card row shows above the fold at 390×664. */}
       <div className="space-y-4 md:space-y-8">
-        {/* The header group: title, ···, and the chip row held together; the action row breaks after it. */}
+        {/* The header group: title, ··· and (tablet) See your ranking held together; the action row breaks after it. */}
         <div className="space-y-2">
           <header className="flex items-start justify-between gap-3">
             <div className="min-w-0 max-w-3xl">
@@ -101,14 +100,13 @@ export default async function CollectionPage({ params, searchParams: searchParam
             </div>
             <CollectionHomeMenu href={base} name={collection.name} isOwner={collection.ownerId === session.user.id} />
           </header>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <WorkspaceModeChips base={base} activeMode="build" />
-            {hasEverSorted && (
-              <Link href={`${base}/results`} className={`${quietLink} max-md:hidden`}>
+          {hasEverSorted && (
+            <div className="max-md:hidden">
+              <Link href={`${base}/results`} className={quietLink}>
                 See your ranking
               </Link>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Spec §5: the one primary action, Add photos beside it. Start sorting needs
