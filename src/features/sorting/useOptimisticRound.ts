@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { enqueue, newClientKey, removeQueued, type QueueKey } from "./decisionQueue";
+import { enqueue, newClientKey, removeQueued, type PendingEntry, type QueueKey } from "./decisionQueue";
+import { directSubmit } from "./directSubmit";
 import { awaitAck, isInFlight, triggerFlush, useDecisionFlusher, type AckOutcome } from "./decisionFlusher";
 import { triageDecisions, type TriageResult } from "./roundCopy";
 
@@ -66,24 +67,16 @@ export function useOptimisticRound({
     try {
       setStumble(false);
       const clientKey = newClientKey();
-      const persisted = await enqueue(
-        key,
-        { kind: "decision", clientKey, type: "triage", decision, enqueuedAt: new Date().toISOString() },
-        () => triggerFlush(key), // quota → shrink the queue, retry once (F18)
-      );
+      const entry: PendingEntry = {
+        kind: "decision",
+        clientKey,
+        type: "triage",
+        decision,
+        enqueuedAt: new Date().toISOString(),
+      };
+      const persisted = await enqueue(key, entry, () => triggerFlush(key)); // quota → shrink the queue, retry once (F18)
       if (persisted === "needs_fallback") {
-        let landed = false;
-        try {
-          const res = await fetch(`/api/sessions/${sessionId}/decisions`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ type: "triage", decision, clientKey }),
-          });
-          landed = res.ok;
-        } catch {
-          landed = false;
-        }
-        if (!landed) {
+        if (!(await directSubmit({ sessionId, collectionId }, entry))) {
           setStumble(true);
           return false;
         }

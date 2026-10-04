@@ -1,7 +1,8 @@
 "use client";
 
 // decisionFlusher — ONE module-level drain engine per realm; the ONLY code
-// that POSTs queued decisions/dispositions (spec §3.2, F12).
+// that drains queued decisions/dispositions (spec §3.2, F12); `directSubmit`
+// sends one un-queued entry when storage is unavailable (F18).
 //
 // Single-flight is promise-based, not skip-based: a caller that finds a drain
 // in flight for the same queue awaits the SAME promise. A drain resolves only

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
-import { enqueue, newClientKey, readQueue, type QueueKey } from "./decisionQueue";
+import { enqueue, newClientKey, readQueue, type PendingEntry, type QueueKey } from "./decisionQueue";
+import { directSubmit } from "./directSubmit";
 import { awaitAck, isInFlight, subscribeNotices, triggerFlush, type AckOutcome } from "./decisionFlusher";
 
 type Result = "item_a" | "item_b" | "tie" | "skip";
@@ -141,24 +142,16 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
     // NEVER a bare fetch: the answer rides the queue as a batch-of-1.
     const alreadyRiding = readQueue(key).some((e) => e.clientKey === clientKey) || isInFlight(key, clientKey);
     if (!alreadyRiding && !settled.current.has(clientKey)) {
-      const persisted = await enqueue(
-        key,
-        { kind: "decision", clientKey, type: "pairwise_compare", decision, enqueuedAt: new Date().toISOString() },
-        () => triggerFlush(key),
-      );
+      const entry: PendingEntry = {
+        kind: "decision",
+        clientKey,
+        type: "pairwise_compare",
+        decision,
+        enqueuedAt: new Date().toISOString(),
+      };
+      const persisted = await enqueue(key, entry, () => triggerFlush(key));
       if (persisted === "needs_fallback") {
-        let landed = false;
-        try {
-          const res = await fetch(`/api/sessions/${submit.sessionId}/decisions`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ type: "pairwise_compare", decision, clientKey }),
-          });
-          landed = res.ok;
-        } catch {
-          landed = false;
-        }
-        if (!landed) {
+        if (!(await directSubmit({ sessionId: submit.sessionId, collectionId: submit.collectionId }, entry))) {
           setError(FALLBACK_RETRY_LINE);
           pendingRef.current = false;
           setPending(null);

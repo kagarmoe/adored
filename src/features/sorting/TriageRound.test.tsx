@@ -284,6 +284,20 @@ describe("feelings phase: storage fallback (F18)", () => {
     expect(JSON.parse((init as RequestInit).body as string)).toMatchObject({ type: "triage", decision: { itemId: "item_a", result: "top" } });
   });
 
+  it("Not yet degrades to ONE POST of a deferred disposition and still moves the piece on", async () => {
+    store.setItem = () => {
+      throw new Error("quota");
+    };
+    const user = userEvent.setup();
+    renderRound();
+    await user.click(screen.getByRole("button", { name: /^not yet/i }));
+    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const [url, init] = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe("/api/collections/coll_1/dispositions");
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({ itemId: "item_a", disposition: "deferred" });
+  });
+
   it("a fallback that does not land keeps the piece in place with a gentle line", async () => {
     store.setItem = () => {
       throw new Error("quota");

@@ -10,7 +10,8 @@ import { triageDecisions, type TriageResult } from "./roundCopy";
 import { DeferControl } from "./DeferControl";
 import { SetAsideButton } from "./SetAsideButton";
 import { useOptionalTriageUndo } from "./TriageUndoProvider";
-import { enqueue, newClientKey } from "./decisionQueue";
+import { enqueue, newClientKey, type PendingEntry } from "./decisionQueue";
+import { directSubmit } from "./directSubmit";
 import { drain, triggerFlush } from "./decisionFlusher";
 import { STUMBLE_LINE, useOptimisticRound } from "./useOptimisticRound";
 import { PendingNotices } from "./pendingNotices";
@@ -134,22 +135,16 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
       setHandled((h) => add(h, target.item.id));
       return;
     }
-    const persisted = await enqueue(
-      key,
-      { kind: "disposition", clientKey: newClientKey(), itemId: target.item.id, disposition: "deferred", enqueuedAt: new Date().toISOString() },
-      () => triggerFlush(key),
-    );
-    if (persisted === "needs_fallback") {
-      try {
-        await fetch(`/api/collections/${collectionId}/dispositions`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ itemId: target.item.id, disposition: "deferred" }),
-        });
-      } catch {
-        // best-effort: the piece still waits at the end and returns next visit
-      }
-    }
+    const entry: PendingEntry = {
+      kind: "disposition",
+      clientKey: newClientKey(),
+      itemId: target.item.id,
+      disposition: "deferred",
+      enqueuedAt: new Date().toISOString(),
+    };
+    const persisted = await enqueue(key, entry, () => triggerFlush(key));
+    // best-effort: the piece still waits at the end and returns next visit
+    if (persisted === "needs_fallback") await directSubmit({ sessionId, collectionId }, entry);
     setEntries((prev) => [...prev.filter((e) => e.item.id !== target.item.id), { ...target, deferred: true }]);
   }
 

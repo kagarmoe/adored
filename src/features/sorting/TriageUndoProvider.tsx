@@ -9,6 +9,7 @@ import {
   type QueueKey,
 } from "./decisionQueue";
 import { isInFlight, triggerFlush } from "./decisionFlusher";
+import { directSubmit } from "./directSubmit";
 
 // The set-aside undo, hoisted out of the empty-state branch. Not mine
 // (TriageRound's `handleNotMine`, via `SetAsideButton`) lives inside the triage decision sub-row, but the NOTICE
@@ -100,12 +101,7 @@ export function TriageUndoProvider({
       if (persisted === "needs_fallback") {
         // Storage unavailable even after a flush: degrade to today's awaited
         // direct submit (F18) — nothing is queued, so the undo must DELETE.
-        const res = await fetch(`/api/collections/${collectionId}/dispositions`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ itemId, disposition: "set_aside" }),
-        });
-        if (!res.ok) throw new Error("set aside failed");
+        if (!(await directSubmit({ sessionId, collectionId }, entry))) throw new Error("set aside failed");
         setUndo({ itemId, name, clientKey: null });
         return;
       }
@@ -135,14 +131,10 @@ export function TriageUndoProvider({
       }
       // Flushed or in flight: a `clear` entry rides the queue behind it; the
       // flusher's DELETE is idempotent, so ordering is safe either way.
-      const persisted = await enqueue(key, dispositionEntry(itemId, "clear"), () =>
-        triggerFlush(key),
-      );
+      const clear = dispositionEntry(itemId, "clear");
+      const persisted = await enqueue(key, clear, () => triggerFlush(key));
       if (persisted === "needs_fallback") {
-        const res = await fetch(`/api/collections/${collectionId}/dispositions/${itemId}`, {
-          method: "DELETE",
-        });
-        if (!res.ok) throw new Error("bring back failed");
+        if (!(await directSubmit({ sessionId, collectionId }, clear))) throw new Error("bring back failed");
       } else {
         void triggerFlush(key);
       }
