@@ -90,6 +90,7 @@ jobs:
         task:
           type: assert
           expr: >-
-            int(data.latest("adored-tests", "e2e-latest").attributes.failed) == 0
+            data.latest("adored-tests", "e2e-latest").attributes.exitCode == 0
+            && int(data.latest("adored-tests", "e2e-latest").attributes.failed) == 0
           message: >-
             ${{ data.latest("adored-tests", "e2e-latest").attributes.failed }} Playwright failures

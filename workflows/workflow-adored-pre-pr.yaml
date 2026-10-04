@@ -23,7 +23,9 @@ inputs:
         e.g. "home,ranking,login". Empty = skip.
 jobs:
   - name: static
-    description: Gates that need no database (run in parallel)
+    description: >-
+      Gates that need no database. They share one model (adored-tests), so swamp runs
+      them in sequence on its per-model lock; that also keeps build and coverage output apart.
     steps:
       - name: lint
         task:
@@ -59,7 +61,7 @@ jobs:
           modelIdOrName: adored-deno
           methodName: run
           inputs:
-            args: ["check", "extensions/models/link_audit.ts", "extensions/models/test_suite.ts"]
+            args: ["check", "extensions/models/", "extensions/tests/"]
       - name: extensions-test
         task:
           type: model_method
@@ -133,7 +135,9 @@ jobs:
             viewport: phone
             shots: ${{ inputs.shots }}
   - name: verdict
-    description: One assert per gate, so a failing run names every failure at once
+    description: >-
+      One assert per recorded gate result. A gate whose method throws (no report written)
+      fails its own step, and that fails the run.
     dependsOn:
       - job: e2e
         condition:

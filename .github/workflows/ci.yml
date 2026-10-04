@@ -55,7 +55,7 @@ jobs:
 
       - name: Swamp extensions — type-check and test
         run: |
-          deno check extensions/models/link_audit.ts extensions/models/test_suite.ts
+          deno check extensions/models/ extensions/tests/
           deno test --no-check extensions/tests/
 
       - name: Unit tests (coverage → blob)

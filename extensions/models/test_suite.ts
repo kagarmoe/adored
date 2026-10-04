@@ -107,7 +107,46 @@ async function runNpm(
 }
 
 /** Space-separated spec paths from a workflow input ("" → none). */
-const splitSpecs = (s?: string) => (s ?? "").split(/\s+/).filter(Boolean);
+export const splitSpecs = (s?: string) => (s ?? "").split(/\s+/).filter(Boolean);
+
+type PwSpec = {
+  file?: string;
+  title: string;
+  tests: Array<{ projectName: string; status: string; results: Array<{ error?: { message?: string } }> }>;
+};
+type PwSuite = { file?: string; specs?: PwSpec[]; suites?: PwSuite[] };
+
+/** Playwright's JSON report → counts, every failure with its last error, setup errors. */
+export function parsePlaywrightReport(report: { suites: unknown[]; errors?: Array<{ message?: string }> }) {
+  // Playwright nests suites; flatten to specs and read each test's final result.
+  const flat: Array<PwSpec & { file: string }> = [];
+  const walk = (suite: PwSuite) => {
+    for (const sp of suite.specs ?? []) flat.push({ ...sp, file: sp.file ?? suite.file ?? "" });
+    for (const child of suite.suites ?? []) walk({ file: suite.file, ...child });
+  };
+  for (const s of report.suites) walk(s as PwSuite);
+  const counts = { total: 0, passed: 0, failed: 0, skipped: 0 };
+  const failures: z.infer<typeof E2eFailure>[] = [];
+  for (const sp of flat) {
+    for (const t of sp.tests) {
+      counts.total++;
+      if (t.status === "expected") counts.passed++;
+      else if (t.status === "skipped") counts.skipped++;
+      else {
+        counts.failed++;
+        failures.push({
+          file: sp.file,
+          title: sp.title,
+          project: t.projectName,
+          error: (t.results.at(-1)?.error?.message ?? t.status).slice(0, 2000),
+        });
+      }
+    }
+  }
+  // webServer/globalSetup failures land here, not in any test
+  const setupErrors = (report.errors ?? []).map((e) => (e.message ?? "").slice(0, 2000));
+  return { ...counts, failures, setupErrors };
+}
 
 /** Test-suite model: pre-PR gates, unit coverage, e2e results, screenshots. */
 export const model = {
@@ -226,48 +265,23 @@ export const model = {
           });
           return { dataHandles: [handle] };
         }
-        const run = await runNpm(context, "test:e2e", specs, viewport === "phone" ? { PW_VIEWPORT: "phone" } : {});
         const reportPath = `${reportDir}/results.json`;
+        // A report left by an earlier run must never be read as this run's result (e.g. the
+        // DB lock is busy and Playwright never starts): delete it first, so a missing report throws.
+        await Deno.remove(reportPath).catch(() => {});
+        const run = await runNpm(context, "test:e2e", specs, viewport === "phone" ? { PW_VIEWPORT: "phone" } : {});
         let report: { suites: unknown[]; errors?: Array<{ message?: string }> };
         try {
           report = JSON.parse(await Deno.readTextFile(reportPath));
         } catch {
-          throw new Error(`No Playwright JSON report at ${reportPath}. Output tail:\n${run.tail.slice(-2000)}`);
-        }
-        // Playwright nests suites; flatten to specs and read each test's final result.
-        const flat: Array<{ file: string; title: string; tests: Array<{ projectName: string; status: string; results: Array<{ error?: { message?: string } }> }> }> = [];
-        const walk = (suite: { file?: string; specs?: typeof flat; suites?: unknown[] }) => {
-          for (const sp of suite.specs ?? []) flat.push({ ...sp, file: sp.file ?? suite.file ?? "" });
-          for (const child of suite.suites ?? []) walk(child as typeof suite);
-        };
-        for (const s of report.suites) walk(s as Parameters<typeof walk>[0]);
-        const counts = { total: 0, passed: 0, failed: 0, skipped: 0 };
-        const failures: z.infer<typeof E2eFailure>[] = [];
-        for (const sp of flat) {
-          for (const t of sp.tests) {
-            counts.total++;
-            if (t.status === "expected") counts.passed++;
-            else if (t.status === "skipped") counts.skipped++;
-            else {
-              counts.failed++;
-              failures.push({
-                file: sp.file,
-                title: sp.title,
-                project: t.projectName,
-                error: (t.results.at(-1)?.error?.message ?? t.status).slice(0, 2000),
-              });
-            }
-          }
+          throw new Error(`No Playwright JSON report at ${reportPath} (exit ${run.code}). Output tail:\n${run.tail.slice(-2000)}`);
         }
         const handle = await context.writeResource("e2e", name, {
           ranAt: new Date().toISOString(),
           viewport,
           notRun: false,
           exitCode: run.code,
-          ...counts,
-          failures,
-          // webServer/globalSetup failures land here, not in any test
-          setupErrors: (report.errors ?? []).map((e) => (e.message ?? "").slice(0, 2000)),
+          ...parsePlaywrightReport(report),
           reportDir,
         });
         return { dataHandles: [handle] };
@@ -291,11 +305,15 @@ export const model = {
         }
         const env: Record<string, string> = { SHOTS: shots };
         if (viewport === "phone") env.PW_VIEWPORT = "phone";
+        const started = Date.now();
         const run = await runNpm(context, "screenshots", [], env);
         const files: string[] = [];
         try {
           for await (const entry of Deno.readDir(`${context.repoDir}/pr-screenshots`)) {
-            if (entry.isFile && entry.name.endsWith(`-${viewport}.png`)) files.push(`pr-screenshots/${entry.name}`);
+            if (!entry.isFile || !entry.name.endsWith(`-${viewport}.png`)) continue;
+            // Only this run's captures; earlier runs' PNGs stay in the folder.
+            const mtime = (await Deno.stat(`${context.repoDir}/pr-screenshots/${entry.name}`)).mtime?.getTime() ?? 0;
+            if (mtime >= started) files.push(`pr-screenshots/${entry.name}`);
           }
         } catch {
           // no directory: nothing captured; the exit code says why
