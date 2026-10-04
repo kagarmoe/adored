@@ -47,7 +47,7 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 // Routes imported via the @/ alias ([id] is a real dir).
 import { POST as recordDecision } from "@/app/api/sessions/[id]/decisions/route";
 import { POST as createResult } from "@/app/api/sort-results/route";
-import { DELETE as deleteResultRoute, PATCH as patchResultRoute } from "@/app/api/sort-results/[id]/route";
+import { DELETE as deleteResultRoute } from "@/app/api/sort-results/[id]/route";
 
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 
@@ -214,16 +214,15 @@ describeDb("sort pipeline (route/service -> DB)", () => {
 
   it("createDraftResult rolls back the whole materialization when an item INSERT fails (atomicity)", async () => {
     // AUTHORITATIVE un-mocked transactional-rollback proof. We seed ONE real
-    // item + a real high-score preference for it (this is the row-0
-    // sort_result_items INSERT that succeeds inside the tx), and feed the
-    // service a SECOND, lower-score preference whose itemId is fabricated and
-    // does NOT exist in `items` — so its sort_result_items INSERT trips the
-    // item_id FK (23503) on attempt 1 (23503 is NOT a number conflict, so it
+    // item + a real high-score preference for it, and feed the service a
+    // SECOND, lower-score preference whose itemId is fabricated and does NOT
+    // exist in `items`. Both rows go in one multi-row sort_result_items INSERT,
+    // which trips the item_id FK (23503) after the result row is written, on attempt 1 (23503 is NOT a number conflict, so it
     // propagates, no retry). The fabricated preference is an in-memory object,
     // never persisted: preferences.item_id is itself a hard FK to items.id, so
     // a dangling preference row is impossible at the DB level. Only the
     // upstream preference READ is faked; the entire WRITE path (result row +
-    // both item INSERTs) runs on the REAL db/tx with real tx-bound repos.
+    // the item INSERT) runs on the REAL db/tx with real tx-bound repos.
     const { db } = getTestDb();
     const collectionId = generateId("col");
     await db.execute(sql`
@@ -236,13 +235,13 @@ describeDb("sort pipeline (route/service -> DB)", () => {
     const now = new Date();
     const fakePreferenceRepo = {
       findByCollection: async (): Promise<CollectionPreferenceItem[]> => [
-        // Higher score → computedRank 0 → inserted FIRST (succeeds).
+        // Higher score → computedRank 0 → a valid row in the multi-row INSERT.
         {
           id: generateId("pref"), collectionId, curatorId: ownerId,
           itemId: realItem.id, score: 0.9, confidence: 1, rankBucket: "top",
           comparisonCount: 0, lastSeen: now, createdAt: now, updatedAt: now,
         },
-        // Lower score → computedRank 1 → inserted SECOND, FK-fails (23503).
+        // Lower score → computedRank 1 → its dangling item_id fails the INSERT (23503).
         {
           id: generateId("pref"), collectionId, curatorId: ownerId,
           itemId: ghostItemId, score: 0.1, confidence: 1, rankBucket: "low",
@@ -423,58 +422,5 @@ describeDb("sort pipeline (route/service -> DB)", () => {
 
     // Finalized result must survive a delete attempt.
     expect(await new SortResultRepository(db).findById(draft.id)).not.toBeNull();
-  });
-
-  it("PATCH /api/sort-results/[id] rejects renaming a finalized result with 409 and leaves the name intact", async () => {
-    const { db } = getTestDb();
-    const draft = await seedPopulatedDraft();
-    const originalName = (await new SortResultRepository(db).findById(draft.id))!.name;
-
-    const service = new SortResultService(
-      new SortResultRepository(db),
-      new SortResultItemRepository(db),
-      new CollectionPreferenceItemRepository(db),
-      db,
-    );
-    await service.finalizeResult(draft.id);
-
-    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await patchResultRoute(
-      new Request(`http://localhost/api/sort-results/${draft.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: "Renamed" }),
-      }) as any,
-      { params: Promise.resolve({ id: draft.id }) },
-    );
-    expect(res.status).toBe(409);
-
-    // The finalized result's name must be unchanged — not "Renamed".
-    const after = await new SortResultRepository(db).findById(draft.id);
-    expect(after!.name).toBe(originalName);
-    expect(after!.name).not.toBe("Renamed");
-  });
-
-  it("PATCH /api/sort-results/[id] 400s an invalid body (empty name) via errorResponse — and leaves the name intact (purses-pv9)", async () => {
-    // updateResult UpdateResultSchema.parse()es the body; an empty name is a ZodError,
-    // now mapped to 400 by errorResponse (was 500). Authz + the finalized 409 guard run
-    // BEFORE the parse, so authz is unchanged. The result here is a draft.
-    const { db } = getTestDb();
-    const draft = await seedPopulatedDraft();
-    const originalName = (await new SortResultRepository(db).findById(draft.id))!.name;
-
-    mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-    const res = await patchResultRoute(
-      new Request(`http://localhost/api/sort-results/${draft.id}`, {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: "" }),
-      }) as any,
-      { params: Promise.resolve({ id: draft.id }) },
-    );
-    expect(res.status).toBe(400);
-
-    // The draft's name is unchanged — validation fired before any write.
-    expect((await new SortResultRepository(db).findById(draft.id))!.name).toBe(originalName);
   });
 });

@@ -31,8 +31,8 @@ ids of a kind in one ordering regime.
 `generateId` mints from one process-wide ULID monotonic factory, so ids minted in one process sort in
 creation order even within a millisecond (bare `ulid()` randomizes within a millisecond, which ordered
 same-ms rows by chance — `purses-w7ss.16`). Ids minted concurrently on two instances are not ordered.
-`generateOrderedIdFactory()` (`src/lib/id.ts:19`) remains for batch inserts (one factory per request/batch;
-consolidating it is `purses-w7ss.20`). A module-level monotonic factory is safe because ids are not
+The decisions batch route mints with `generateId("event")` too, so a later array entry wins a
+shared `createdAt` (`purses-w7ss.20` retired the per-batch factory). A module-level monotonic factory is safe because ids are not
 capabilities: knowing or predicting one grants nothing — share and invite tokens come from `randomBytes`,
 and every access check is server-side authz.
 
@@ -85,7 +85,7 @@ A partial unique index encodes "unique *among the rows that count*". Each predic
 | `sessions_active_unique` on `(collection_id, curator_id)` (`schema.ts:206`) | `deleted_at is null and status in ('active','paused')` | **One in-progress session per (collection, curator).** Terminal or soft-deleted rows free the slot. |
 | `preferences_order_rank_unique` on `(collection_id, curator_id, order_rank)` (`schema.ts:297`) | `order_rank is not null` | Manual ordering is unique per curator *where set*; unranked rows (NULL) don't collide. |
 | `decision_events_client_key_unique` on `(session_id, client_key)` (`schema.ts:233`) | `client_key is not null` | Idempotency key, only for requests that supply one. |
-| `sort_results_open_draft_unique` on `(collection_id, curator_id)` (`schema.ts:360`) | `status = 'draft'` | **One open draft per (collection, curator)** (migration 0003). The ranking writers (pin, unpin, save, revision, finalize, draft delete, legacy create) run under the `(collection, curator)` advisory lock (`SortResultService.inCuratorTx`), so the index is a backstop, never a 500 for them. Every draft writer in `SortResultService` is under the curator lock; the owner purge-prep (`removeItemFromDraftResults`) takes every curator's lock for the collection (`lockCollectionCurators`). (`AccountDeletionService`'s draft writes are `purses-w7ss.18`.) |
+| `sort_results_open_draft_unique` on `(collection_id, curator_id)` (`schema.ts:360`) | `status = 'draft'` | **One open draft per (collection, curator)** (migration 0003). The ranking writers (pin, unpin, save, revision, finalize, draft delete, legacy create) run under the `(collection, curator)` advisory lock (`SortResultService.inCuratorTx`), so the index is a backstop, never a 500 for them. Every current draft-writer call site in app code is under the curator lock (exception: `SortResultRepository.create`, the unlocked allocate-and-retry insert, is used only by tests and the e2e seed); the owner purge-prep (`removeItemFromDraftResults`) takes every curator's lock for the collection (`lockCollectionCurators`). (`AccountDeletionService`'s draft writes are `purses-w7ss.18`.) |
 | `sort_results_save_key_unique` on `(curator_id, save_key)` (`schema.ts:363`) | `save_key is not null` | Save-and-share idempotency key (migration 0003); a retried save returns the same link. |
 
 **The rule a partial unique index imposes on every writer** (memory:

@@ -101,9 +101,9 @@ export default async function RankingPage({ params }: RankingPageProps) {
   return (
     <AppLayout breadcrumbs={trail.results(collection)}>
       {/* Queued answers land before the ranking is read. */}
-      <PendingDecisionsGate curatorId={curatorId}>
+      <PendingDecisionsGate curatorId={curatorId} collectionId={collection.id}>
         <div className="space-y-8">
-          <PendingNotices />
+          <PendingNotices collectionId={collection.id} />
           <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 id="ranking-heading" tabIndex={-1} className="font-display text-2xl text-ink focus:outline-hidden sm:text-3xl">

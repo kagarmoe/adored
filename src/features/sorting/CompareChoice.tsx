@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
 import { enqueue, newClientKey, readQueue, type PendingEntry, type QueueKey } from "./decisionQueue";
 import { directSubmit } from "./directSubmit";
-import { awaitAck, isInFlight, subscribeNotices, triggerFlush, type AckOutcome } from "./decisionFlusher";
+import { awaitAck, getNoticeSet, isInFlight, subscribeNoticeSet, triggerFlush, type AckOutcome } from "./decisionFlusher";
 
 type Result = "item_a" | "item_b" | "tie" | "skip";
 
@@ -50,21 +50,16 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
   const pendingRef = useRef(false);
   // A sort closed elsewhere (409): the answer will never land here, so the
   // "it's safe" line must not stand and the controls hold still; PendingNotices
-  // says what happened.
-  const [closedElsewhere, setClosedElsewhere] = useState(false);
+  // says what happened. Only THIS sort's conflict: a sticky one from an earlier
+  // sort in the same tab (or any, for the local walkthrough) never holds this one.
   const sessionId = submit.kind === "session" ? submit.sessionId : undefined;
-  useEffect(
-    () =>
-      subscribeNotices((notice) => {
-        // Only THIS sort's conflict: a sticky one from an earlier sort in the same
-        // tab (or any, for the local walkthrough) must never hold this one.
-        if (notice.kind !== "session_conflict" || notice.sessionId !== sessionId) return;
-        pendingRef.current = false;
-        setPending(null);
-        setClosedElsewhere(true);
-      }),
-    [sessionId],
-  );
+  const notices = useSyncExternalStore(subscribeNoticeSet, getNoticeSet, getNoticeSet);
+  const closedElsewhere =
+    sessionId !== undefined && notices.some((n) => n.kind === "session_conflict" && n.sessionId === sessionId);
+  // Derived, not reset in an effect: both tap guards and `busy` already hold on closedElsewhere, and
+  // the ack bound releases the tap guard; only the "Saving…" label must let go here.
+  // Relies on a session_conflict never being dismissed in-tab (it offers Reload only).
+  const saving = closedElsewhere ? null : pending;
   const [error, setError] = useState<string | null>(null);
   // One idempotency key per in-flight tap, reused if that same tap is retried so the
   // server dedupes the retry; cleared on ack. The slot names the PAIR as well as the
@@ -221,7 +216,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
               />
             </div>
             <div className="p-4">
-              <h3 className="text-ink">{pending === `${mode}:${key}` ? "Saving…" : itemDisplayName(item)}</h3>
+              <h3 className="text-ink">{saving === `${mode}:${key}` ? "Saving…" : itemDisplayName(item)}</h3>
               {item.brand && <p className="mt-1 text-sm text-ink-soft">{item.brand}</p>}
             </div>
           </button>
@@ -231,13 +226,13 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
       {/* Escape hatches, deliberately quiet. */}
       <div className="flex items-center justify-center gap-2">
         <Button type="button" variant="ghost" size="sm" className={`min-h-11${held}${ring("tie")}`} aria-disabled={busy} aria-pressed={pressed("tie")} onClick={() => choose("tie", "tie")}>
-          {pending === `${mode}:tie` ? "Saving…" : "Tie"}
+          {saving === `${mode}:tie` ? "Saving…" : "Tie"}
         </Button>
         <span className="text-hairline" aria-hidden>
           &middot;
         </span>
         <Button type="button" variant="ghost" size="sm" className={`min-h-11${held}${ring("skip")}`} aria-disabled={busy} aria-pressed={pressed("skip")} onClick={() => choose("skip", "skip")}>
-          {pending === `${mode}:skip` ? "Saving…" : "Skip"}
+          {saving === `${mode}:skip` ? "Saving…" : "Skip"}
         </Button>
       </div>
 

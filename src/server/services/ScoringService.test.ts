@@ -3,11 +3,8 @@ import { ScoringService } from "./ScoringService";
 import type {
   DecisionEvent,
   PairwiseResult,
-  Session,
   TriageResult,
 } from "@/types";
-import type { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
-import type { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 
 const COLLECTION = "col-1";
 const CURATOR = "cur-1";
@@ -53,19 +50,6 @@ function pairwise(
   };
 }
 
-function buildService(decisions: DecisionEvent[]): ScoringService {
-  const sessionRepo: SessionRepository = {
-    findByCollection: async () =>
-      [{ id: SESSION, curatorId: CURATOR }] as unknown as Session[],
-  } as unknown as SessionRepository;
-
-  const decisionRepo: DecisionEventRepository = {
-    findBySession: async () => decisions,
-  } as unknown as DecisionEventRepository;
-
-  return new ScoringService(decisionRepo, sessionRepo);
-}
-
 // Every itemId a decision references — the default "live" set, so the existing
 // scoring tests behave exactly as before (nothing is filtered out).
 function referencedItemIds(decisions: DecisionEvent[]): Set<string> {
@@ -85,11 +69,7 @@ async function scoreByItem(
   decisions: DecisionEvent[],
   liveItemIds: ReadonlySet<string> = referencedItemIds(decisions),
 ) {
-  const prefs = await buildService(decisions).computePreferences(
-    COLLECTION,
-    CURATOR,
-    liveItemIds,
-  );
+  const prefs = await new ScoringService().computePreferences(COLLECTION, CURATOR, liveItemIds, decisions);
   return new Map(prefs.map((p) => [p.itemId, p]));
 }
 

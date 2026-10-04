@@ -28,7 +28,7 @@ vi.mock("@/lib/db", () => ({ getDb: () => getTestDb().db }));
 
 import { requireApiResultAccess } from "@/server/dal/collection-access";
 import { POST as createResult } from "@/app/api/sort-results/route";
-import { GET as getResult, PATCH as patchResult, DELETE as deleteResult } from "@/app/api/sort-results/[id]/route";
+import { GET as getResult, DELETE as deleteResult } from "@/app/api/sort-results/[id]/route";
 import { POST as finalizeResult } from "@/app/api/sort-results/[id]/finalize/route";
 import { GET as getItem } from "@/app/api/sort-results/[id]/items/[rid]/route";
 import { GET as listShares } from "@/app/api/sort-results/[id]/shares/route";
@@ -97,32 +97,6 @@ describeDb("requireApiResultAccess (guard -> DB) — purses-axn", () => {
         body: body === undefined ? undefined : JSON.stringify(body),
       });
     }
-
-    it("PATCH 403s a non-member and leaves the name unchanged (IDOR)", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedResult(ownerId, ownerId);
-      mockGetSession.mockResolvedValue({ user: { id: "intruder_user" } });
-      const res = await patchResult(jsonReq({ name: "HACKED" }) as any, { params: Promise.resolve({ id: resultId }) });
-      expect(res.status).toBe(403);
-      expect((await new SortResultRepository(db).findById(resultId))!.name).toBe("R");
-    });
-
-    it("PATCH 403s a member who is not the curator (curator-scope)", async () => {
-      const { collectionId, resultId } = await seedResult(ownerId, ownerId);
-      const memberId = await addMember(collectionId);
-      mockGetSession.mockResolvedValue({ user: { id: memberId } });
-      const res = await patchResult(jsonReq({ name: "X" }) as any, { params: Promise.resolve({ id: resultId }) });
-      expect(res.status).toBe(403);
-    });
-
-    it("PATCH 200s for the curator and updates the name", async () => {
-      const { db } = getTestDb();
-      const { resultId } = await seedResult(ownerId, ownerId);
-      mockGetSession.mockResolvedValue({ user: { id: ownerId } });
-      const res = await patchResult(jsonReq({ name: "Renamed" }) as any, { params: Promise.resolve({ id: resultId }) });
-      expect(res.status).toBe(200);
-      expect((await new SortResultRepository(db).findById(resultId))!.name).toBe("Renamed");
-    });
 
     it("finalize 403s a non-member; result stays draft", async () => {
       const { db } = getTestDb();

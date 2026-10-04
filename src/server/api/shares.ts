@@ -1,10 +1,9 @@
 import { z } from "zod";
 import type { SortResultShare } from "@/types";
-import { randomBytes } from "crypto";
 import type { Database } from "@/lib/db";
 import { SortResultShareRepository } from "@/server/repositories/implementations/SortResultShareRepository";
 
-const CreateShareSchema = z.object({
+export const CreateShareSchema = z.object({
   expiresAt: z.string().datetime().optional(),
 });
 
@@ -36,17 +35,6 @@ export class ShareController {
     return this.shareRepo.findByResult(resultId);
   }
 
-  async createShare(resultId: string, data: unknown): Promise<SortResultShare & { shareToken: string }> {
-    const parsed = CreateShareSchema.parse(data);
-    const token = randomBytes(32).toString("hex");
-    const share = await this.shareRepo.create({
-      sortResultId: resultId,
-      shareToken: token,
-      expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : undefined,
-    });
-    return { ...share, shareToken: token };
-  }
-
   async getShare(shareId: string): Promise<SortResultShare> {
     const share = await this.shareRepo.findById(shareId);
     if (!share) {
@@ -55,7 +43,7 @@ export class ShareController {
     return share;
   }
 
-  async updateShare(shareId: string, data: unknown): Promise<SortResultShare> {
+  async updateShare(shareId: string, data: unknown): Promise<SortResultShare | null> {
     const parsed = UpdateShareSchema.parse(data);
     const updateData: Partial<SortResultShare> = {
       status: parsed.status,
@@ -64,12 +52,9 @@ export class ShareController {
     return this.shareRepo.update(shareId, updateData);
   }
 
-  async revokeShare(shareId: string): Promise<void> {
-    const share = await this.shareRepo.findById(shareId);
-    if (!share) {
-      throw new Error("Share not found");
-    }
-    await this.shareRepo.update(shareId, { status: "revoked" });
+  // false when the share is already gone.
+  async revokeShare(shareId: string): Promise<boolean> {
+    return (await this.shareRepo.update(shareId, { status: "revoked" })) !== null;
   }
 
   async viewSharedResult(token: string): Promise<SortResultShare> {

@@ -28,7 +28,7 @@ vi.mock("./decisionQueue", async (importOriginal) => {
 
 // Engine notices are sticky and module-level: never let one leak into the next test.
 afterEach(() => {
-  for (const notice of flusher.getNoticeSet()) flusher.dismissNotice(notice.kind);
+  for (const notice of flusher.getNoticeSet()) flusher.dismissNotice(notice);
 });
 
 // Repository-format item ids: the flusher pre-validates entries against the
@@ -369,6 +369,47 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     await act(async () => {
       await Promise.resolve();
     });
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(readQueue({ curatorId: "u1", sessionId })).toHaveLength(0);
+    expect(screen.queryByText(COMPARE_SLOW_SAVE_LINE)).not.toBeInTheDocument();
+  });
+
+  it("a late ack that says the answer never landed (recovery 409: closed) clears the slow line and offers no Undo (purses-w7ss.35)", async () => {
+    vi.useFakeTimers();
+    let release: (() => void) | undefined;
+    const gate = new Promise<void>((r) => {
+      release = r;
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        await gate;
+        return { ok: false, status: 409, json: async () => ({}) };
+      }),
+    );
+    renderChoice();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Choose Bag A" }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(COMPARE_ACK_BOUND_MS);
+    });
+    expect(screen.getByText(COMPARE_SLOW_SAVE_LINE)).toBeInTheDocument();
+
+    // A recovery joins the live drain, so its 409 discards the sort's waiting answers.
+    void flusher.drain([{ curatorId: "u1", sessionId, collectionId: "c" }], { recovery: true });
+    release?.();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(screen.queryByText(COMPARE_SLOW_SAVE_LINE)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Undo/ })).not.toBeInTheDocument();
     expect(refresh).toHaveBeenCalledTimes(1);
     expect(readQueue({ curatorId: "u1", sessionId })).toHaveLength(0);
   });

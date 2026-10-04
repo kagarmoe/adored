@@ -83,7 +83,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   // Engine notices are sticky and module-level: never let one leak into the next test.
-  for (const notice of getNoticeSet()) dismissNotice(notice.kind);
+  for (const notice of getNoticeSet()) dismissNotice(notice);
   vi.clearAllTimers();
   vi.useRealTimers();
   vi.restoreAllMocks();
@@ -91,8 +91,8 @@ afterEach(() => {
 
 function gate(curatorId = "u1") {
   return render(
-    <PendingDecisionsGate curatorId={curatorId}>
-      <PendingNotices />
+    <PendingDecisionsGate curatorId={curatorId} collectionId="coll_1">
+      <PendingNotices collectionId="coll_1" />
       <div data-testid="content">the surface</div>
     </PendingDecisionsGate>,
   );
@@ -202,7 +202,7 @@ describe("PendingDecisionsGate", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1); // never a second POST
   });
 
-  it("401 during the recovery drain → immediate reveal with the re-auth affordance, queue preserved, no refresh", async () => {
+  it("401 during the recovery drain → reveal once the drain stops, with the re-auth affordance, queue preserved, no refresh", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonRes(401)));
     await enqueue(key, triage());
 
@@ -235,6 +235,25 @@ describe("PendingDecisionsGate", () => {
     expect(readQueue(key)).toHaveLength(0);
   });
 
+  it("stale sign-in line + recovery 409 still refreshes", async () => {
+    // A sign-in line from an earlier drain is not this recovery's answer: the 409 lets the closed
+    // sort's answers go (non-2xx, so nothing clears the old line), and the surface must still refresh.
+    const earlier: QueueKey = { ...key, sessionId: `${key.sessionId}_earlier` };
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonRes(401)));
+    await enqueue(earlier, triage());
+    await drain([earlier]); // auth_required now stands in the engine
+    window.localStorage.removeItem(pendingStorageKey(earlier));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonRes(409)));
+    await enqueue(key, triage());
+
+    gate();
+
+    await waitFor(() => expect(screen.getByTestId("content")).toBeInTheDocument());
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(window.localStorage.getItem(pendingStorageKey(key))).toBeNull();
+    expect(screen.getAllByText(CLOSED_SESSION_DISCARDED_NOTICE)).toHaveLength(1);
+  });
+
   it("recovery-409 → the discarded answers are told (ONE line, any surface), terminal queue deleted, Okay removes it", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonRes(409)));
     await enqueue(key, triage());
@@ -242,13 +261,37 @@ describe("PendingDecisionsGate", () => {
     gate();
 
     await waitFor(() => expect(screen.getByTestId("content")).toBeInTheDocument());
-    // The surface's PendingNotices has no sessionId, and still tells the person.
+    // The surface's PendingNotices (this collection, no sort) still tells the person.
     expect(screen.getAllByText(CLOSED_SESSION_DISCARDED_NOTICE)).toHaveLength(1);
     expect(screen.queryByText(SESSION_CONFLICT_NOTICE)).not.toBeInTheDocument();
     expect(window.localStorage.getItem(pendingStorageKey(key))).toBeNull(); // disposed, not preserved
 
     fireEvent.click(screen.getByRole("button", { name: "Okay" }));
-    expect(screen.queryByText(CLOSED_SESSION_DISCARDED_NOTICE)).not.toBeInTheDocument();
+    // Eventual, not synchronous: see the next test.
+    await waitFor(() => expect(screen.queryByText(CLOSED_SESSION_DISCARDED_NOTICE)).not.toBeInTheDocument());
+  });
+
+  it("Okay tapped the instant the surface reveals (before its notice slot has subscribed) still clears the line", async () => {
+    // The reveal commits in a transition, so the surface's PendingNotices subscribes a task later; a
+    // tap in that gap must not be lost (useSyncExternalStore re-reads the set on subscribe).
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonRes(409)));
+    await enqueue(key, triage());
+    const tapped = new Promise<void>((resolve) => {
+      // A MutationObserver callback is a microtask right after the reveal commit — inside the gap.
+      const observer = new MutationObserver(() => {
+        const okay = screen.queryByRole("button", { name: "Okay" });
+        if (screen.queryByTestId("content") === null || okay === null) return;
+        observer.disconnect();
+        fireEvent.click(okay);
+        resolve();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+
+    gate();
+    await tapped;
+
+    await waitFor(() => expect(screen.queryByText(CLOSED_SESSION_DISCARDED_NOTICE)).not.toBeInTheDocument());
   });
 
   it("cross-curator isolation: curator B's mount leaves curator A's queue untouched and drains nothing", async () => {

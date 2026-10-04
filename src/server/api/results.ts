@@ -1,11 +1,6 @@
-import { z } from "zod";
 import type { SortResult } from "@/types";
 import type { Database } from "@/lib/db";
 import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
-
-const UpdateResultSchema = z.object({
-  name: z.string().min(1).optional(),
-});
 
 export class ResultController {
   constructor(private resultRepo: SortResultRepository) {}
@@ -30,10 +25,5 @@ export class ResultController {
 
   async getByCollectionAndNumber(collectionId: string, number: number): Promise<SortResult | null> {
     return this.resultRepo.findByCollectionAndNumber(collectionId, number);
-  }
-
-  async updateResult(resultId: string, data: unknown): Promise<SortResult> {
-    const parsed = UpdateResultSchema.parse(data);
-    return this.resultRepo.update(resultId, parsed);
   }
 }

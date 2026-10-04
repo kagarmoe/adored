@@ -204,6 +204,18 @@ for (const theme of ["light", "dark"] as const) {
         .first()
         .waitFor({ state: "visible", timeout: 10_000 })
         .catch(() => {});
+      // next/image tiles are loading="lazy": below the fold on a phone they never request
+      // in a full-page shot. Load them all eagerly and wait until each has painted.
+      await page.evaluate(() => {
+        for (const img of document.images) img.loading = "eager";
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+      await page
+        .waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0), null, {
+          timeout: 10_000,
+        })
+        .catch(() => {});
+      await page.evaluate(() => window.scrollTo(0, 0));
       await page.waitForTimeout(400);
       await page.screenshot({
         path: `pr-screenshots/${name}-${theme}-${proj}.png`,

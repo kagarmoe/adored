@@ -20,7 +20,7 @@ export class PreferenceController {
     const sessionRepo = new SessionRepository(db);
     const decisionRepo = new DecisionEventRepository(db);
     const itemRepo = new ItemRepository(db);
-    const scoringService = new ScoringService(decisionRepo, sessionRepo);
+    const scoringService = new ScoringService();
     const prefService = new PreferenceStateServiceImpl(
       prefRepo,
       scoringService,
