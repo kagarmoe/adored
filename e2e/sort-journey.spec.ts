@@ -100,8 +100,18 @@ test.describe("sort journey", () => {
     await page.reload();
     await expect(rows.first().getByRole("link")).toHaveText(second);
     await expect(page.getByRole("button", { name: `Unpin ${second}` })).toBeVisible();
-    // A pinned row keeps its name readable at this width (phone included): it wraps, never clips.
-    expect(await rows.first().getByRole("link").evaluate((el) => el.scrollHeight <= el.clientHeight && el.clientWidth > 80)).toBe(true);
+    // A pinned row on a phone keeps a small ordinal and a readable name: it wraps, never clips
+    // or scrolls sideways. (Viewport-sensitive; runs in CI's tablet project at iPhone width.)
+    const tablet = page.viewportSize()!;
+    await page.setViewportSize({ width: 390, height: 664 });
+    expect(
+      await rows.first().getByRole("link").evaluate(
+        (el) => el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth && el.clientWidth > 80,
+      ),
+    ).toBe(true);
+    await expect(rows.first().getByText("1", { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.setViewportSize(tablet);
 
     // ── Save and share ───────────────────────────────────────────────────────
     await page.getByRole("button", { name: "Save and share" }).click();

@@ -10,15 +10,20 @@ import { TriageUndoProvider } from "./TriageUndoProvider";
 import { TriageUndoNotice } from "./TriageUndoNotice";
 
 const { refresh, push, replace } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push, replace }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh, push, replace }),
+  usePathname: () => "/collections/bags/sort",
+}));
 
 // The flusher is mocked (call counts / ordering); the queue module stays REAL so
 // persist-before-advance is asserted against actual localStorage writes.
+const NO_NOTICES: readonly never[] = []; // stable snapshot for useSyncExternalStore
 const flusher = vi.hoisted(() => ({
   triggerFlush: vi.fn<() => Promise<void>>(() => Promise.resolve()),
   drain: vi.fn(() => Promise.resolve()),
   useDecisionFlusher: vi.fn(),
-  subscribeNotices: vi.fn(() => () => {}),
+  subscribeNoticeSet: vi.fn(() => () => {}),
+  getNoticeSet: vi.fn(() => NO_NOTICES),
   awaitAck: vi.fn(() => new Promise(() => {})),
   isInFlight: vi.fn(() => false),
 }));
@@ -86,10 +91,12 @@ describe("feelings phase: answers advance optimistically", () => {
   it("announces the saved tier in the live region that existed before the tap (SC 4.1.3)", async () => {
     const user = userEvent.setup();
     renderRound();
-    const region = screen.getByRole("status");
+    // The answer announcer, not the round's (always-mounted, empty) notice region.
+    const announcer = () => screen.getAllByRole("status").find((el) => el.classList.contains("sr-only"));
+    const region = announcer();
     await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    expect(screen.getByRole("status")).toBe(region);
+    expect(announcer()).toBe(region);
     expect(region).toHaveTextContent("Love — saved.");
   });
 
@@ -275,6 +282,20 @@ describe("feelings phase: storage fallback (F18)", () => {
     const [url, init] = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(url).toBe("/api/sessions/sess_1/decisions");
     expect(JSON.parse((init as RequestInit).body as string)).toMatchObject({ type: "triage", decision: { itemId: "item_a", result: "top" } });
+  });
+
+  it("Not yet degrades to ONE POST of a deferred disposition and still moves the piece on", async () => {
+    store.setItem = () => {
+      throw new Error("quota");
+    };
+    const user = userEvent.setup();
+    renderRound();
+    await user.click(screen.getByRole("button", { name: /^not yet/i }));
+    expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+    const [url, init] = (global.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+    expect(url).toBe("/api/collections/coll_1/dispositions");
+    expect(JSON.parse((init as RequestInit).body as string)).toEqual({ itemId: "item_a", disposition: "deferred" });
   });
 
   it("a fallback that does not land keeps the piece in place with a gentle line", async () => {

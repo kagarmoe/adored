@@ -1,7 +1,8 @@
 "use client";
 
 // decisionFlusher — ONE module-level drain engine per realm; the ONLY code
-// that POSTs queued decisions/dispositions (spec §3.2, F12).
+// that drains queued decisions/dispositions (spec §3.2, F12); `directSubmit`
+// sends one un-queued entry when storage is unavailable (F18).
 //
 // Single-flight is promise-based, not skip-based: a caller that finds a drain
 // in flight for the same queue awaits the SAME promise. A drain resolves only
@@ -15,6 +16,11 @@
 // ack-removal can never clobber another tab's concurrent enqueue (enqueue
 // stays synchronous and lock-free; removal re-reads under the lock). Backoff
 // waits happen OUTSIDE the lock so a stalled tab never starves the others.
+//
+// Notices are sticky per tab: the engine keeps the current one of each kind,
+// and a surface that subscribes later hears it on subscribe. An entry stands
+// until dismissed (dismissNotice) or resolved (a 2xx clears auth_required); a
+// reload clears them all.
 import { useEffect } from "react";
 import { withWebLock } from "@/lib/web-lock";
 import { BatchEntrySchema, type BatchResult } from "@/lib/decision-batch-schema";
@@ -42,7 +48,8 @@ export type AckOutcome =
 export type FlushNotice =
   | { kind: "rejected_unknown_item"; count: number }
   | { kind: "quarantined"; count: number }
-  | { kind: "session_conflict" } // batch-route 409 mid-round
+  | { kind: "session_conflict"; sessionId: string } // mid-round batch 409; names its sort so it never holds another
+  | { kind: "closed_session_discarded" } // recovery batch 409: a closed sort's waiting answers were let go
   | { kind: "disposition_superseded" } // disposition POST 409 (PreferenceExistsError)
   | { kind: "auth_required" };
 
@@ -72,6 +79,7 @@ const attempts = new Map<string, number>();
 const backoffPreempts = new Map<string, () => void>();
 const keepaliveNext = new Set<string>();
 const noticeSubscribers = new Set<(n: FlushNotice) => void>();
+const currentNotices = new Map<FlushNotice["kind"], FlushNotice>();
 const ackWaiters = new Map<string, Array<(o: AckOutcome) => void>>();
 const ackOutcomes = new Map<string, AckOutcome>();
 const ACK_OUTCOME_BUFFER = 200;
@@ -83,13 +91,39 @@ function lockName(key: QueueKey): string {
   return `adored.flush.v1.${key.curatorId}.${key.sessionId}`;
 }
 
+// The current set as an immutable snapshot (useSyncExternalStore), so adds AND
+// clears reach a mounted surface.
+let noticeSet: readonly FlushNotice[] = [];
+const noticeSetListeners = new Set<() => void>();
+
+function publishNoticeSet(): void {
+  noticeSet = [...currentNotices.values()];
+  for (const listener of [...noticeSetListeners]) listener();
+}
+
 function emitNotice(notice: FlushNotice): void {
+  currentNotices.set(notice.kind, notice);
+  publishNoticeSet();
   for (const subscriber of [...noticeSubscribers]) subscriber(notice);
 }
 
 export function subscribeNotices(fn: (n: FlushNotice) => void): () => void {
   noticeSubscribers.add(fn);
+  for (const notice of [...currentNotices.values()]) fn(notice);
   return () => void noticeSubscribers.delete(fn);
+}
+
+export function subscribeNoticeSet(listener: () => void): () => void {
+  noticeSetListeners.add(listener);
+  return () => void noticeSetListeners.delete(listener);
+}
+
+export function getNoticeSet(): readonly FlushNotice[] {
+  return noticeSet;
+}
+
+export function dismissNotice(kind: FlushNotice["kind"]): void {
+  if (currentNotices.delete(kind)) publishNoticeSet();
 }
 
 function ackId(storageKey: string, clientKey: string): string {
@@ -253,6 +287,7 @@ async function flushDecisionRun(
 
     if (res.ok) {
       attempts.set(storageKey, 0); // success resets the backoff schedule
+      dismissNotice("auth_required"); // signed in again
       let results: BatchResult[] = [];
       try {
         results = ((await res.json()) as { results?: BatchResult[] }).results ?? [];
@@ -310,11 +345,14 @@ function handleBatchFailure(
     return "stop"; // preserve for this queue; retained until GC, never deleted live
   }
   if (status === 409) {
-    emitNotice({ kind: "session_conflict" });
     if (opts.recovery) {
-      deleteQueue(key); // terminal-session disposal: surface once, then discard
+      // Terminal-session disposal: surface once, then discard. Its own kind, not a
+      // conflict: no surface is that closed sort's, so every surface must say it.
+      emitNotice({ kind: "closed_session_discarded" });
+      deleteQueue(key);
       return "done";
     }
+    emitNotice({ kind: "session_conflict", sessionId: key.sessionId });
     return "stop"; // mid-round: stop gently, preserve
   }
   if (status >= 500) return "backoff";
@@ -361,6 +399,7 @@ async function flushDisposition(
 
   if (res.ok) {
     attempts.set(storageKey, 0);
+    dismissNotice("auth_required"); // signed in again
     removeEntries(key, [entry.clientKey]);
     return "continue";
   }

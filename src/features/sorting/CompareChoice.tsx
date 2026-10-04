@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import type { Item } from "@/types";
 import { itemDisplayName, itemInitial } from "@/lib/items";
 import { Button, CardImage } from "@/components/ui";
-import { enqueue, newClientKey, readQueue, type QueueKey } from "./decisionQueue";
+import { enqueue, newClientKey, readQueue, type PendingEntry, type QueueKey } from "./decisionQueue";
+import { directSubmit } from "./directSubmit";
 import { awaitAck, isInFlight, subscribeNotices, triggerFlush, type AckOutcome } from "./decisionFlusher";
 
 type Result = "item_a" | "item_b" | "tie" | "skip";
@@ -48,17 +49,21 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
   // disabling the focused card would drop focus to <body> on every answer.
   const pendingRef = useRef(false);
   // A sort closed elsewhere (409): the answer will never land here, so the
-  // "it's safe" line must not stand; PendingNotices says what happened.
+  // "it's safe" line must not stand and the controls hold still; PendingNotices
+  // says what happened.
   const [closedElsewhere, setClosedElsewhere] = useState(false);
+  const sessionId = submit.kind === "session" ? submit.sessionId : undefined;
   useEffect(
     () =>
       subscribeNotices((notice) => {
-        if (notice.kind !== "session_conflict") return;
+        // Only THIS sort's conflict: a sticky one from an earlier sort in the same
+        // tab (or any, for the local walkthrough) must never hold this one.
+        if (notice.kind !== "session_conflict" || notice.sessionId !== sessionId) return;
         pendingRef.current = false;
         setPending(null);
         setClosedElsewhere(true);
       }),
-    [],
+    [sessionId],
   );
   const [error, setError] = useState<string | null>(null);
   // One idempotency key per in-flight tap, reused if that same tap is retried so the
@@ -123,7 +128,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
       submit.onDecision(result); // walkthrough: no keys, no pending, no refresh
       return;
     }
-    if (pendingRef.current) return;
+    if (pendingRef.current || closedElsewhere) return; // closed elsewhere: nothing more can land
     pendingRef.current = true;
     const pair = shown;
     const slot = `${mode}:${tapped}`;
@@ -137,24 +142,16 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
     // NEVER a bare fetch: the answer rides the queue as a batch-of-1.
     const alreadyRiding = readQueue(key).some((e) => e.clientKey === clientKey) || isInFlight(key, clientKey);
     if (!alreadyRiding && !settled.current.has(clientKey)) {
-      const persisted = await enqueue(
-        key,
-        { kind: "decision", clientKey, type: "pairwise_compare", decision, enqueuedAt: new Date().toISOString() },
-        () => triggerFlush(key),
-      );
+      const entry: PendingEntry = {
+        kind: "decision",
+        clientKey,
+        type: "pairwise_compare",
+        decision,
+        enqueuedAt: new Date().toISOString(),
+      };
+      const persisted = await enqueue(key, entry, () => triggerFlush(key));
       if (persisted === "needs_fallback") {
-        let landed = false;
-        try {
-          const res = await fetch(`/api/sessions/${submit.sessionId}/decisions`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ type: "pairwise_compare", decision, clientKey }),
-          });
-          landed = res.ok;
-        } catch {
-          landed = false;
-        }
-        if (!landed) {
+        if (!(await directSubmit({ sessionId: submit.sessionId, collectionId: submit.collectionId }, entry))) {
           setError(FALLBACK_RETRY_LINE);
           pendingRef.current = false;
           setPending(null);
@@ -183,7 +180,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
     settle(clientKey, keySlot, { ...pair, result }, outcome);
   }
 
-  const busy = pending !== null || undefined;
+  const busy = pending !== null || closedElsewhere || undefined;
   const prior = revisit?.result;
   const pressed = (result: Result) => (prior === undefined ? undefined : prior === result);
   const ring = (result: Result) => (prior === result ? " ring-2 ring-primary ring-offset-2 ring-offset-ground" : "");
@@ -251,7 +248,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
             type="button"
             aria-disabled={busy}
             onClick={() => {
-              if (pendingRef.current) return;
+              if (pendingRef.current || closedElsewhere) return;
               if (revisit) keepGoing();
               else undo(last);
             }}

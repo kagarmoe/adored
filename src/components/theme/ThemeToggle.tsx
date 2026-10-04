@@ -36,7 +36,7 @@ export function ThemeToggle() {
       type="button"
       onClick={flip}
       aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-      className="inline-flex h-11 min-w-11 items-center justify-center rounded-control px-3 text-ink transition-colors hover:bg-content-soft/40"
+      className="inline-flex h-11 min-w-11 items-center justify-center rounded-control px-3 text-ink transition-colors hover:bg-content-soft"
     >
       <span aria-hidden="true">{theme === "dark" ? "☾" : "☀"}</span>
     </button>

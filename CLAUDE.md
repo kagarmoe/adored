@@ -143,7 +143,7 @@ for the branch's blast radius and record the exact commands/results in the PR bo
 - **DB/schema/repository/service/API persistence changes:** also run `npm run test:db`.
 - **UI, page, route-flow, onboarding/tutorial, copy, responsive, or interaction changes:** run the
   mapped Playwright spec(s) locally, for example
-  `npx playwright test e2e/welcome-walkthrough.spec.ts --project=tablet`.
+  `npm run test:e2e -- e2e/welcome-walkthrough.spec.ts --project=tablet`.
 - **Broad/unknown UI blast radius:** run `npm run test:e2e` locally instead of relying on CI's
   selective Playwright mapping.
 - **Phone/responsive changes:** run the mapped Playwright spec with `PW_VIEWPORT=phone` as well as

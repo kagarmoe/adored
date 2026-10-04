@@ -21,6 +21,7 @@ import { trail } from "@/components/layout/breadcrumb-trails";
 import { CardImage, buttonVariants } from "@/components/ui";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
+import { PendingNotices } from "@/features/sorting/pendingNotices";
 import { BringBackControl } from "@/features/sorting/BringBackControl";
 import { ItemCard } from "@/features/items/ItemCard";
 import { MostLovedHero } from "@/features/results/MostLovedHero";
@@ -102,6 +103,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
       {/* Queued answers land before the ranking is read. */}
       <PendingDecisionsGate curatorId={curatorId}>
         <div className="space-y-8">
+          <PendingNotices />
           <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 id="ranking-heading" tabIndex={-1} className="font-display text-2xl text-ink focus:outline-hidden sm:text-3xl">

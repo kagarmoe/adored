@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ulid } from "ulid";
 import type { Item } from "@/types";
@@ -15,12 +15,22 @@ import {
   type QueueKey,
 } from "./decisionQueue";
 // REAL engine — these tests prove the wiring end-to-end (drain → notice → UI).
-import { drain } from "./decisionFlusher";
-import { PendingNotices, QUARANTINE_NOTICE, REJECTED_NOTICE, SESSION_CONFLICT_NOTICE } from "./pendingNotices";
+import { dismissNotice, drain, getNoticeSet } from "./decisionFlusher";
+import {
+  AUTH_REQUIRED_NOTICE,
+  CLOSED_SESSION_DISCARDED_NOTICE,
+  PendingNotices,
+  QUARANTINE_NOTICE,
+  REJECTED_NOTICE,
+  SESSION_CONFLICT_NOTICE,
+} from "./pendingNotices";
 import { TriageRound } from "./TriageRound";
 
 const { refresh, push, replace } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push, replace }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh, push, replace }),
+  usePathname: () => "/collections/c1/sort",
+}));
 
 // jsdom in this setup does not expose a working localStorage on file:// URLs —
 // install the house Map-backed Storage (see decisionFlusher.test.ts).
@@ -77,7 +87,10 @@ let key: QueueKey;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.unstubAllGlobals();
   installStorage();
+  // Engine notices are sticky and module-level: never let one leak into the next test.
+  for (const notice of getNoticeSet()) dismissNotice(notice.kind);
   // A fresh queue key per test: the engine's module state is keyed by storage key.
   sessionSeq += 1;
   key = { curatorId: "u1", sessionId: `sess_${sessionSeq}`, collectionId: "coll_1" };
@@ -85,7 +98,7 @@ beforeEach(() => {
 
 describe("PendingNotices — copy constants", () => {
   it("never uses machine-side words (TONE.md)", () => {
-    for (const copy of [REJECTED_NOTICE, QUARANTINE_NOTICE, SESSION_CONFLICT_NOTICE]) {
+    for (const copy of [REJECTED_NOTICE, QUARANTINE_NOTICE, SESSION_CONFLICT_NOTICE, AUTH_REQUIRED_NOTICE, CLOSED_SESSION_DISCARDED_NOTICE]) {
       expect(copy).not.toMatch(/error|failed|invalid/i);
     }
   });
@@ -94,6 +107,73 @@ describe("PendingNotices — copy constants", () => {
 describe("PendingNotices — a sort closed elsewhere", () => {
   it("a mid-round 409 says the sort was wrapped up elsewhere", async () => {
     global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    render(<PendingNotices sessionId={key.sessionId} />);
+    const region = screen.getByRole("status");
+    expect(region).toBeEmptyDOMElement(); // mounted empty BEFORE the notice (SC 4.1.3)
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    expect(region).toHaveTextContent(SESSION_CONFLICT_NOTICE); // the same node, now with text
+    expect(screen.getByRole("button", { name: "Reload" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Okay" })).not.toBeInTheDocument();
+  });
+
+  it("another sort's conflict never shows: not on a different sort, not on a surface with no sort", async () => {
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    render(
+      <>
+        <div data-testid="this-sort">
+          <PendingNotices sessionId={key.sessionId} />
+        </div>
+        <PendingNotices sessionId="sess_other" />
+        <PendingNotices />
+      </>,
+    );
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    // Positive control: the conflict did land, on its own sort's surface only.
+    expect(screen.getAllByText(SESSION_CONFLICT_NOTICE)).toHaveLength(1);
+    expect(within(screen.getByTestId("this-sort")).getByText(SESSION_CONFLICT_NOTICE)).toBeInTheDocument();
+  });
+
+  it("Reload reloads the page", async () => {
+    const reload = vi.fn();
+    vi.stubGlobal("location", { ...window.location, reload });
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    render(<PendingNotices sessionId={key.sessionId} />);
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Reload" }));
+    expect(reload).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("PendingNotices — signed out mid-round", () => {
+  it("a 401 says to sign in again, with a Sign in link back to this page, and no Okay", async () => {
+    global.fetch = vi.fn(async () => ({ ok: false, status: 401, json: async () => ({}) })) as unknown as typeof fetch;
     render(<PendingNotices />);
     await enqueue(key, {
       kind: "decision",
@@ -105,7 +185,58 @@ describe("PendingNotices — a sort closed elsewhere", () => {
     await act(async () => {
       await drain([key]);
     });
+    expect(screen.getByText(AUTH_REQUIRED_NOTICE)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      `/login?callbackUrl=${encodeURIComponent("/collections/c1/sort")}`,
+    );
+    expect(screen.queryByRole("button", { name: "Okay" })).not.toBeInTheDocument(); // signing in is the action
+  });
+});
+
+describe("PendingNotices — engine clears reach a mounted surface", () => {
+  it("a sign-in line leaves once answers save (2xx), and a dismissed notice leaves too", async () => {
+    global.fetch = vi.fn(async () => ({ ok: false, status: 401, json: async () => ({}) })) as unknown as typeof fetch;
+    render(<PendingNotices sessionId={key.sessionId} />);
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    expect(screen.getByText(AUTH_REQUIRED_NOTICE)).toBeInTheDocument();
+
+    global.fetch = vi.fn(async (_url: string, init: RequestInit = {}) => {
+      const body = JSON.parse(String(init.body)) as { decisions: Array<{ clientKey: string }> };
+      return {
+        ok: true,
+        status: 201,
+        json: async () => ({ results: body.decisions.map((d) => ({ clientKey: d.clientKey, status: "created" })) }),
+      } as unknown as Response;
+    }) as unknown as typeof fetch;
+    await act(async () => {
+      await drain([key]);
+    });
+    expect(screen.queryByText(AUTH_REQUIRED_NOTICE)).not.toBeInTheDocument();
+
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
     expect(screen.getByText(SESSION_CONFLICT_NOTICE)).toBeInTheDocument();
+    act(() => dismissNotice("session_conflict"));
+    expect(screen.queryByText(SESSION_CONFLICT_NOTICE)).not.toBeInTheDocument();
   });
 });
 
@@ -193,5 +324,35 @@ describe("PendingNotices in the round — rejected acks (F9)", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/sort?phase=pairs"));
     expect(screen.getAllByText(REJECTED_NOTICE)).toHaveLength(1);
     expect(refresh).not.toHaveBeenCalled();
+  });
+});
+
+describe("PendingNotices in the round — a sort closed elsewhere", () => {
+  it("a mid-round 409 shows the wrapped-up line with Reload on the round's own surface", async () => {
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    const queue = Array.from({ length: 6 }, (_, i) => {
+      const id = realItemId();
+      return { item: item(id, `Bag ${i + 1}`), deferred: false, heroPhotoUrl: `/photos/${id}.jpg` };
+    });
+    const user = userEvent.setup();
+    render(
+      <TriageRound
+        curatorId="u1"
+        sessionId={key.sessionId}
+        collectionId="coll_1"
+        collectionSlugOrId="coll_1"
+        queue={queue}
+        placedSeed={0}
+        nextHref="/sort?phase=pairs"
+      />,
+    );
+
+    // Five taps hit the ≥5-pending trigger → a real mid-round drain → 409 for this sort.
+    for (let i = 1; i <= 5; i++) {
+      await user.click(screen.getByRole("button", { name: "Love" }));
+    }
+
+    await waitFor(() => expect(screen.getAllByText(SESSION_CONFLICT_NOTICE)).toHaveLength(1));
+    expect(screen.getByRole("button", { name: "Reload" })).toBeInTheDocument();
   });
 });

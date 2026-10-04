@@ -50,7 +50,7 @@ export function DeleteAccountSection({ email }: DeleteAccountSectionProps) {
   }
 
   return (
-    <Card padding="lg" className="mt-10 border border-error-soft bg-error-soft/30">
+    <Card variant="danger" padding="lg" className="mt-10">
       <h2 className="text-lg text-ink">Delete your account</h2>
       <p className="mt-1 text-sm text-ink-soft">
         This permanently removes your account and everything in it — your collections, items, photos,

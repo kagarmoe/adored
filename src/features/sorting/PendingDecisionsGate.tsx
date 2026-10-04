@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { listPendingKeysForCurator, sweepExpired, type QueueKey } from "./decisionQueue";
@@ -16,7 +15,6 @@ export const GATE_REVEAL_BOUND_MS = 5_000;
 export const GATE_WAITING_LINE = "Gathering up the answers you already gave — just a moment";
 export const GATE_CATCHUP_LINE =
   "A few of your answers are still on their way — everything here catches up in a moment";
-export const GATE_SIGNIN_LINE = "Sign in again and your answers will finish saving on their own";
 
 /**
  * Crash/pause/completion recovery (spec §3.4): before any sort surface renders
@@ -55,14 +53,19 @@ export function PendingDecisionsGate({
       return;
     }
     const bound = setTimeout(() => setBoundedReveal(true), GATE_REVEAL_BOUND_MS);
+    // Only THIS drain's notices decide the reveal. The engine replays its sticky
+    // notices synchronously on subscribe; a sign-in line left over from an
+    // earlier drain must not skip the refresh after a recovery that lands.
+    let live = false;
     const unsubscribe = subscribeNotices((notice) => {
-      if (notice.kind === "auth_required") {
+      if (live && notice.kind === "auth_required") {
         // Reveal immediately with the re-auth affordance; the queue is
         // preserved across re-login (spec §3.2) — no refresh, nothing changed.
         authRequiredRef.current = true;
         setAuthRequired(true);
       }
     });
+    live = true;
     void drain(pendingKeys, { recovery: true }).finally(() => {
       clearTimeout(bound);
       unsubscribe();
@@ -82,47 +85,28 @@ export function PendingDecisionsGate({
 
   const revealed = !recovering || authRequired || boundedReveal || (drained && !isPending);
 
-  // The engine's quiet voice during (and after) recovery — rejected/quarantined
-  // answers raised by the recovery drain surface here, the same slot the round
-  // surfaces use. Only rendered when a recovery actually happened, so ordinary
-  // mounts add nothing.
-  const noticeSlot = recovering ? (
-    <div className="mx-auto max-w-xl space-y-2">
-      <PendingNotices />
-      {revealed && !drained && (
-        <p role="status" className="rounded-control bg-content-soft px-4 py-3 text-sm text-ink-soft">
-          {GATE_CATCHUP_LINE}
-        </p>
+  // One fixed tree shape. The notice slot exists only when a recovery actually
+  // happened, so ordinary mounts add nothing.
+  return (
+    <>
+      {recovering && (
+        <div className="mx-auto max-w-xl space-y-2 empty:hidden">
+          {/* Before reveal the gate is the only voice; after it, the surface's own single
+              PendingNotices speaks (it reads the engine's sticky notices on mount), so the
+              line can never be doubled. */}
+          {!revealed && <PendingNotices />}
+          {revealed && !drained && (
+            <p role="status" className="rounded-control bg-content-soft px-4 py-3 text-sm text-ink-soft">
+              {GATE_CATCHUP_LINE}
+            </p>
+          )}
+        </div>
       )}
-      {authRequired && (
-        <p role="status" className="rounded-control bg-content-soft px-4 py-3 text-sm text-ink-soft">
-          {GATE_SIGNIN_LINE}{" "}
-          <Link
-            href="/login"
-            className="font-medium text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-xs"
-          >
-            Sign in
-          </Link>
-        </p>
-      )}
-    </div>
-  ) : null;
-
-  if (!revealed) {
-    return (
-      <div className="space-y-4">
-        {noticeSlot}
+      {revealed ? children : (
         <p role="status" className="mx-auto max-w-xl text-sm text-ink-soft">
           {GATE_WAITING_LINE}
         </p>
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {noticeSlot}
-      {children}
+      )}
     </>
   );
 }

@@ -16,6 +16,7 @@ export function checkDocSync(changedFiles, entries) {
   const changed = new Set(changedFiles);
   const out = [];
   for (const f of changedFiles) {
+    if (/\.(test|spec)\.[cm]?[jt]sx?$/.test(f)) continue; // a test states no documented fact
     const docs = new Set();
     for (const e of entries) if (matches(f, e.entry)) e.docs.forEach((d) => docs.add(d));
     if (docs.size === 0) continue;                       // unmapped source

@@ -1,41 +1,26 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui";
 
-// Generic over the decision shape D (type-level only; runtime is unchanged) so a
-// local caller's narrowed decision type flows to onDecision instead of being
-// erased to Record<string, unknown>. Defaults to Record<string, unknown> for the
-// session path, which never reads the decision's fields.
-export type DecisionSubmit<D = Record<string, unknown>> =
-  | { kind: "session"; sessionId: string; onDecisionMade?: () => void }
-  // A local caller may return false (or a promise of it) when the answer did not
-  // hold; the announcement waits for it, so "saved" is never said too early.
-  | { kind: "local"; onDecision: (decision: D) => void | boolean | Promise<void | boolean> };
-
+// Generic over the decision shape D so a caller's narrowed decision type reaches onDecision.
 interface DecisionControlsProps<D extends Record<string, unknown> = Record<string, unknown>> {
-  submit: DecisionSubmit<D>;
-  type: "triage" | "pairwise_compare" | "usage";
+  /** Records the answer. Return false (or a promise of it) when it did not hold, so "saved" is never said too early. */
+  onDecision: (decision: D) => void | boolean | Promise<void | boolean>;
   decisions: Array<{ label: string; decision: D }>;
   /**
-   * A decision label already standing for this item (undo-as-revisit, F19):
-   * that tier renders as currently selected (`aria-pressed` + a visible ring);
-   * the caller renders the "You placed this with … — change it?" line. Absent =
-   * today's fresh rendering, pixel-identical.
+   * A decision label already standing for this item (undo-as-revisit, F19): that tier renders
+   * as currently selected (`aria-pressed` + a visible ring); the caller renders the
+   * "You placed this with … — change it?" line.
    */
   priorAnswer?: string;
 }
 
 export function DecisionControls<D extends Record<string, unknown> = Record<string, unknown>>({
-  submit,
-  type,
+  onDecision,
   decisions,
   priorAnswer,
 }: DecisionControlsProps<D>) {
-  const router = useRouter();
-  const [pendingLabel, setPendingLabel] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   // Mounted (empty) on first render so the region exists BEFORE its text ever
   // changes — a live region that appears with its content is not announced.
   const [announcement, setAnnouncement] = useState("");
@@ -49,54 +34,15 @@ export function DecisionControls<D extends Record<string, unknown> = Record<stri
   }
 
   async function submitDecision(label: string, decision: D) {
-    if (submit.kind === "local") {
-      // Local path: no fetch, no pending, no refresh.
-      if ((await submit.onDecision(decision)) !== false) announce(label);
-      return;
-    }
-
-    setPendingLabel(label);
-    setError(null);
-
-    try {
-      const response = await fetch(`/api/sessions/${submit.sessionId}/decisions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, decision }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to save decision");
-      }
-
-      // Re-enable the tiers before advancing: the triage page reuses this client
-      // instance across the soft router.refresh(), so a lingering pendingLabel
-      // would keep every tier disabled and block triaging the next item (U2).
-      setPendingLabel(null);
-      announce(label);
-
-      if (submit.onDecisionMade) {
-        submit.onDecisionMade();
-      } else {
-        router.refresh();
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to save decision");
-      setPendingLabel(null);
-    }
+    if ((await onDecision(decision)) !== false) announce(label);
   }
-
-  const controlsClassName =
-    type === "triage"
-      ? "grid grid-cols-2 gap-3 sm:flex sm:flex-wrap"
-      : "flex flex-wrap gap-3";
 
   return (
     <div className="space-y-3">
       <p role="status" aria-live="polite" className="sr-only">
         {announcement}
       </p>
-      <div className={controlsClassName}>
+      <div className="grid grid-cols-2 gap-3 sm:flex sm:flex-wrap">
         {decisions.map((item) => {
           const selected = priorAnswer !== undefined && item.label === priorAnswer;
           return (
@@ -105,17 +51,15 @@ export function DecisionControls<D extends Record<string, unknown> = Record<stri
               type="button"
               variant="primary"
               size="lg"
-              disabled={pendingLabel !== null}
               onClick={() => submitDecision(item.label, item.decision)}
               aria-pressed={selected || undefined}
               className={`flex-1 min-w-24${selected ? " ring-2 ring-offset-2 ring-offset-ground ring-primary" : ""}`}
             >
-              {pendingLabel === item.label ? "Saving..." : item.label}
+              {item.label}
             </Button>
           );
         })}
       </div>
-      {error && <p className="text-sm text-error">{error}</p>}
     </div>
   );
 }

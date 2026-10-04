@@ -21,16 +21,18 @@ export function AsyncActionButton({
   title,
   ariaLabel,
   fullWidth = false,
+  className,
 }: {
   action: () => Promise<void>;
   label: string;
   busyLabel?: string;
-  variant?: "primary" | "ghost";
+  variant?: "primary" | "secondary" | "ghost";
   align?: "start" | "end";
   title?: string;
   ariaLabel?: string;
   /** Full width below `md` (the phone action bar), natural width above. */
   fullWidth?: boolean;
+  className?: string;
 }): ReactNode {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -55,7 +57,7 @@ export function AsyncActionButton({
       <Button
         type="button"
         variant={variant}
-        className={fullWidth ? "w-full md:w-auto" : undefined}
+        className={[fullWidth && "w-full md:w-auto", className].filter(Boolean).join(" ") || undefined}
         onClick={run}
         disabled={busy}
         title={title}

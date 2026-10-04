@@ -128,7 +128,7 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
             {sortPhase.kind === "pairs" && (
               <div className="space-y-6">
                 <SortProgress done={sortPhase.progress.done} total={sortPhase.progress.total} />
-                <PendingNotices />
+                <PendingNotices sessionId={open.id} />
                 <div>
                   {handingOff && <p className="mb-2 text-ink-soft">Now, between these two…</p>}
                   <h1 className="text-2xl text-ink sm:text-3xl">Which would you reach for first?</h1>
@@ -143,6 +143,7 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
                 />
               </div>
             )}
+            {sortPhase.kind === "done" && <PendingNotices sessionId={open.id} />}
             {sortPhase.kind === "done" ? (
               <section className="space-y-4 text-center">
                 <SortDoneHeading>That&rsquo;s everything for now</SortDoneHeading>

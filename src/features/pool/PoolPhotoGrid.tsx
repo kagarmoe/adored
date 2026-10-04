@@ -211,8 +211,6 @@ export function PoolPhotoGrid({
         })}
       </div>
 
-      {selected.length > 0 && <div aria-hidden className="h-20" />}
-
       <PoolActionBar
         count={selected.length}
         busy={busy}

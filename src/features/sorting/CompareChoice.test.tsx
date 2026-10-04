@@ -26,6 +26,11 @@ vi.mock("./decisionQueue", async (importOriginal) => {
   return { ...actual, enqueue: vi.fn(actual.enqueue) };
 });
 
+// Engine notices are sticky and module-level: never let one leak into the next test.
+afterEach(() => {
+  for (const notice of flusher.getNoticeSet()) flusher.dismissNotice(notice.kind);
+});
+
 // Repository-format item ids: the flusher pre-validates entries against the
 // SHARED batch schema, so anything else would be quarantined, never POSTed.
 const ITEM_A = "item_0000000000000000000000000a";
@@ -246,6 +251,54 @@ describe("CompareChoice submits through the queue as a batch-of-1 (Epic P Task 1
     });
     expect(screen.queryByText(COMPARE_SLOW_SAVE_LINE)).not.toBeInTheDocument();
     expect(screen.queryByText("Saving…")).not.toBeInTheDocument();
+  });
+
+  it("after a sort closed elsewhere (409) the controls hold: further taps queue nothing", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })));
+    renderChoice();
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Choose Bag A" }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(COMPARE_ACK_BOUND_MS);
+    });
+    vi.mocked(queue.enqueue).mockClear();
+    const b = screen.getByRole("button", { name: "Choose Bag B" });
+    expect(b).toHaveAttribute("aria-disabled", "true");
+    await act(async () => {
+      fireEvent.click(b);
+      fireEvent.click(screen.getByRole("button", { name: "Tie" }));
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(vi.mocked(queue.enqueue)).not.toHaveBeenCalled();
+  });
+
+  it("an answer that settled before the 409 cannot be undone once the sort is closed elsewhere", async () => {
+    const user = userEvent.setup();
+    const { rerender } = renderChoice();
+    await user.click(screen.getByRole("button", { name: "Choose Bag A" }));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+    rerender(
+      <CompareChoice
+        submit={{ kind: "session", sessionId, curatorId: "u1", collectionId: "c" }}
+        itemA={item(ITEM_C, "Bag C") as any}
+        itemB={item(ITEM_D, "Bag D") as any}
+      />,
+    );
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })));
+    await user.click(screen.getByRole("button", { name: "Choose Bag C" }));
+    // The 409 notice clears the saving state.
+    await waitFor(() => expect(screen.queryByText("Saving…")).not.toBeInTheDocument());
+
+    vi.mocked(queue.enqueue).mockClear();
+    const undo = screen.getByRole("button", { name: "Undo: Bag A" });
+    expect(undo).toHaveAttribute("aria-disabled", "true");
+    await user.click(undo);
+    expect(screen.queryByRole("button", { name: "Keep going" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/you chose/i)).not.toBeInTheDocument();
+    expect(vi.mocked(queue.enqueue)).not.toHaveBeenCalled();
   });
 
   it("while an answer saves, focus stays on the tapped card and every control holds still (aria-disabled, never disabled)", async () => {

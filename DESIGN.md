@@ -114,7 +114,7 @@ Two **separate** colour systems that never trade places (see the named rule belo
 
 **Fallbacks:** without `backdrop-filter` support, or under `prefers-reduced-transparency: reduce`, `glass` falls back to `surface` and `glass-strong` to `surface-raised` (opaque).
 
-**Text on glass is ink or ink-soft; primary on glass marks controls (borders, icons, focus), never text.** Per-component inline tints are banned — use the tokens. Composites are declared in `globals.css` and gated by `contrast.test.ts` (each composite is proven against its token's alpha, over both ground stops and over black/white for glass-strong).
+**Text on glass is ink or ink-soft; primary on glass marks controls (borders, icons, focus), never text.** Per-component inline tints are banned — use the tokens. A source scan (`src/lib/design/no-inline-tints.test.ts`) fails on any `/NN` opacity modifier on a colour utility. Composites are declared in `globals.css` and gated by `contrast.test.ts` (each composite is proven against its token's alpha, over both ground stops and over black/white for glass-strong).
 
 ### Semantic / safety (reserved)
 
@@ -160,7 +160,7 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
 
 - **Buttons:** pill radius (`rounded-pill`), min height 44px. **Primary:** teal fill, white text (dark: teal fill, dark text). **Secondary/ghost:** transparent or soft-aqua, ink/teal text. **Danger:** the reserved error red — only for truly destructive, irreversible actions; sober, not loud.
 - **Quiet links:** a secondary, non-dominant text link (shared `quiet-link` token, `src/lib/design/quiet-link.ts`): `primary`-token text, underlined, ≥44px tap height (`min-h-11`), visible focus ring. Used for the quieter actions beside a single dominant button (e.g. "View all items", "Add more photos") so each surface keeps exactly **one** dominant action.
-- **Cards:** 20px radius, `card` fill (pre-composited), hairline + soft shadow (light) / hairline + glow (dark), no backdrop-filter; the selected card uses a teal border + a check, never colour alone. Collection cards carry the owner's `···` (top-right, the `compact` trigger over the cover, above the stretched link) and no status badge — the Archived pill says it; item cards carry none — their rarer actions live on the item panel.
+- **Cards:** 20px radius, `card` fill (pre-composited), hairline + soft shadow (light) / hairline + glow (dark), no backdrop-filter; the selected card uses a teal border + a check, never colour alone. Collection cards carry the owner's `···` (top-right, the `compact` trigger over the cover, above the stretched link) and no status badge — the Archived pill says it; item cards carry none — their rarer actions live on the item panel. A destructive section (delete account / delete collection) is `Card variant="danger"`: the card fill with a sober `error` rim (≥ 3:1 on `card`, a row in `contrast.test.ts`), never a red wash.
 - **Glass panel:** `Card variant="glass"` — glass-strong + blur + rim; reserved for decorative panels. The item panel's fields side uses the pre-composited `card` variant so field contrast stays AA-stable.
 - **Action bar:** the page's one primary action (`ActionBar`, `src/components/layout/ActionBar.tsx`).
   From `md` up an inline row where the page places it; on phone a fixed bottom bar on `glass-strong`
@@ -170,9 +170,15 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
   sit behind it. The primary fills the bar below `md`. It holds the primary and at most one pill
   beside it (the home's **Add photos**). One per screen; with the header it is the second of the three
   glass-strong surfaces a screen may carry.
+- **Selection bar:** the pool's grouping actions (`PoolActionBar`) share the action bar's surface
+  (glass-strong + blur + `shadow-lift` + a `hairline` top edge, `z-30`) but stay fixed at every
+  width while photos are selected — a selection follows the person through a long grid. Its height
+  is reserved through `data-selection-bar` (14rem on phone, 9rem from `sm`, as page padding and
+  `scroll-padding-bottom`); static on a short viewport.
 - **Filter pills / chips:** `rounded-pill`, 44px; selected = `chip` fill + primary border + a check glyph, never colour alone.
 - **Inputs:** surface fill, hairline border, pill radius (textareas keep 10px), 44px height; focus → teal ring; error → error border + a message, never colour alone.
 - **Progress line (Sort):** a thin, numberless pill — `primary` fill inside a `content-soft` track with a 1px `track` edge (`#4F7DA0`; dark `#3F7FA0`), so the bar's full extent reads ≥3:1 on ground and the fill ≥3:1 on the track (SC 1.4.11; rows in `contrast.test.ts`). The count is screen-reader text, read on demand, never live.
+- **Carousel dots:** inactive `ink-soft`, current `primary` and wider (a 16px pill), so 'current' is carried by shape as well as colour; `aria-current` for assistive tech.
 - **Decision note:** an inline ask that replaces the control the person tapped (the saved result's "Make a revision" → the pins note, `MakeRevisionButton`). A `rounded-control border border-hairline bg-surface px-4 py-3` panel, never `content-soft` (it merges with the ground in light and hides the ghost hover). It holds the consequence in one sentence, one `secondary` action, one `ghost` escape and at most one quiet link; no `danger` style, no modal. Focus moves to the note's text on open and back to the control when the person keeps things as they are. Text pairs: `ink` and `primary` on `surface` (gated 4.5 in `contrast.test.ts`).
 - **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise. A **benign, in-progress** status (e.g. a paused sort) is **not** a warning — it uses a cool-blue benign chip (`content-mid` fill + `ink` text, AA-gated), never a safety/amber hue ("Brand never speaks Danger"). (`content-deep` is the deeper sibling on the ramp — a non-text fill in Sea Glass, too dark to carry AA-legible label text.)
 - **Theme toggle:** top-right of the shell; 44px tap target; honours reduced-motion.
@@ -185,9 +191,10 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
   "Back to {parent}" link. An item's trail is Collections / {collection} / {item} (no
   Items level). Trail labels come from one builder
   (`src/components/layout/breadcrumb-trails.ts`) and share the mode-chip vocabulary
-  (Build/Sort/Decide). Mode chips appear on the collection home and the section index pages
-  (Photos, Decide) — never on decision surfaces or leaf pages ("one decision at a time"); on
-  descendant pages the active chip marks the current *section* (`aria-current="true"`), not
+  (Build/Sort/Decide). Mode chips appear on the section index pages (Photos, Decide). They do
+  not appear on the collection home, whose one primary action and Add photos pill already lead
+  there (owner decision, `purses-w7ss.14`). They never appear on decision surfaces or leaf pages
+  ("one decision at a time"). On descendant pages the active chip marks the current *section* (`aria-current="true"`), not
   a false current page.
 - **Patient waiting (Not yet):** when a deferred ("Not yet") item resurfaces, a calm banner — a cool-blue benign chip (`content-mid`) with `ink` text (not `ink-soft`: ink-soft on sky fails light-theme AA) plus a non-state moon glyph so hue is never the sole signal. Crossfade in with `--ease-gentle`; instant under reduced-motion. Gentle, never urgent: no remaining count, no inbox or "resting place" framing — the item simply comes back when the person is ready.
 

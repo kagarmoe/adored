@@ -10,7 +10,8 @@ import { triageDecisions, type TriageResult } from "./roundCopy";
 import { DeferControl } from "./DeferControl";
 import { SetAsideButton } from "./SetAsideButton";
 import { useOptionalTriageUndo } from "./TriageUndoProvider";
-import { enqueue, newClientKey } from "./decisionQueue";
+import { enqueue, newClientKey, type PendingEntry } from "./decisionQueue";
+import { directSubmit } from "./directSubmit";
 import { drain, triggerFlush } from "./decisionFlusher";
 import { STUMBLE_LINE, useOptimisticRound } from "./useOptimisticRound";
 import { PendingNotices } from "./pendingNotices";
@@ -134,22 +135,16 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
       setHandled((h) => add(h, target.item.id));
       return;
     }
-    const persisted = await enqueue(
-      key,
-      { kind: "disposition", clientKey: newClientKey(), itemId: target.item.id, disposition: "deferred", enqueuedAt: new Date().toISOString() },
-      () => triggerFlush(key),
-    );
-    if (persisted === "needs_fallback") {
-      try {
-        await fetch(`/api/collections/${collectionId}/dispositions`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ itemId: target.item.id, disposition: "deferred" }),
-        });
-      } catch {
-        // best-effort: the piece still waits at the end and returns next visit
-      }
-    }
+    const entry: PendingEntry = {
+      kind: "disposition",
+      clientKey: newClientKey(),
+      itemId: target.item.id,
+      disposition: "deferred",
+      enqueuedAt: new Date().toISOString(),
+    };
+    const persisted = await enqueue(key, entry, () => triggerFlush(key));
+    // best-effort: the piece still waits at the end and returns next visit
+    if (persisted === "needs_fallback") await directSubmit({ sessionId, collectionId }, entry);
     setEntries((prev) => [...prev.filter((e) => e.item.id !== target.item.id), { ...target, deferred: true }]);
   }
 
@@ -177,7 +172,7 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
       <p aria-live="polite" className="sr-only">
         {announcement}
       </p>
-      <PendingNotices />
+      <PendingNotices sessionId={sessionId} />
       {shown === undefined ? (
         <p role="status" className="text-sm text-ink-soft">
           Just a moment…
@@ -224,19 +219,14 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
               )}
               {/* NOT keyed per piece: a re-keyed region is never announced (SC 4.1.3). */}
               <DecisionControls
-                submit={{ kind: "local", onDecision: (d) => handleTriage(shown.item, d) }}
-                type="triage"
+                onDecision={(d) => handleTriage(shown.item, d)}
                 decisions={triageDecisions(shown.item.id)}
                 priorAnswer={revisit?.label}
               />
               {revisit === null && (
                 <div className="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-hairline pt-3">
-                  <DeferControl submit={{ kind: "local", onDecision: () => void handleNotYet(shown) }} itemId={shown.item.id} />
-                  <SetAsideButton
-                    submit={{ kind: "local", onDecision: () => handleNotMine(shown.item) }}
-                    itemId={shown.item.id}
-                    itemName={shown.item.name}
-                  />
+                  <DeferControl onDecision={() => void handleNotYet(shown)} />
+                  <SetAsideButton onDecision={() => handleNotMine(shown.item)} />
                 </div>
               )}
             </div>
