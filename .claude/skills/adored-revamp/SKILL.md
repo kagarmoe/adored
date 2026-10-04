@@ -49,6 +49,6 @@ An irreversible or destructive operation; a security-sensitive action; a merge/p
 
 ## Current map (update this block at each PR boundary)
 - PR 1 item panel — merged #369. PR 2 sort/ranking/save — merged #370 (migration 0003).
-- PR 3 lists and home — merged #371 (6d7eeb1f7). All three spec PRs are shipped.
-- Follow-up beads: purses-w7ss.4–.17 (see `bd list --parent purses-w7ss`); owner decisions .10 and .14. The epic closes only when all are closed — next sessions work the follow-ups as small PRs through the same loop.
-- Prod health check (`swamp workflow run adored-health`) is red until the owner re-stores VERCEL_TOKEN — command in the handoff.
+- PR 3 lists and home — merged #371. PR 4 follow-ups — merged #373. PR 5 polish + test-infra hygiene — merged #376 (c3477decf).
+- Remaining beads: purses-w7ss.18–.23 and .30–.33 (P4 hygiene) — see `bd list --parent purses-w7ss`. Next: PR 6 = those in one branch from main through the same loop; the epic closes only when all are closed.
+- Prod health check: `swamp workflow run adored-health` (green since 2026-10-03; token refresh hook attached).
