@@ -28,5 +28,24 @@
     "checksum": "0939f9eff540d2a51aae4c8eebdc0a85376c566e4f20dfafc0f8d35fb430a255",
     "filesChecksum": "b4f78fd1fe8c02c46529365e59cee3f71fae8184d52d0cf1164f34dbd8471322",
     "serverUrl": "https://swamp-club.com"
+  },
+  "@swamp/deno-runner": {
+    "version": "2026.08.23.1",
+    "pulledAt": "2026-10-04T19:50:35.096Z",
+    "files": [
+      ".swamp/bundles/d0a66309/deno_runner.js",
+      ".swamp/pulled-extensions/@swamp/deno-runner/files/LICENSE.txt",
+      ".swamp/pulled-extensions/@swamp/deno-runner/files/README.md",
+      ".swamp/pulled-extensions/@swamp/deno-runner/manifest.yaml",
+      ".swamp/pulled-extensions/@swamp/deno-runner/models/_lib/executor.ts",
+      ".swamp/pulled-extensions/@swamp/deno-runner/models/_lib/installer.ts",
+      ".swamp/pulled-extensions/@swamp/deno-runner/models/_lib/schemas.ts",
+      ".swamp/pulled-extensions/@swamp/deno-runner/models/_lib/tracing.ts",
+      ".swamp/pulled-extensions/@swamp/deno-runner/models/_lib/types.ts",
+      ".swamp/pulled-extensions/@swamp/deno-runner/models/deno_runner.ts"
+    ],
+    "checksum": "0c35bed7e6f863a7f612de5065993950cafe898f076def31f254fdd075cd34d6",
+    "filesChecksum": "bbc400680f3338bb973159d116e3a80d76ae07a5bd25c8fe164503888c59b756",
+    "serverUrl": "https://swamp-club.com"
   }
 }
