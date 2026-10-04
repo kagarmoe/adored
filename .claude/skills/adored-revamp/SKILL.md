@@ -48,7 +48,6 @@ loop, it is drift: name the step it belongs to before doing it, or don't do it.
 An irreversible or destructive operation; a security-sensitive action; a merge/push to a shared branch that norms say the owner does; a plan so broken every path is a guess. Otherwise rule, ledger it, continue.
 
 ## Current map (update this block at each PR boundary)
-- PR 1 item panel — merged #369. PR 2 sort/ranking/save — merged #370 (migration 0003).
-- PR 3 lists and home — merged #371. PR 4 follow-ups — merged #373. PR 5 polish + test-infra hygiene — merged #376 (c3477decf).
-- Remaining beads: purses-w7ss.18–.23 and .30–.33 (P4 hygiene) — see `bd list --parent purses-w7ss`. Next: PR 6 = those in one branch from main through the same loop; the epic closes only when all are closed.
-- Prod health check: `swamp workflow run adored-health` (green since 2026-10-03; token refresh hook attached).
+- **Epic purses-w7ss is CLOSED (2026-10-04).** PRs: #369 item panel, #370 sort/ranking/save (migration 0003), #371 lists and home, #373 follow-ups, #376 polish + test-infra hygiene, #378 final hygiene (aa138cad2). All 78 child beads closed.
+- This charter is now historical. Related open beads outside the epic: purses-5wus, purses-1jrf (revisit by 2026-11-02), purses-6ztu.
+- Prod health check: `swamp workflow run adored-health`.
