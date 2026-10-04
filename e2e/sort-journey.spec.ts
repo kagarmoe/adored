@@ -110,6 +110,7 @@ test.describe("sort journey", () => {
       ),
     ).toBe(true);
     await expect(rows.first().getByText("1", { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.setViewportSize(tablet);
 
     // ── Save and share ───────────────────────────────────────────────────────

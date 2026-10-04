@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { constants } from "node:os";
 import { acquireDbLock, HELD_ENV } from "./db-lock";
 
 // tsx scripts/with-db-lock.ts <cmd> [args…]: run one command holding the test-DB lock.
@@ -12,7 +13,8 @@ async function main(): Promise<void> {
   // lock is released after it, not under it. A SIGTERM aimed at us alone is passed on.
   process.on("SIGINT", () => {});
   process.on("SIGTERM", () => child.kill("SIGTERM"));
-  child.on("close", (code, signal) => process.exit(code ?? (signal ? 1 : 0)));
+  // A child killed by a signal exits the shell way, 128 + the signal number (SIGTERM → 143).
+  child.on("close", (code, signal) => process.exit(code ?? (signal ? 128 + constants.signals[signal] : 0)));
 }
 main().catch((e) => {
   console.error(e instanceof Error ? e.message : e);

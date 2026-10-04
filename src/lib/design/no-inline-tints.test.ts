@@ -4,10 +4,11 @@ import { describe, expect, it } from "vitest";
 
 // Spec §5 / DESIGN.md §2: "Per-component inline tints are banned — use the tokens."
 // A Tailwind opacity modifier on a colour utility (bg-x/30, bg-x/[.3], bg-x/(--a), ring-ink/10,
-// hover:bg-y/40) is exactly that, and so is an arbitrary colour (bg-[#fff], text-[rgb(…)]).
+// hover:bg-y/40, a stock shade like bg-gray-900/40) is exactly that, and so is an arbitrary
+// colour (bg-[#fff], text-[rgb(…)]).
 // Fractions like w-1/2 or translate-y-1/2 are not colour utilities.
 const TINT =
-  /\b(?:bg|text|border|ring|outline|fill|stroke|divide|from|via|to|shadow|decoration|placeholder|caret|accent)-(?:[a-z]+(?:-[a-z]+)*\/(?:\d{1,3}|\[[^\]]+\]|\([^)]+\))|\[(?:#|rgb|hsl))/g;
+  /\b(?:bg|text|border|ring|outline|fill|stroke|divide|from|via|to|shadow|decoration|placeholder|caret|accent)-(?:[a-z0-9]+(?:-[a-z0-9]+)*\/(?:\d{1,3}|\[[^\]]+\]|\([^)]+\))|\[(?:#|rgb|hsl))/g;
 
 const root = new URL("../../", import.meta.url).pathname; // src/
 function sources(dir: string): string[] {

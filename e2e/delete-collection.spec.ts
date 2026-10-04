@@ -2,13 +2,15 @@
 // POST /api/collections/[id]/purge (cascade) → redirect to /collections. The
 // redirect only fires on the route's 200, so it proves the server purged.
 import { test, expect } from "@playwright/test";
-import { seedBaseline, seedTriageScenario } from "./fixtures/seed";
+import { seedBaseline, seedCollections, seedTriageScenario } from "./fixtures/seed";
 
 test.describe("delete a collection", () => {
   let slug: string;
 
   test.beforeAll(async () => {
     const ownerId = await seedBaseline();
+    // A second collection, so deleting this one never empties the owner (zero → /welcome).
+    await seedCollections(ownerId, 1);
     ({ slug } = await seedTriageScenario(ownerId));
   });
 

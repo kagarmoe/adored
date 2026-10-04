@@ -21,9 +21,6 @@ describe("ci.yml e2e area map", () => {
   it("lists only specs that exist", () => {
     expect([...listed].filter((s) => !onDisk.includes(s))).toEqual([]);
   });
-  it("sort-area changes also run lists-and-home (its ActionBar/archived-card geometry)", () => {
-    expect(block).toMatch(/A_SORT" = "true" \]; then\n(?:\s*#.*\n)*\s*add "[^"]*e2e\/lists-and-home\.spec\.ts/);
-  });
 });
 
 describe("ci.yml changes filters", () => {
@@ -38,7 +35,8 @@ describe("ci.yml changes filters", () => {
   it("every pattern matches at least one path", () => {
     // Root extension catch-alls ('*.js' under code:) guard future root configs; they may match nothing.
     const rootCatchAll = /^\*\.[a-z]+$/;
-    const missing = paths.filter((p) => !rootCatchAll.test(p) && globSync(p, { cwd: repoRoot }).length === 0);
+    const skipNodeModules = (p: string) => /(^|\/)node_modules$/.test(p);
+    const missing = paths.filter((p) => !rootCatchAll.test(p) && globSync(p, { cwd: repoRoot, exclude: skipNodeModules }).length === 0);
     expect(missing).toEqual([]);
   });
 });

@@ -27,6 +27,13 @@ describe("the local test-DB lock", () => {
     expect(existsSync(path)).toBe(false);
   });
 
+  it("release leaves a lock held by another run in place (globalTeardown under the wrapper)", () => {
+    const path = freshPath();
+    heldBy(path, process.ppid); // alive, and not us
+    releaseDbLock(path);
+    expect(readFileSync(join(path, "pid"), "utf8")).toBe(String(process.ppid));
+  });
+
   it("under a live with-db-lock wrapper (ADORED_DB_LOCK_HELD), acquire is a no-op: no wait on itself", async () => {
     const path = freshPath();
     process.env.ADORED_DB_LOCK_HELD = String(process.ppid); // alive
