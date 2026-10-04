@@ -87,7 +87,7 @@ test("submitting a valid email shows the announced success", async ({ page }) =>
   ]);
 
   // The success view replaces the form and is announced to AT via role="status".
-  const status = page.getByRole("status");
+  const status = page.getByRole("status").filter({ hasText: /Invitation sent successfully/ });
   await expect(status).toBeVisible();
   await expect(status).toHaveText(/Invitation sent successfully/);
 });
