@@ -23,7 +23,7 @@ import {
   type PendingEntry,
   type QueueKey,
 } from "./decisionQueue";
-import { dismissNotice, drain, triggerFlush, type FlushNotice } from "./decisionFlusher";
+import { dismissNotice, drain, getNoticeSet, triggerFlush } from "./decisionFlusher";
 
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -80,19 +80,10 @@ beforeEach(() => {
   key = { curatorId: "u1", sessionId: `sess_gate_${++seq}`, collectionId: "coll_1" };
 });
 
-const NOTICE_KINDS: FlushNotice["kind"][] = [
-  "rejected_unknown_item",
-  "quarantined",
-  "session_conflict",
-  "closed_session_discarded",
-  "disposition_superseded",
-  "auth_required",
-];
-
 afterEach(() => {
   cleanup();
   // Engine notices are sticky and module-level: never let one leak into the next test.
-  for (const kind of NOTICE_KINDS) dismissNotice(kind);
+  for (const notice of getNoticeSet()) dismissNotice(notice.kind);
   vi.clearAllTimers();
   vi.useRealTimers();
   vi.restoreAllMocks();

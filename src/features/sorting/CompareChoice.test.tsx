@@ -26,6 +26,11 @@ vi.mock("./decisionQueue", async (importOriginal) => {
   return { ...actual, enqueue: vi.fn(actual.enqueue) };
 });
 
+// Engine notices are sticky and module-level: never let one leak into the next test.
+afterEach(() => {
+  for (const notice of flusher.getNoticeSet()) flusher.dismissNotice(notice.kind);
+});
+
 // Repository-format item ids: the flusher pre-validates entries against the
 // SHARED batch schema, so anything else would be quarantined, never POSTed.
 const ITEM_A = "item_0000000000000000000000000a";

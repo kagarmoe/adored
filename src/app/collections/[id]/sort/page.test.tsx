@@ -57,6 +57,10 @@ vi.mock("@/features/sorting/TriageRound", () => ({
 vi.mock("@/features/sorting/CompareChoice", () => ({
   CompareChoice: (p: { itemA: Item; itemB: Item }) => <div data-testid="pair">{`${p.itemA.name}|${p.itemB.name}`}</div>,
 }));
+// The notice slot voices a conflict only for the sort it is given: pin that each phase hands it this sort.
+vi.mock("@/features/sorting/pendingNotices", () => ({
+  PendingNotices: (p: { sessionId?: string }) => <div data-testid="notices" data-session={p.sessionId} />,
+}));
 vi.mock("@/features/sessions/KeepSortingButton", () => ({
   KeepSortingButton: (p: { session: unknown }) => <button type="button">{p.session ? "Keep sorting" : "Start sorting"}</button>,
 }));
@@ -107,6 +111,7 @@ describe("the one Sort screen", () => {
     expect(screen.getByTestId("feelings")).toHaveTextContent("c");
     await visit("pairs");
     expect(screen.getByTestId("pair")).toHaveTextContent(/^(a\|b|b\|a)$/);
+    expect(screen.getByTestId("notices")).toHaveAttribute("data-session", "sess_1");
   });
 
   it("the hand-off line sits above the question, and only until a pair answer of this sort has landed", async () => {
@@ -129,6 +134,7 @@ describe("the one Sort screen", () => {
     expect(screen.getByRole("heading", { name: "That’s everything for now" })).toHaveFocus();
     expect(screen.getByRole("link", { name: "See your ranking" })).toHaveAttribute("href", "/collections/bags/results");
     expect(screen.queryByTestId("pair")).not.toBeInTheDocument();
+    expect(screen.getByTestId("notices")).toHaveAttribute("data-session", "sess_1");
   });
 
   it("a paused sort opened by URL is resumed by a client island, not during render", async () => {

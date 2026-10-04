@@ -34,6 +34,11 @@ vi.mock("@/server/api/sessions", () => ({ SessionController: { fromDb: () => ses
 // The gate's own behaviour is covered in its tests; here it just mounts the page.
 vi.mock("@/features/sorting/PendingDecisionsGate", () => ({ PendingDecisionsGate: ({ children }: { children: React.ReactNode }) => children }));
 
+// The notice slot: present on the ranking, and given no sort (it is no sort's surface).
+vi.mock("@/features/sorting/pendingNotices", () => ({
+  PendingNotices: (p: { sessionId?: string }) => <div data-testid="notices" data-session={p.sessionId} />,
+}));
+
 import RankingPage from "./page";
 
 const COLLECTION = { id: "coll_01ABC", slug: "summer-bags", name: "Summer Bags" };
@@ -78,6 +83,7 @@ describe("the live Ranking page (spec §4.3)", () => {
     const setAside = screen.getByText("Set aside").closest("details")!;
     expect(setAside).not.toHaveAttribute("open");
     expect(within(setAside).getByText("Foxtrot")).toBeInTheDocument();
+    expect(screen.getByTestId("notices")).not.toHaveAttribute("data-session");
     expect(within(setAside).getByRole("button", { name: "Bring back Foxtrot" })).toBeInTheDocument();
   });
 

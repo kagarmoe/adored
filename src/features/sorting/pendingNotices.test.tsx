@@ -15,7 +15,7 @@ import {
   type QueueKey,
 } from "./decisionQueue";
 // REAL engine — these tests prove the wiring end-to-end (drain → notice → UI).
-import { dismissNotice, drain, type FlushNotice } from "./decisionFlusher";
+import { dismissNotice, drain, getNoticeSet } from "./decisionFlusher";
 import {
   AUTH_REQUIRED_NOTICE,
   CLOSED_SESSION_DISCARDED_NOTICE,
@@ -90,8 +90,7 @@ beforeEach(() => {
   vi.unstubAllGlobals();
   installStorage();
   // Engine notices are sticky and module-level: never let one leak into the next test.
-  const kinds: FlushNotice["kind"][] = ["rejected_unknown_item", "quarantined", "session_conflict", "closed_session_discarded", "disposition_superseded", "auth_required"];
-  for (const kind of kinds) dismissNotice(kind);
+  for (const notice of getNoticeSet()) dismissNotice(notice.kind);
   // A fresh queue key per test: the engine's module state is keyed by storage key.
   sessionSeq += 1;
   key = { curatorId: "u1", sessionId: `sess_${sessionSeq}`, collectionId: "coll_1" };
@@ -325,5 +324,35 @@ describe("PendingNotices in the round — rejected acks (F9)", () => {
     await waitFor(() => expect(replace).toHaveBeenCalledWith("/sort?phase=pairs"));
     expect(screen.getAllByText(REJECTED_NOTICE)).toHaveLength(1);
     expect(refresh).not.toHaveBeenCalled();
+  });
+});
+
+describe("PendingNotices in the round — a sort closed elsewhere", () => {
+  it("a mid-round 409 shows the wrapped-up line with Reload on the round's own surface", async () => {
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    const queue = Array.from({ length: 6 }, (_, i) => {
+      const id = realItemId();
+      return { item: item(id, `Bag ${i + 1}`), deferred: false, heroPhotoUrl: `/photos/${id}.jpg` };
+    });
+    const user = userEvent.setup();
+    render(
+      <TriageRound
+        curatorId="u1"
+        sessionId={key.sessionId}
+        collectionId="coll_1"
+        collectionSlugOrId="coll_1"
+        queue={queue}
+        placedSeed={0}
+        nextHref="/sort?phase=pairs"
+      />,
+    );
+
+    // Five taps hit the ≥5-pending trigger → a real mid-round drain → 409 for this sort.
+    for (let i = 1; i <= 5; i++) {
+      await user.click(screen.getByRole("button", { name: "Love" }));
+    }
+
+    await waitFor(() => expect(screen.getAllByText(SESSION_CONFLICT_NOTICE)).toHaveLength(1));
+    expect(screen.getByRole("button", { name: "Reload" })).toBeInTheDocument();
   });
 });
