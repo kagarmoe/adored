@@ -27,6 +27,10 @@ describe("checkDocSync", () => {
   it("flags a DIRECTORY-PREFIX-mapped source (dal/**) whose doc is untouched", () => {
     expect(checkDocSync(["src/server/dal/collection-access.ts"], entries)).toHaveLength(1);
   });
+  it("ignores test files: a test-only change under a mapped prefix needs no doc", () => {
+    expect(checkDocSync(["src/app/api/items/[id]/restore/route.test.ts"], entries)).toHaveLength(0);
+    expect(checkDocSync(["src/app/api/items/[id]/restore/route.ts"], entries)).toHaveLength(1); // the source still maps
+  });
   it("is clean when ANY ONE mapped doc is touched (lenient backstop)", () => {
     // schema.ts maps to 3 docs; touching just README satisfies the nudge.
     expect(checkDocSync(["src/lib/db/schema.ts", "README.md"], entries)).toHaveLength(0);
