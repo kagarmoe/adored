@@ -21,9 +21,12 @@ describe("CardImage", () => {
 
   it("retries a photo once before falling back, so one dropped request on a phone is not a lost photo", () => {
     render(<CardImage src={A} alt="Bag" fallback={<span data-testid="fb">B</span>} />);
-    fireEvent.error(screen.getByRole("img", { name: "Bag" }));
-    // First failure: a fresh request for the same photo, not the initial.
-    expect(screen.getByRole("img", { name: "Bag" })).toHaveAttribute("src", A);
+    const first = screen.getByRole("img", { name: "Bag" });
+    fireEvent.error(first);
+    // First failure: a fresh request for the same photo (a new <img> element), not the initial.
+    const retry = screen.getByRole("img", { name: "Bag" });
+    expect(retry).not.toBe(first);
+    expect(retry).toHaveAttribute("src", A);
     expect(screen.queryByTestId("fb")).not.toBeInTheDocument();
   });
 
