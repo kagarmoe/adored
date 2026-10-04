@@ -27,7 +27,7 @@ colors:
   tier-maybe: "#6fa0b8"
   tier-onward: "#b8d4dc"
   ground-aqua: "#a2d4d9"
-  ground-mint: "#c1dfd1"
+  ground-mint: "#c0decc"
   ground-mid: "#e7f0ee"
   ground-end: "#d9e7e2"
   card: "#fbfcfc"
@@ -109,15 +109,15 @@ Two **separate** colour systems that never trade places (see the named rule belo
 **AA comes from each surface's own opacity, never from what sits behind it.** Three surface kinds, nothing else:
 
 - **Glass-strong** (`glass-strong`, ≥ 0.85 opaque — 0.88 light, 0.92 dark) — the only token that carries `backdrop-filter` blur, with a `rim` edge. At most three per screen.
-- **Glass** (`glass`, 0.52 white light / 0.5 night teal dark) — no blur, and only over the static ground wash, never over photos or moving content. It is the fill of every card (grid tiles, the item panel, danger sections), inputs, selects, textareas, secondary buttons and the `···` trigger.
-- **Photo controls** (expand, carousel arrows) sit over photos, so they use `glass-strong` + `backdrop-blur-md` + a `rim`.
+- **Glass** (`glass`, 0.52 white light / 0.5 night teal dark) — no blur, and only over the static ground wash, never over photos or moving content. It is the fill of every surface that sits on the wash: cards (grid tiles, the item panel, danger sections), the login and invitation cards, compare cards, ranking rows, save-and-share and share rows, notices, the revision note, profile/member/tutorial rows, inputs, selects, textareas, secondary buttons, the add-photo tile and the `···` trigger. Menus, popovers, the pool chooser and the image viewer float over arbitrary content and stay opaque (`surface-raised`).
+- **Photo controls** (expand, carousel arrows) sit over photos, so they use `glass-strong` + `backdrop-blur-md` + a `hairline` ring (a white rim vanishes over a white photo); hover goes to `surface`.
 - **`card`** (pre-composited hex) survives only as a contrast reference and for the empty-carousel placeholder.
 
-**Ground wash** (`--ground-wash`, option A of the 2026-09-30 brainstorm): an aqua blob (`ground-aqua` `#A2D4D9`, top-left) and a mint blob (`ground-mint` `#C1DFD1`, bottom-right) — each the pre-composited centre of the mock's translucent blob, i.e. the darkest point text can sit on — over a 160° linear base `ground` → `ground-mid` → `ground-end`. Dark keeps the flat night ground under dim aqua/mint blobs. The wash is painted on `<body>`; nothing above it (the app shell, the footer) paints an opaque fill, and `html` uses `min-height` so the wash covers the whole page instead of tiling per viewport.
+**Ground wash** (`--ground-wash`, option A of the 2026-09-30 brainstorm): an aqua blob (`ground-aqua` `#A2D4D9`, top-left) and a mint blob (`ground-mint` `#C0DECC`, bottom-right) — each the pre-composited centre of the mock's translucent blob (aqua over the start stop, mint over the end stop), i.e. the darkest point text can sit on; blob radii are viewport units so long pages keep viewport-sized blobs — over a 160° linear base `ground` → `ground-mid` → `ground-end`. Dark keeps the flat night ground under dim aqua/mint blobs. The wash is painted on `<body>`; nothing above it (the app shell, the footer) paints an opaque fill, and `html` uses `min-height` so the wash covers the whole page instead of tiling per viewport.
 
 **Fallbacks:** without `backdrop-filter` support, or under `prefers-reduced-transparency: reduce`, `glass` falls back to `surface` and `glass-strong` to `surface-raised` (opaque).
 
-**Text on glass is ink or ink-soft; primary on glass marks controls (borders, icons, focus), never text.** Per-component inline tints are banned — use the tokens. A source scan (`src/lib/design/no-inline-tints.test.ts`) fails on any `/NN` opacity modifier on a colour utility. Composites are declared in `globals.css` and gated by `contrast.test.ts` (each composite is proven against its token's alpha, over both ground stops and over black/white for glass-strong).
+**Text on glass is ink, ink-soft, or a primary link over the wash (gated 4.5 on every over-wash composite); over photos, glass-strong backs controls only (primary ≥ 3:1 for edges and icons).** Per-component inline tints are banned — use the tokens. A source scan (`src/lib/design/no-inline-tints.test.ts`) fails on any `/NN` opacity modifier on a colour utility. Composites are declared in `globals.css` and gated by `contrast.test.ts` (each composite is proven against its token's alpha, over both ground stops and over black/white for glass-strong).
 
 ### Semantic / safety (reserved)
 
@@ -182,7 +182,7 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
 - **Inputs:** surface fill, hairline border, pill radius (textareas keep 10px), 44px height; focus → teal ring; error → error border + a message, never colour alone.
 - **Progress line (Sort):** a thin, numberless pill — `primary` fill inside a `content-soft` track with a 1px `track` edge (`#4F7DA0`; dark `#3F7FA0`), so the bar's full extent reads ≥3:1 on ground and the fill ≥3:1 on the track (SC 1.4.11; rows in `contrast.test.ts`). The count is screen-reader text, read on demand, never live.
 - **Carousel dots:** inactive `ink-soft`, current `primary` and wider (a 16px pill), so 'current' is carried by shape as well as colour; `aria-current` for assistive tech.
-- **Decision note:** an inline ask that replaces the control the person tapped (the saved result's "Make a revision" → the pins note, `MakeRevisionButton`). A `rounded-control border border-hairline bg-surface px-4 py-3` panel, never `content-soft` (it merges with the ground in light and hides the ghost hover). It holds the consequence in one sentence, one `secondary` action, one `ghost` escape and at most one quiet link; no `danger` style, no modal. Focus moves to the note's text on open and back to the control when the person keeps things as they are. Text pairs: `ink` and `primary` on `surface` (gated 4.5 in `contrast.test.ts`).
+- **Decision note:** an inline ask that replaces the control the person tapped (the saved result's "Make a revision" → the pins note, `MakeRevisionButton`). A `rounded-control border border-rim bg-glass px-4 py-3` panel, never `content-soft` (it merges with the ground in light and hides the ghost hover). It holds the consequence in one sentence, one `secondary` action, one `ghost` escape and at most one quiet link; no `danger` style, no modal. Focus moves to the note's text on open and back to the control when the person keeps things as they are. Text pairs: `ink` and `primary` on the glass composites (gated 4.5 in `contrast.test.ts`).
 - **Badges / buckets:** tier badges use the value-ramp tokens + label + icon. Status badges are semantic where meaningful, neutral (hairline) otherwise. A **benign, in-progress** status (e.g. a paused sort) is **not** a warning — it uses a cool-blue benign chip (`content-mid` fill + `ink` text, AA-gated), never a safety/amber hue ("Brand never speaks Danger"). (`content-deep` is the deeper sibling on the ramp — a non-text fill in Sea Glass, too dark to carry AA-legible label text.)
 - **Theme toggle:** top-right of the shell; 44px tap target; honours reduced-motion.
 - **Wayfinding (breadcrumb + back arrow):** every authenticated page carries the breadcrumb

@@ -12,7 +12,7 @@ export default async function Home() {
   }
 
   return (
-    <main className="min-h-[100svh] flex flex-col items-center justify-center bg-ground px-4 py-10 sm:p-6">
+    <main className="min-h-[100svh] flex flex-col items-center justify-center px-4 py-10 sm:p-6">
       <div className="max-w-md text-center sm:max-w-2xl">
         <h1 className="mb-3 text-4xl font-medium tracking-tight text-ink sm:text-5xl">Adored</h1>
         <p className="mb-6 text-lg text-ink-soft sm:mb-8 sm:text-xl">for the things you love</p>

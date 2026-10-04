@@ -202,7 +202,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
             aria-label={`Choose ${itemDisplayName(item)}`}
             aria-pressed={pressed(result)}
             onClick={() => choose(result, key)}
-            className={`group flex min-h-11 flex-col overflow-hidden rounded-card border border-hairline bg-surface text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ground${held}${ring(result)}`}
+            className={`group flex min-h-11 flex-col overflow-hidden rounded-card border border-rim bg-glass text-left transition-shadow duration-200 ease-gentle hover:shadow-lift focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-ground${held}${ring(result)}`}
           >
             <div className="relative flex aspect-4/3 items-center justify-center overflow-hidden bg-content-soft">
               <CardImage

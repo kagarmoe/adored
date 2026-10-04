@@ -20,7 +20,7 @@ const avatarBase =
   "flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-semibold";
 
 const rowBase =
-  "flex items-center gap-4 rounded-card border border-hairline bg-surface-raised shadow-card px-4 py-3";
+  "flex items-center gap-4 rounded-card border border-rim bg-glass shadow-card px-4 py-3";
 
 export function MemberList({ members, pending = [], canManage = false }: MemberListProps) {
   return (

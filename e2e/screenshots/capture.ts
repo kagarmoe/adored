@@ -136,7 +136,7 @@ test.beforeAll(async () => {
 });
 
 for (const theme of ["light", "dark"] as const) {
-  test(`capture ${theme}`, async ({ page }, testInfo) => {
+  test(`capture ${theme}`, async ({ page, browser }, testInfo) => {
     // Seeded PER TEST so each theme's feelings shot starts from an untouched queue.
     const { slug: triageSlug } = await seedJourneyScenario(ownerId, 3);
 
@@ -225,6 +225,26 @@ for (const theme of ["light", "dark"] as const) {
 
     const shot = (n: string) =>
       page.screenshot({ path: `pr-screenshots/${n}-${theme}-${proj}.png`, fullPage: true });
+
+    if (!only || only.includes("login")) {
+      // Signed out: the login card on the bare ground wash (no session in this context).
+      const anon = await browser.newContext({
+        storageState: { cookies: [], origins: [] },
+        viewport: page.viewportSize() ?? undefined,
+      });
+      const anonPage = await anon.newPage();
+      await anonPage.addInitScript((t) => {
+        try {
+          localStorage.setItem("pi-theme", t);
+        } catch {
+          /* storage blocked — falls back to light, fine */
+        }
+      }, theme);
+      await anonPage.goto("/login");
+      await anonPage.waitForTimeout(400);
+      await anonPage.screenshot({ path: `pr-screenshots/login-${theme}-${proj}.png`, fullPage: true });
+      await anon.close();
+    }
 
     if (!only || only.includes("result-revision-note")) {
       // purses-w7ss.5: the revision note. A hand move on the Ranking pins a piece off

@@ -9,7 +9,7 @@ export function BroughtBackNotice() {
   const ref = useRef<HTMLParagraphElement>(null);
   useEffect(() => ref.current?.focus(), []);
   return (
-    <p ref={ref} tabIndex={-1} role="status" className="rounded-card bg-surface p-4 text-sm text-ink ring-1 ring-hairline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+    <p ref={ref} tabIndex={-1} role="status" className="rounded-card bg-glass p-4 text-sm text-ink ring-1 ring-rim focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
       Brought back. It&rsquo;s under All.
     </p>
   );

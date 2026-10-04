@@ -38,7 +38,7 @@ export function TutorialArticle({
           {steps.map((step, index) => (
             <li
               key={step.title}
-              className="rounded-control border border-hairline bg-surface px-4 py-3"
+              className="rounded-control border border-rim bg-glass px-4 py-3"
             >
               <div className="flex gap-3">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-content-soft text-sm font-semibold text-ink">

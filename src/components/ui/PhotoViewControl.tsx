@@ -30,7 +30,7 @@ export function PhotoViewControl({
         aria-label="View photo"
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
-        className={`inline-flex h-11 w-11 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md text-ink ring-1 ring-rim shadow-lift transition-colors hover:bg-surface-raised focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${className ?? ""}`}
+        className={`inline-flex h-11 w-11 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md text-ink ring-1 ring-hairline shadow-lift transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${className ?? ""}`}
       >
         <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5">
           <path

@@ -176,13 +176,15 @@
    * composites (over both ground stops, and black/white for glass-strong) that
    * contrast.test.ts asserts text against and proves against the alpha. */
   /* Option A of the 2026-09-30 brainstorm: aqua at 0.65 and mint at 0.55 over the ground,
-   * pre-composited at the blob centres (the darkest points the wash reaches). */
+   * pre-composited at the blob centres (the darkest points the wash reaches): aqua over the
+   * start stop, mint over the end stop it sits on. Blob radii are viewport units so a long page
+   * keeps viewport-sized blobs instead of one stretched streak. */
   --color-ground-aqua: #a2d4d9;
-  --color-ground-mint: #c1dfd1;
+  --color-ground-mint: #c0decc;
   --color-ground-mid: #e7f0ee;
   --color-ground-end: #d9e7e2;
-  --ground-wash: radial-gradient(60% 50% at 10% 0%, var(--color-ground-aqua), transparent 70%),
-    radial-gradient(50% 50% at 95% 100%, var(--color-ground-mint), transparent 70%),
+  --ground-wash: radial-gradient(60vw 50vh at 10% 0%, var(--color-ground-aqua), transparent 70%),
+    radial-gradient(50vw 50vh at 95% 100%, var(--color-ground-mint), transparent 70%),
     linear-gradient(160deg, var(--color-ground), var(--color-ground-mid) 60%, var(--color-ground-end));
   --color-card: #fbfcfc; /* surface-raised @ 0.9 over ground, pre-composited */
   --color-rim: #ffffff;
@@ -191,9 +193,9 @@
   --color-glass: rgb(255 255 255 / 0.52);
   --color-glass-strong: rgb(255 255 255 / 0.88);
   --color-glass-on-aqua: #d2eaed;
-  --color-glass-on-mint: #e1f0e9;
+  --color-glass-on-mint: #e1efe7;
   --color-glass-strong-on-aqua: #f4fafa;
-  --color-glass-strong-on-mint: #f8fbf9;
+  --color-glass-strong-on-mint: #f7fbf9;
   --color-glass-strong-on-black: #e0e0e0;
   --color-glass-strong-on-white: #ffffff;
 }

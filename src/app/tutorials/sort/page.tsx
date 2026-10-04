@@ -5,7 +5,7 @@ import { WalkthroughShell } from "@/features/onboarding/WalkthroughShell";
 // shared directly.
 export default function SortTutorialPage() {
   return (
-    <main className="min-h-[100svh] bg-ground">
+    <main className="min-h-[100svh]">
       <WalkthroughShell />
     </main>
   );

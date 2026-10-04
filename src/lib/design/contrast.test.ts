@@ -124,8 +124,11 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     ...GLASS_COMPOSITES.flatMap((k): [string, string, number, string][] => [
       [t.ink, t[k], 4.5, `ink on ${k}`],
       [t.inkSoft, t[k], 4.5, `ink-soft on ${k}`],
-      // Text on glass is ink/ink-soft; primary on glass marks controls only (DESIGN §2).
-      [t.primary, t[k], 3.0, `primary control edge on ${k}`],
+      // Links on glass panels over the wash (revision note, profile, share rows) are primary
+      // text: 4.5. Over photos (black/white backdrops) glass-strong only backs controls: 3.0.
+      k.endsWith("Black") || k.endsWith("White")
+        ? [t.primary, t[k], 3.0, `primary control edge on ${k}`]
+        : [t.primary, t[k], 4.5, `primary text/link on ${k}`],
       // Danger sections are glass cards with an error rim (SC 1.4.11).
       [t.error, t[k], 3.0, `error rim on ${k} (danger section)`],
     ]),
