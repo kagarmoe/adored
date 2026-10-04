@@ -71,6 +71,7 @@ export function WalkthroughShell() {
     dismissWelcome();
     // Full-document nav, NOT router.push: the server must re-run the /collections →
     // /welcome gate with the fresh dismissal cookie (purses-etv0).
+    // eslint-disable-next-line @next/next/no-location-assign-relative-destination -- deliberate full navigation so the server re-runs the /welcome gate (purses-etv0)
     window.location.assign("/collections");
   };
 
