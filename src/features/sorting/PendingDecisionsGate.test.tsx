@@ -267,7 +267,31 @@ describe("PendingDecisionsGate", () => {
     expect(window.localStorage.getItem(pendingStorageKey(key))).toBeNull(); // disposed, not preserved
 
     fireEvent.click(screen.getByRole("button", { name: "Okay" }));
-    expect(screen.queryByText(CLOSED_SESSION_DISCARDED_NOTICE)).not.toBeInTheDocument();
+    // Eventual, not synchronous: see the next test.
+    await waitFor(() => expect(screen.queryByText(CLOSED_SESSION_DISCARDED_NOTICE)).not.toBeInTheDocument());
+  });
+
+  it("Okay tapped the instant the surface reveals (before its notice slot has subscribed) still clears the line", async () => {
+    // The reveal commits in a transition, so the surface's PendingNotices subscribes a task later; a
+    // tap in that gap must not be lost (useSyncExternalStore re-reads the set on subscribe).
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonRes(409)));
+    await enqueue(key, triage());
+    const tapped = new Promise<void>((resolve) => {
+      // A MutationObserver callback is a microtask right after the reveal commit — inside the gap.
+      const observer = new MutationObserver(() => {
+        const okay = screen.queryByRole("button", { name: "Okay" });
+        if (screen.queryByTestId("content") === null || okay === null) return;
+        observer.disconnect();
+        fireEvent.click(okay);
+        resolve();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+
+    gate();
+    await tapped;
+
+    await waitFor(() => expect(screen.queryByText(CLOSED_SESSION_DISCARDED_NOTICE)).not.toBeInTheDocument());
   });
 
   it("cross-curator isolation: curator B's mount leaves curator A's queue untouched and drains nothing", async () => {
