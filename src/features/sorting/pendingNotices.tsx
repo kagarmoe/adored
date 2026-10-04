@@ -18,7 +18,7 @@ export const SESSION_CONFLICT_NOTICE =
 export const AUTH_REQUIRED_NOTICE = "Sign in again and your answers will finish saving on their own";
 export const CLOSED_SESSION_DISCARDED_NOTICE =
   "A sort that was wrapped up somewhere else still had a few answers waiting, and those didn't make it in";
-export const DISPOSITION_SUPERSEDED_NOTICE = "One piece already had a feeling from you, so it stays where you placed it";
+export const DISPOSITION_SUPERSEDED_NOTICE = "Anything that already had a feeling from you stays where you placed it";
 
 // Every kind the engine can raise has words, or this does not compile (purses-w7ss.33).
 const NOTICE_COPY: Record<FlushNotice["kind"], string> = {
@@ -47,12 +47,12 @@ function isForThisSurface(notice: FlushNotice, collectionId: string, sessionId: 
  * sentence. `auth_required` offers Sign in (back to this page) and is not
  * dismissible: signing in is the action, and a later save clears it.
  * `session_conflict` offers Reload, and shows only on the surface of the sort it
- * names (`sessionId`). The rest offer Okay, which dismisses the line everywhere.
+ * names (`sessionId`). Every other line (including `closed_session_discarded` and
+ * `disposition_superseded`, a set-aside a feeling had already settled) offers Okay,
+ * which dismisses it on every surface.
  * Every line shows only on its own collection's surfaces, except two global ones:
  * `auth_required` and `closed_session_discarded` (a recovery-time 409; no surface
  * belongs to the closed sort, and lost answers must be heard).
- * `closed_session_discarded` and `disposition_superseded` (a set-aside a feeling had
- * already settled) offer Okay too.
  * Mounted OUTSIDE the round's content swap so it survives the round-end recap
  * ("no later than the revert", F9). The engine never renders; this is its only
  * voice. `PendingDecisionsGate` reuses the same slot.

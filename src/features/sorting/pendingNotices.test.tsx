@@ -407,7 +407,7 @@ describe("PendingNotices — scoped by collection (purses-w7ss.31)", () => {
 });
 
 describe("PendingNotices — a set-aside an answer had already settled (purses-w7ss.33)", () => {
-  it("says the piece stays where you placed it, with Okay", async () => {
+  it("says anything already felt stays where you placed it, with Okay", async () => {
     global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
     render(<PendingNotices collectionId="coll_1" />);
     await enqueue(key, {
@@ -421,6 +421,8 @@ describe("PendingNotices — a set-aside an answer had already settled (purses-w
       await drain([key]);
     });
     expect(screen.getByText(DISPOSITION_SUPERSEDED_NOTICE)).toBeInTheDocument();
+    // One line stands for every superseded set-aside in the collection, so it names no count.
+    expect(DISPOSITION_SUPERSEDED_NOTICE).not.toMatch(/\bone\b/i);
     await userEvent.click(screen.getByRole("button", { name: "Okay" }));
     expect(screen.queryByText(DISPOSITION_SUPERSEDED_NOTICE)).not.toBeInTheDocument();
   });

@@ -58,6 +58,7 @@ export function CompareChoice({ submit, itemA, itemB, heroA, heroB }: CompareCho
     sessionId !== undefined && notices.some((n) => n.kind === "session_conflict" && n.sessionId === sessionId);
   // Derived, not reset in an effect: both tap guards and `busy` already hold on closedElsewhere, and
   // the ack bound releases the tap guard; only the "Saving…" label must let go here.
+  // Relies on a session_conflict never being dismissed in-tab (it offers Reload only).
   const saving = closedElsewhere ? null : pending;
   const [error, setError] = useState<string | null>(null);
   // One idempotency key per in-flight tap, reused if that same tap is retried so the

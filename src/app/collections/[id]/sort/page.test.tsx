@@ -114,7 +114,9 @@ describe("the one Sort screen", () => {
     expect(screen.getByTestId("notices")).toHaveAttribute("data-session", "sess_1");
     expect(screen.getByTestId("notices")).toHaveAttribute("data-collection", "coll_1");
     // Both visits (feelings, then pairs) are mounted: each gate gets the collection id, never the slug.
-    for (const gate of screen.getAllByTestId("gate")) expect(gate).toHaveAttribute("data-collection", "coll_1");
+    const gates = screen.getAllByTestId("gate");
+    expect(gates).toHaveLength(2);
+    for (const gate of gates) expect(gate).toHaveAttribute("data-collection", "coll_1");
   });
 
   it("the hand-off line sits above the question, and only until a pair answer of this sort has landed", async () => {

@@ -59,8 +59,6 @@ export class ScoringService {
     liveItemIds: ReadonlySet<string>,
     events: DecisionEvent[],
   ): Promise<CollectionPreferenceItem[]> {
-    const allDecisions = events;
-
     const itemState = new Map<string, ItemState>();
     const ensure = (itemId: string): ItemState => {
       let state = itemState.get(itemId);
@@ -73,7 +71,7 @@ export class ScoringService {
 
     // Chronological order so the LAST triage per item wins its bucket. Ties on
     // createdAt fall back to id via the shared comparator (spec §2.4).
-    const ordered = [...allDecisions].sort(compareByCreatedAtThenId);
+    const ordered = [...events].sort(compareByCreatedAtThenId);
 
     // Pass 1: triage seeds the score at its tier center — latest triage wins.
     for (const decision of ordered) {
