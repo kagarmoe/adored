@@ -119,7 +119,7 @@ export function ItemOverflowMenu({ itemId, listHref, isOwner }: ItemOverflowMenu
           aria-label="Delete this item"
           aria-describedby={messageId}
           onKeyDown={(e) => e.key === "Escape" && close()}
-          className="mt-3 basis-full space-y-3 rounded-card bg-surface-raised p-4 shadow-lift ring-1 ring-hairline"
+          className="mt-3 basis-full space-y-3 rounded-card bg-glass p-4 shadow-lift ring-1 ring-rim"
         >
           {step === "confirm" && (
             <p id={messageId} className="text-sm text-ink">
@@ -161,7 +161,7 @@ export function ItemOverflowMenu({ itemId, listHref, isOwner }: ItemOverflowMenu
         role="status"
         className={`basis-full text-sm ${
           error
-            ? "mt-3 rounded-card bg-surface-raised p-3 text-error-deep ring-1 ring-hairline"
+            ? "mt-3 rounded-card bg-glass p-3 text-error-deep ring-1 ring-rim"
             : ""
         }`}
       >

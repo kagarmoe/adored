@@ -1,16 +1,16 @@
-# Graph Report - img-wt  (2026-10-04)
+# Graph Report - fs-wt  (2026-10-04)
 
 ## Corpus Check
-- 719 files · ~806,129 words
+- 719 files · ~806,812 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4645 nodes · 10540 edges · 302 communities (275 shown, 27 thin omitted)
+- 4645 nodes · 10540 edges · 301 communities (274 shown, 27 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 262 edges (avg confidence: 0.8)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9c7f6067`
+- Built from commit: `c557e3aa`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -300,7 +300,6 @@
 - [[_COMMUNITY_Community 293|Community 293]]
 - [[_COMMUNITY_Community 294|Community 294]]
 - [[_COMMUNITY_Community 295|Community 295]]
-- [[_COMMUNITY_Community 296|Community 296]]
 - [[_COMMUNITY_Community 297|Community 297]]
 - [[_COMMUNITY_Community 298|Community 298]]
 - [[_COMMUNITY_Community 299|Community 299]]
@@ -328,8 +327,8 @@
   scripts/static-coverage.mjs → docs/design-system/support.js
 - `rawUserRow()` --calls--> `getTestDb()`  [EXTRACTED]
   src/lib/db/account-deletion.integration.test.ts → e2e/fixtures/db.ts
-- `makeService()` --calls--> `getTestDb()`  [EXTRACTED]
-  src/lib/db/move-photos.integration.test.ts → e2e/fixtures/db.ts
+- `rawUserRow()` --calls--> `getTestDb()`  [EXTRACTED]
+  src/lib/db/public-account-routes.integration.test.ts → e2e/fixtures/db.ts
 
 ## Import Cycles
 - None detected.
@@ -343,7 +342,7 @@
 - **Photo pool integrity flow (no-txn guard + blob client-upload + reassign)** — architecture_photo_pool, architecture_neon_no_txn_guard, architecture_blob_client_upload, architecture_reassign_one_op [INFERRED 0.85]
 - **TONE guardrails realized in deferred-metadata UX** — tone_object_is_story, tone_unpressured_forgiving, architecture_deferred_metadata_guardrails [INFERRED 0.85]
 
-## Communities (302 total, 27 thin omitted)
+## Communities (301 total, 27 thin omitted)
 
 ### Community 0 - "Community 0"
 Cohesion: 0.70
@@ -379,7 +378,7 @@ Nodes (22): 0. Review folds (changelog), 10. Screenshots (hard rule), 11. Out of
 
 ### Community 8 - "Community 8"
 Cohesion: 0.07
-Nodes (31): mockDel, { mockGetSession }, rawUserRow(), FullSeed, { mockGetSession, mockBlobDel, mockBlobList }, { mockGetSession }, { mockBlobDel, mockGetSession }, account (+23 more)
+Nodes (30): mockDel, { mockGetSession }, rawUserRow(), FullSeed, { mockGetSession, mockBlobDel, mockBlobList }, { mockGetSession }, { mockBlobDel, mockGetSession }, account (+22 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.31
@@ -414,8 +413,8 @@ Cohesion: 0.08
 Nodes (25): compilerOptions, allowJs, allowSyntheticDefaultImports, esModuleInterop, forceConsistentCasingInFileNames, incremental, isolatedModules, jsx (+17 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.25
-Nodes (7): { GET, POST }, auth, env, EnvConfig, envSchema, previewTrustedOrigins(), validateEnv()
+Cohesion: 0.18
+Nodes (10): { GET, POST }, auth, getClient(), InvitationArgs, send(), env, EnvConfig, envSchema (+2 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.08
@@ -491,7 +490,7 @@ Nodes (64): DecisionController, DispositionController, PreferenceExistsError, Se
 
 ### Community 36 - "Community 36"
 Cohesion: 0.06
-Nodes (36): { mockGetSession }, { mockGetSession, UnauthorizedError }, photoRepo(), seedPhoto(), { mockGetSession, mockBlobGet }, { mockGetSession }, seedInvitation(), seedItem() (+28 more)
+Nodes (29): { mockGetSession }, { mockGetSession, UnauthorizedError }, { mockGetSession }, { mockGetSession, mockBlobGet }, seedItem(), { mockGetSession }, seedRanked(), { mockGetSession } (+21 more)
 
 ### Community 37 - "Community 37"
 Cohesion: 0.14
@@ -535,7 +534,7 @@ Nodes (12): InYourLifeChip(), JSON_HEADERS, OPTIONS, Props, refresh, UsageAnswer
 
 ### Community 47 - "Community 47"
 Cohesion: 0.04
-Nodes (56): { mockGetSession }, { mockGetSession }, { mockGetSession }, { mockGetSession, mockBlobDel }, { mockGetSession }, { mockGetSession }, decisionEventsTable, itemsTable (+48 more)
+Nodes (60): { mockGetSession }, { mockGetSession }, { mockGetSession }, { mockGetSession, mockBlobDel }, { mockGetSession }, { mockGetSession }, decisionEventsTable, itemsTable (+52 more)
 
 ### Community 48 - "Community 48"
 Cohesion: 0.12
@@ -719,7 +718,7 @@ Nodes (4): AuditController, AuditLogRepository, clampLimit(), AuditLog
 
 ### Community 104 - "Community 104"
 Cohesion: 0.14
-Nodes (13): API reference (agent-first), auth & user, Authentication, Authorization model, Cross-cutting invariants, Error bodies: the `errorResponse` contract, `GET·PATCH·DELETE /api/users/me`, `GET·POST /api/auth/[...all]` (+5 more)
+Nodes (13): API reference (agent-first), Authentication, Authorization model, collection items, Cross-cutting invariants, Error bodies: the `errorResponse` contract, `GET·POST /api/collections/[id]/items`, Known authz gaps (+5 more)
 
 ### Community 105 - "Community 105"
 Cohesion: 0.15
@@ -890,8 +889,8 @@ Cohesion: 0.48
 Nodes (5): CAPABILITIES, Operation, resolveEffectiveRole(), Role, roleSatisfies()
 
 ### Community 150 - "Community 150"
-Cohesion: 0.14
-Nodes (7): CreateInvitationSchema, InvitationController, UpdateInvitationSchema, getClient(), InvitationArgs, send(), sendInvitation()
+Cohesion: 0.18
+Nodes (4): CreateInvitationSchema, InvitationController, UpdateInvitationSchema, sendInvitation()
 
 ### Community 151 - "Community 151"
 Cohesion: 0.40
@@ -1106,8 +1105,8 @@ Cohesion: 0.25
 Nodes (7): 1. Blocking today — shipped features that are dead without these, 2. External dashboards (no code, no redeploy), 3. Redeploys / restarts, 4. Better Auth Google login, 5. Needs no action (ships with the next deploy), Quick reference — env vars, Setup Checklist — keys, dashboards, redeploys
 
 ### Community 211 - "Community 211"
-Cohesion: 0.38
-Nodes (5): itemRepo(), makeService(), photoRepo(), seedItem(), seedPhoto()
+Cohesion: 0.10
+Nodes (16): { mockGetSession, UnauthorizedError }, seedCollectionItemSession(), seedPopulatedDraft(), addMember(), { mockGetSession }, seedForeignShare(), seedResult(), firstResultItem() (+8 more)
 
 ### Community 212 - "Community 212"
 Cohesion: 0.11
@@ -1122,8 +1121,8 @@ Cohesion: 0.23
 Nodes (9): BlobEntry, deleteRefusal(), findOrphans(), main(), PhotoRow, now, old, photos (+1 more)
 
 ### Community 216 - "Community 216"
-Cohesion: 0.04
-Nodes (85): { mockGetSession, mockBlobDel }, photoRowCount(), prefRowCount(), seedItemWithChildren(), seedUserRow(), decisionReq(), insertEvent(), insertPreference() (+77 more)
+Cohesion: 0.05
+Nodes (63): { mockGetSession, mockBlobDel }, photoRowCount(), prefRowCount(), seedItemWithChildren(), seedUserRow(), addCurator(), { mockGetSession }, seedCollection() (+55 more)
 
 ### Community 217 - "Community 217"
 Cohesion: 0.11
@@ -1210,8 +1209,8 @@ Cohesion: 0.20
 Nodes (9): 1. Copy-link on pending invitation rows (purses-puuj.1), 2. Email transport is never silently absent (purses-puuj.1), 3. Accept screen enrichment (purses-puuj.3) — no schema change, Changes, Facts this design stands on (verified), Invitation journey: link-first, welcoming, resilient — design, Out of scope, Security notes (+1 more)
 
 ### Community 244 - "Community 244"
-Cohesion: 0.15
-Nodes (3): { mockGetSession }, ItemDispositionRepository, ItemDisposition
+Cohesion: 0.13
+Nodes (9): batchReq(), { mockGetSession }, runScoring(), scoreSnapshot(), seedSession(), triage(), usage(), ItemDispositionRepository (+1 more)
 
 ### Community 245 - "Community 245"
 Cohesion: 0.22
@@ -1246,8 +1245,8 @@ Cohesion: 0.33
 Nodes (5): block, ci, listed, onDisk, start
 
 ### Community 254 - "Community 254"
-Cohesion: 0.13
-Nodes (19): formatTransportError(), hasNestedErrors(), step(), signInFresh(), apiContextFor(), ApiUser, PlaywrightFixture, authSecret() (+11 more)
+Cohesion: 0.07
+Nodes (35): decisionReq(), insertEvent(), insertPreference(), { mockGetSession }, postDecision(), recordPairwise(), recordTriage(), { mockGetSession } (+27 more)
 
 ### Community 255 - "Community 255"
 Cohesion: 0.29
@@ -1302,8 +1301,8 @@ Cohesion: 0.33
 Nodes (5): lastLockedCollection(), betterAuthUseSession, Probe(), signIn, signOut
 
 ### Community 269 - "Community 269"
-Cohesion: 0.27
-Nodes (7): batchReq(), { mockGetSession }, runScoring(), scoreSnapshot(), seedSession(), triage(), usage()
+Cohesion: 0.67
+Nodes (3): auth & user, `GET·PATCH·DELETE /api/users/me`, `GET·POST /api/auth/[...all]`
 
 ### Community 270 - "Community 270"
 Cohesion: 0.40
@@ -1385,10 +1384,6 @@ Nodes (10): BroughtBackNotice(), CollectionsPageProps, Param, ArchivedNotice(), 
 Cohesion: 0.50
 Nodes (3): connectionOptions(), loggerOption(), { mockDrizzle, mockPostgres }
 
-### Community 296 - "Community 296"
-Cohesion: 0.67
-Nodes (3): collection items, `GET·POST /api/collections/[id]/items`, `PATCH /api/collections/[id]/items/[itemId]`
-
 ### Community 298 - "Community 298"
 Cohesion: 0.29
 Nodes (6): AuditSchema, extractTargets(), GlobalArgs, GlobalArgsSchema, model, TargetSchema
@@ -1413,7 +1408,7 @@ _Questions this graph is uniquely positioned to answer:_
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **Why does `h` connect `Community 257` to `Community 271`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `Database` connect `Community 12` to `Community 258`, `Community 6`, `Community 8`, `Community 140`, `Community 13`, `Community 278`, `Community 150`, `Community 155`, `Community 284`, `Community 288`, `Community 35`, `Community 292`, `Community 297`, `Community 170`, `Community 44`, `Community 47`, `Community 177`, `Community 309`, `Community 184`, `Community 71`, `Community 75`, `Community 204`, `Community 214`, `Community 216`, `Community 91`, `Community 98`, `Community 228`, `Community 103`, `Community 244`, `Community 246`?**
+- **Why does `Database` connect `Community 12` to `Community 258`, `Community 6`, `Community 8`, `Community 140`, `Community 13`, `Community 278`, `Community 150`, `Community 155`, `Community 284`, `Community 288`, `Community 35`, `Community 292`, `Community 297`, `Community 170`, `Community 44`, `Community 47`, `Community 177`, `Community 309`, `Community 184`, `Community 71`, `Community 75`, `Community 204`, `Community 214`, `Community 91`, `Community 98`, `Community 228`, `Community 103`, `Community 244`, `Community 246`, `Community 254`?**
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Are the 36 inferred relationships involving `getDb()` (e.g. with `EditCollectionPage()` and `ItemEditRedirect()`) actually correct?**
   _`getDb()` has 36 INFERRED edges - model-reasoned connections that need verification._

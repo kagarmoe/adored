@@ -58,13 +58,13 @@ test("Remove is gated to the non-owner row", async ({ page }) => {
   // (MemberList renders Remove only when role !== "owner").
   await expect(page.getByRole("button", { name: "Remove" })).toHaveCount(1);
 
-  // And it lives on the curator's card, not the owner's. Member rows are
-  // surface-raised card <div>s now (not table rows); match on the card element.
-  const curatorCard = page.locator("div.bg-surface-raised").filter({ hasText: "Curator" });
+  // And it lives on the curator's row, not the owner's. Member rows are list items; locate
+  // them by role, never by a styling class (a restyle must not break this check).
+  const curatorCard = page.getByRole("listitem").filter({ hasText: "Curator" });
   await expect(
     curatorCard.getByRole("button", { name: "Remove" }),
   ).toBeVisible();
-  const ownerCard = page.locator("div.bg-surface-raised").filter({ hasText: "Owner" });
+  const ownerCard = page.getByRole("listitem").filter({ hasText: "Owner" });
   await expect(
     ownerCard.getByRole("button", { name: "Remove" }),
   ).toHaveCount(0);

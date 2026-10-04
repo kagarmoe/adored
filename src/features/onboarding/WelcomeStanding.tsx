@@ -143,7 +143,7 @@ function StandingRowItem({
   rank?: number;
 }) {
   return (
-    <li className="flex items-center gap-3 rounded-card p-2 bg-surface border border-hairline">
+    <li className="flex items-center gap-3 rounded-card p-2 bg-glass border border-rim">
       {rank && (
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-content-soft text-sm font-semibold text-ink">
           {rank}

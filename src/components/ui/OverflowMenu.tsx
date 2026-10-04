@@ -101,7 +101,7 @@ export function OverflowMenu({ label, items, className, compact = false }: Overf
         aria-expanded={open}
         aria-controls={open ? menuId : undefined}
         onClick={() => (open ? close(false) : setOpen(true))}
-        className={`group inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${compact ? "" : "border border-rim bg-surface-raised hover:bg-surface"} ${className ?? ""}`}
+        className={`group inline-flex h-11 w-11 items-center justify-center rounded-full text-ink transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${compact ? "" : "border border-rim bg-glass hover:bg-glass-strong"} ${className ?? ""}`}
       >
         <span
           aria-hidden

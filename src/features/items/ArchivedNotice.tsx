@@ -66,7 +66,7 @@ export function ArchivedNotice({ kind, id }: ArchivedNoticeProps) {
       ref={containerRef}
       tabIndex={-1}
       role="status"
-      className="flex flex-col gap-3 rounded-card bg-surface p-4 ring-1 ring-hairline focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-3 rounded-card bg-glass p-4 ring-1 ring-rim focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:flex-row sm:items-center sm:justify-between"
     >
       <span className="text-sm text-ink">
         Archived. You&rsquo;ll find it under Archived.

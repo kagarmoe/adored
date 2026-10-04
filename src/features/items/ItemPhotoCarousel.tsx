@@ -183,7 +183,7 @@ export function ItemPhotoCarousel({
             aria-expanded={adding}
             aria-controls={adding ? "add-photos-panel" : undefined}
             onClick={() => setAdding((a) => !a)}
-            className="flex h-20 w-20 flex-col items-center justify-center rounded-control border-2 border-dashed border-ink-soft text-sm text-ink transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
+            className="flex h-20 w-20 flex-col items-center justify-center rounded-control border-2 border-dashed border-ink-soft bg-glass text-sm text-ink transition-colors hover:bg-glass-strong focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary"
           >
             <span aria-hidden className="text-xl leading-none">
               +
@@ -200,7 +200,7 @@ export function ItemPhotoCarousel({
           onKeyDown={(e) => {
             if (e.key === "Escape") cancelConfirm();
           }}
-          className="mt-3 space-y-3 rounded-card bg-surface-raised p-4 ring-1 ring-hairline"
+          className="mt-3 space-y-3 rounded-card bg-glass p-4 ring-1 ring-rim"
         >
           <p className="text-sm text-ink">Delete this photo? This can&apos;t be undone.</p>
           <div className="flex flex-wrap gap-2">
@@ -275,7 +275,7 @@ export function ItemPhotoCarousel({
       >
         <div
           data-testid="carousel-stage"
-          className="relative aspect-4/3 touch-pan-y overflow-hidden rounded-card bg-ground"
+          className="relative aspect-4/3 touch-pan-y overflow-hidden rounded-card bg-glass"
           onTouchStart={(e) => {
             // React bubbles touches from the portalled zoom viewer through here; only
             // a touch that is really on the stage counts as a swipe.
@@ -328,7 +328,7 @@ export function ItemPhotoCarousel({
           >
             <span
               aria-hidden
-              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-hairline shadow-lift"
+              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md text-ink ring-1 ring-hairline shadow-lift transition-colors hover:ring-primary"
             >
               <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
                 <path
@@ -423,7 +423,7 @@ function NavArrow({
       onClick={() => {
         if (!disabled) onClick();
       }}
-      className={`absolute top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-hairline shadow-lift transition-colors hover:bg-surface-raised focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${side === "left" ? "left-3" : "right-3"} ${disabled ? "opacity-40" : ""}`}
+      className={`absolute top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md text-ink ring-1 ring-hairline shadow-lift transition-colors hover:ring-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${side === "left" ? "left-3" : "right-3"} ${disabled ? "opacity-40" : ""}`}
     >
       <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5">
         <path

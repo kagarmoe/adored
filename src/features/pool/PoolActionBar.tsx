@@ -131,7 +131,7 @@ export function PoolActionBar({
               {count} selected
             </span>
             <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-              <Button type="button" variant="ghost" className="min-h-11 w-full sm:w-auto" disabled={busy} onClick={onClear}>
+              <Button type="button" variant="ghost" className="min-h-11 w-full text-ink! sm:w-auto" disabled={busy} onClick={onClear}>
                 Clear
               </Button>
               <Button

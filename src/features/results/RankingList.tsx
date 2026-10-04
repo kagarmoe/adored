@@ -149,7 +149,7 @@ export function RankingList({ collectionId, rows }: { collectionId: string; rows
               if (from !== null) void place(from, i);
             }}
             onDragEnd={() => setDragging(null)}
-            className={`flex items-center gap-2 rounded-card border border-hairline bg-surface p-2 sm:gap-3${dragging === i ? " opacity-60" : ""}`}
+            className={`flex items-center gap-2 rounded-card border border-rim bg-glass p-2 sm:gap-3${dragging === i ? " opacity-60" : ""}`}
           >
             {/* Phone: the grip gives way (drag is a tablet nicety); a small ordinal stays. */}
             <span aria-hidden className="hidden h-11 w-6 shrink-0 cursor-grab items-center justify-center text-lg text-ink-soft sm:flex">

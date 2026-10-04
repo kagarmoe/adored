@@ -146,7 +146,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
           )}
 
           {setAside.length > 0 && (
-            <details className="group rounded-card border border-hairline bg-surface p-4">
+            <details className="group rounded-card border border-rim bg-glass p-4">
               <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-control text-ink focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden">
                 <span className="flex-1">Set aside</span>
                 <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5 shrink-0 text-ink-soft transition-transform group-open:rotate-180 motion-reduce:transition-none">

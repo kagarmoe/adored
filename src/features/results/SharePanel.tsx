@@ -142,7 +142,7 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
           {activeShares.length > 0 && (
             <div className="space-y-3 pt-4 border-t border-hairline">
               {activeShares.map((share) => (
-                <div key={share.id} className="flex flex-col gap-3 p-3 bg-ground rounded-lg">
+                <div key={share.id} className="flex flex-col gap-3 p-3 bg-glass border border-rim rounded-lg">
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-ink-soft">Share link:</p>
                     <Input
