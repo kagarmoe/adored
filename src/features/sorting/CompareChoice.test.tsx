@@ -28,7 +28,7 @@ vi.mock("./decisionQueue", async (importOriginal) => {
 
 // Engine notices are sticky and module-level: never let one leak into the next test.
 afterEach(() => {
-  for (const notice of flusher.getNoticeSet()) flusher.dismissNotice(notice.kind);
+  for (const notice of flusher.getNoticeSet()) flusher.dismissNotice(notice);
 });
 
 // Repository-format item ids: the flusher pre-validates entries against the

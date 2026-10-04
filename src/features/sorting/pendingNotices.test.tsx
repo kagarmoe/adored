@@ -19,6 +19,7 @@ import { dismissNotice, drain, getNoticeSet } from "./decisionFlusher";
 import {
   AUTH_REQUIRED_NOTICE,
   CLOSED_SESSION_DISCARDED_NOTICE,
+  DISPOSITION_SUPERSEDED_NOTICE,
   PendingNotices,
   QUARANTINE_NOTICE,
   REJECTED_NOTICE,
@@ -90,7 +91,7 @@ beforeEach(() => {
   vi.unstubAllGlobals();
   installStorage();
   // Engine notices are sticky and module-level: never let one leak into the next test.
-  for (const notice of getNoticeSet()) dismissNotice(notice.kind);
+  for (const notice of getNoticeSet()) dismissNotice(notice);
   // A fresh queue key per test: the engine's module state is keyed by storage key.
   sessionSeq += 1;
   key = { curatorId: "u1", sessionId: `sess_${sessionSeq}`, collectionId: "coll_1" };
@@ -98,7 +99,14 @@ beforeEach(() => {
 
 describe("PendingNotices — copy constants", () => {
   it("never uses machine-side words (TONE.md)", () => {
-    for (const copy of [REJECTED_NOTICE, QUARANTINE_NOTICE, SESSION_CONFLICT_NOTICE, AUTH_REQUIRED_NOTICE, CLOSED_SESSION_DISCARDED_NOTICE]) {
+    for (const copy of [
+      REJECTED_NOTICE,
+      QUARANTINE_NOTICE,
+      SESSION_CONFLICT_NOTICE,
+      AUTH_REQUIRED_NOTICE,
+      CLOSED_SESSION_DISCARDED_NOTICE,
+      DISPOSITION_SUPERSEDED_NOTICE,
+    ]) {
       expect(copy).not.toMatch(/error|failed|invalid/i);
     }
   });
@@ -107,7 +115,7 @@ describe("PendingNotices — copy constants", () => {
 describe("PendingNotices — a sort closed elsewhere", () => {
   it("a mid-round 409 says the sort was wrapped up elsewhere", async () => {
     global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
-    render(<PendingNotices sessionId={key.sessionId} />);
+    render(<PendingNotices collectionId="coll_1" sessionId={key.sessionId} />);
     const region = screen.getByRole("status");
     expect(region).toBeEmptyDOMElement(); // mounted empty BEFORE the notice (SC 4.1.3)
     await enqueue(key, {
@@ -130,10 +138,10 @@ describe("PendingNotices — a sort closed elsewhere", () => {
     render(
       <>
         <div data-testid="this-sort">
-          <PendingNotices sessionId={key.sessionId} />
+          <PendingNotices collectionId="coll_1" sessionId={key.sessionId} />
         </div>
-        <PendingNotices sessionId="sess_other" />
-        <PendingNotices />
+        <PendingNotices collectionId="coll_1" sessionId="sess_other" />
+        <PendingNotices collectionId="coll_1" />
       </>,
     );
     await enqueue(key, {
@@ -155,7 +163,7 @@ describe("PendingNotices — a sort closed elsewhere", () => {
     const reload = vi.fn();
     vi.stubGlobal("location", { ...window.location, reload });
     global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
-    render(<PendingNotices sessionId={key.sessionId} />);
+    render(<PendingNotices collectionId="coll_1" sessionId={key.sessionId} />);
     await enqueue(key, {
       kind: "decision",
       clientKey: newClientKey(),
@@ -174,7 +182,7 @@ describe("PendingNotices — a sort closed elsewhere", () => {
 describe("PendingNotices — signed out mid-round", () => {
   it("a 401 says to sign in again, with a Sign in link back to this page, and no Okay", async () => {
     global.fetch = vi.fn(async () => ({ ok: false, status: 401, json: async () => ({}) })) as unknown as typeof fetch;
-    render(<PendingNotices />);
+    render(<PendingNotices collectionId="coll_1" />);
     await enqueue(key, {
       kind: "decision",
       clientKey: newClientKey(),
@@ -197,7 +205,7 @@ describe("PendingNotices — signed out mid-round", () => {
 describe("PendingNotices — engine clears reach a mounted surface", () => {
   it("a sign-in line leaves once answers save (2xx), and a dismissed notice leaves too", async () => {
     global.fetch = vi.fn(async () => ({ ok: false, status: 401, json: async () => ({}) })) as unknown as typeof fetch;
-    render(<PendingNotices sessionId={key.sessionId} />);
+    render(<PendingNotices collectionId="coll_1" sessionId={key.sessionId} />);
     await enqueue(key, {
       kind: "decision",
       clientKey: newClientKey(),
@@ -235,14 +243,14 @@ describe("PendingNotices — engine clears reach a mounted surface", () => {
       await drain([key]);
     });
     expect(screen.getByText(SESSION_CONFLICT_NOTICE)).toBeInTheDocument();
-    act(() => dismissNotice("session_conflict"));
+    act(() => getNoticeSet().filter((n) => n.kind === "session_conflict").forEach(dismissNotice));
     expect(screen.queryByText(SESSION_CONFLICT_NOTICE)).not.toBeInTheDocument();
   });
 });
 
 describe("PendingNotices — quarantine (F9)", () => {
   it("N quarantined entries in one drain render ONE quiet line, dismissible", async () => {
-    render(<PendingNotices />);
+    render(<PendingNotices collectionId="coll_1" />);
     await enqueue(key, staleEntry());
     await enqueue(key, staleEntry());
     await enqueue(key, staleEntry());
@@ -354,5 +362,66 @@ describe("PendingNotices in the round — a sort closed elsewhere", () => {
 
     await waitFor(() => expect(screen.getAllByText(SESSION_CONFLICT_NOTICE)).toHaveLength(1));
     expect(screen.getByRole("button", { name: "Reload" })).toBeInTheDocument();
+  });
+});
+
+describe("PendingNotices — scoped by collection (purses-w7ss.31)", () => {
+  it("a line from another collection's answers stays on that collection; the sign-in and lost-answers lines show everywhere", async () => {
+    const other: QueueKey = { ...key, sessionId: `${key.sessionId}_other`, collectionId: "coll_2" };
+    render(
+      <>
+        <div data-testid="here"><PendingNotices collectionId="coll_1" /></div>
+        <div data-testid="there"><PendingNotices collectionId="coll_2" /></div>
+      </>,
+    );
+    await enqueue(other, staleEntry());
+    await act(async () => {
+      await drain([other]);
+    });
+    expect(within(screen.getByTestId("here")).queryByText(QUARANTINE_NOTICE)).not.toBeInTheDocument();
+    expect(within(screen.getByTestId("there")).getByText(QUARANTINE_NOTICE)).toBeInTheDocument();
+
+    global.fetch = vi.fn(async () => ({ ok: false, status: 401, json: async () => ({}) })) as unknown as typeof fetch;
+    await enqueue(other, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([other]);
+    });
+    expect(within(screen.getByTestId("here")).getByText(AUTH_REQUIRED_NOTICE)).toBeInTheDocument();
+    expect(within(screen.getByTestId("there")).getByText(AUTH_REQUIRED_NOTICE)).toBeInTheDocument();
+
+    // A recovery (here: a gate on coll_1's page) finds coll_2's sort closed: the answers are gone, so
+    // the line is global — coll_1's page says it too (purses-w7ss.31, U2).
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    await act(async () => {
+      await drain([other], { recovery: true });
+    });
+    expect(within(screen.getByTestId("here")).getByText(CLOSED_SESSION_DISCARDED_NOTICE)).toBeInTheDocument();
+    expect(within(screen.getByTestId("there")).getByText(CLOSED_SESSION_DISCARDED_NOTICE)).toBeInTheDocument();
+  });
+});
+
+describe("PendingNotices — a set-aside an answer had already settled (purses-w7ss.33)", () => {
+  it("says the piece stays where you placed it, with Okay", async () => {
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    render(<PendingNotices collectionId="coll_1" />);
+    await enqueue(key, {
+      kind: "disposition",
+      clientKey: newClientKey(),
+      itemId: realItemId(),
+      disposition: "set_aside",
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    expect(screen.getByText(DISPOSITION_SUPERSEDED_NOTICE)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Okay" }));
+    expect(screen.queryByText(DISPOSITION_SUPERSEDED_NOTICE)).not.toBeInTheDocument();
   });
 });

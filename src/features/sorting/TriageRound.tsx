@@ -172,7 +172,7 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
       <p aria-live="polite" className="sr-only">
         {announcement}
       </p>
-      <PendingNotices sessionId={sessionId} />
+      <PendingNotices collectionId={collectionId} sessionId={sessionId} />
       {shown === undefined ? (
         <p role="status" className="text-sm text-ink-soft">
           Just a moment…

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { listPendingKeysForCurator, sweepExpired, type QueueKey } from "./decisionQueue";
-import { drain, subscribeNotices } from "./decisionFlusher";
+import { dismissNotice, drain, getNoticeSet } from "./decisionFlusher";
 import { PendingNotices } from "./pendingNotices";
 
 // Reveal is time-bounded (spec §3.4/F8): after one backoff step, availability
@@ -27,9 +27,11 @@ export const GATE_CATCHUP_LINE =
  */
 export function PendingDecisionsGate({
   curatorId,
+  collectionId,
   children,
 }: {
   curatorId: string;
+  collectionId: string;
   children: React.ReactNode;
 }) {
   const router = useRouter();
@@ -41,8 +43,6 @@ export function PendingDecisionsGate({
   const recovering = pendingKeys.length > 0;
   const [drained, setDrained] = useState(!recovering);
   const [boundedReveal, setBoundedReveal] = useState(false);
-  const [authRequired, setAuthRequired] = useState(false);
-  const authRequiredRef = useRef(false);
   const ran = useRef(false);
 
   useEffect(() => {
@@ -53,24 +53,16 @@ export function PendingDecisionsGate({
       return;
     }
     const bound = setTimeout(() => setBoundedReveal(true), GATE_REVEAL_BOUND_MS);
-    // Only THIS drain's notices decide the reveal. The engine replays its sticky
-    // notices synchronously on subscribe; a sign-in line left over from an
-    // earlier drain must not skip the refresh after a recovery that lands.
-    let live = false;
-    const unsubscribe = subscribeNotices((notice) => {
-      if (live && notice.kind === "auth_required") {
-        // Reveal immediately with the re-auth affordance; the queue is
-        // preserved across re-login (spec §3.2) — no refresh, nothing changed.
-        authRequiredRef.current = true;
-        setAuthRequired(true);
-      }
-    });
-    live = true;
+    // Only THIS drain may hold the refresh back for sign-in: a line left over from an earlier drain
+    // goes first (a 401 in this drain raises it again), so a recovery whose answers are let go
+    // (409, no 2xx to clear it) still refreshes.
+    dismissNotice({ kind: "auth_required" });
     void drain(pendingKeys, { recovery: true }).finally(() => {
       clearTimeout(bound);
-      unsubscribe();
       sweepExpired(Date.now());
-      if (authRequiredRef.current) {
+      // Still signed out: nothing landed and the queue waits for sign-in (spec §3.2) — reveal
+      // with the re-auth line, no refresh.
+      if (getNoticeSet().some((n) => n.kind === "auth_required")) {
         setDrained(true);
         return;
       }
@@ -83,7 +75,7 @@ export function PendingDecisionsGate({
     });
   }, [recovering, pendingKeys, router]);
 
-  const revealed = !recovering || authRequired || boundedReveal || (drained && !isPending);
+  const revealed = !recovering || boundedReveal || (drained && !isPending);
 
   // One fixed tree shape. The notice slot exists only when a recovery actually
   // happened, so ordinary mounts add nothing.
@@ -94,7 +86,7 @@ export function PendingDecisionsGate({
           {/* Before reveal the gate is the only voice; after it, the surface's own single
               PendingNotices speaks (it reads the engine's sticky notices on mount), so the
               line can never be doubled. */}
-          {!revealed && <PendingNotices />}
+          {!revealed && <PendingNotices collectionId={collectionId} />}
           {revealed && !drained && (
             <p role="status" className="rounded-control bg-content-soft px-4 py-3 text-sm text-ink-soft">
               {GATE_CATCHUP_LINE}

@@ -35,7 +35,7 @@ vi.mock("@/components/layout", () => ({
     </div>
   ),
 }));
-vi.mock("@/features/sorting/PendingDecisionsGate", () => ({ PendingDecisionsGate: ({ children }: { children: ReactNode }) => children }));
+vi.mock("@/features/sorting/PendingDecisionsGate", () => ({ PendingDecisionsGate: (p: { collectionId: string; children: ReactNode }) => <div data-testid="gate" data-collection={p.collectionId}>{p.children}</div> }));
 vi.mock("@/features/sorting/TriageUndoProvider", () => ({ TriageUndoProvider: ({ children }: { children: ReactNode }) => children }));
 vi.mock("@/features/sorting/TriageUndoNotice", () => ({ TriageUndoNotice: () => null }));
 vi.mock("@/features/sorting/PauseControl", () => ({ PauseControl: () => <button type="button">Pause</button> }));
@@ -59,7 +59,7 @@ vi.mock("@/features/sorting/CompareChoice", () => ({
 }));
 // The notice slot voices a conflict only for the sort it is given: pin that each phase hands it this sort.
 vi.mock("@/features/sorting/pendingNotices", () => ({
-  PendingNotices: (p: { sessionId?: string }) => <div data-testid="notices" data-session={p.sessionId} />,
+  PendingNotices: (p: { collectionId: string; sessionId?: string }) => <div data-testid="notices" data-collection={p.collectionId} data-session={p.sessionId} />,
 }));
 vi.mock("@/features/sessions/KeepSortingButton", () => ({
   KeepSortingButton: (p: { session: unknown }) => <button type="button">{p.session ? "Keep sorting" : "Start sorting"}</button>,
@@ -112,6 +112,9 @@ describe("the one Sort screen", () => {
     await visit("pairs");
     expect(screen.getByTestId("pair")).toHaveTextContent(/^(a\|b|b\|a)$/);
     expect(screen.getByTestId("notices")).toHaveAttribute("data-session", "sess_1");
+    expect(screen.getByTestId("notices")).toHaveAttribute("data-collection", "coll_1");
+    // Both visits (feelings, then pairs) are mounted: each gate gets the collection id, never the slug.
+    for (const gate of screen.getAllByTestId("gate")) expect(gate).toHaveAttribute("data-collection", "coll_1");
   });
 
   it("the hand-off line sits above the question, and only until a pair answer of this sort has landed", async () => {
@@ -135,6 +138,8 @@ describe("the one Sort screen", () => {
     expect(screen.getByRole("link", { name: "See your ranking" })).toHaveAttribute("href", "/collections/bags/results");
     expect(screen.queryByTestId("pair")).not.toBeInTheDocument();
     expect(screen.getByTestId("notices")).toHaveAttribute("data-session", "sess_1");
+    expect(screen.getByTestId("notices")).toHaveAttribute("data-collection", "coll_1");
+    expect(screen.getByTestId("gate")).toHaveAttribute("data-collection", "coll_1");
   });
 
   it("a paused sort opened by URL is resumed by a client island, not during render", async () => {

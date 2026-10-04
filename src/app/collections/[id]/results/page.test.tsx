@@ -32,11 +32,11 @@ vi.mock("@/server/api/decisions", () => ({ DecisionController: { fromDb: () => d
 vi.mock("@/server/api/ranking", () => ({ RankingController: { fromDb: () => ranking } }));
 vi.mock("@/server/api/sessions", () => ({ SessionController: { fromDb: () => sessions } }));
 // The gate's own behaviour is covered in its tests; here it just mounts the page.
-vi.mock("@/features/sorting/PendingDecisionsGate", () => ({ PendingDecisionsGate: ({ children }: { children: React.ReactNode }) => children }));
+vi.mock("@/features/sorting/PendingDecisionsGate", () => ({ PendingDecisionsGate: (p: { collectionId: string; children: React.ReactNode }) => <div data-testid="gate" data-collection={p.collectionId}>{p.children}</div> }));
 
 // The notice slot: present on the ranking, and given no sort (it is no sort's surface).
 vi.mock("@/features/sorting/pendingNotices", () => ({
-  PendingNotices: (p: { sessionId?: string }) => <div data-testid="notices" data-session={p.sessionId} />,
+  PendingNotices: (p: { collectionId: string; sessionId?: string }) => <div data-testid="notices" data-collection={p.collectionId} data-session={p.sessionId} />,
 }));
 
 import RankingPage from "./page";
@@ -84,6 +84,8 @@ describe("the live Ranking page (spec §4.3)", () => {
     expect(setAside).not.toHaveAttribute("open");
     expect(within(setAside).getByText("Foxtrot")).toBeInTheDocument();
     expect(screen.getByTestId("notices")).not.toHaveAttribute("data-session");
+    expect(screen.getByTestId("notices")).toHaveAttribute("data-collection", COLLECTION.id);
+    expect(screen.getByTestId("gate")).toHaveAttribute("data-collection", COLLECTION.id);
     expect(within(setAside).getByRole("button", { name: "Bring back Foxtrot" })).toBeInTheDocument();
   });
 
