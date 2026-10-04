@@ -25,14 +25,14 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>13/13</span>
+                <span class='fraction'>11/11</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>5/5</span>
+                <span class='fraction'>3/3</span>
             </div>
         
             
@@ -187,20 +187,7 @@
 <a name='L122'></a><a href='#L122'>122</a>
 <a name='L123'></a><a href='#L123'>123</a>
 <a name='L124'></a><a href='#L124'>124</a>
-<a name='L125'></a><a href='#L125'>125</a>
-<a name='L126'></a><a href='#L126'>126</a>
-<a name='L127'></a><a href='#L127'>127</a>
-<a name='L128'></a><a href='#L128'>128</a>
-<a name='L129'></a><a href='#L129'>129</a>
-<a name='L130'></a><a href='#L130'>130</a>
-<a name='L131'></a><a href='#L131'>131</a>
-<a name='L132'></a><a href='#L132'>132</a>
-<a name='L133'></a><a href='#L133'>133</a>
-<a name='L134'></a><a href='#L134'>134</a>
-<a name='L135'></a><a href='#L135'>135</a>
-<a name='L136'></a><a href='#L136'>136</a>
-<a name='L137'></a><a href='#L137'>137</a>
-<a name='L138'></a><a href='#L138'>138</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L125'></a><a href='#L125'>125</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -216,14 +203,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -263,11 +242,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -341,7 +315,6 @@
 import type { UsageAnswer } from "@/lib/derive-usage";
 import { ItemCard } from "@/features/items/ItemCard";
 import { MostLovedHero } from "@/features/results/MostLovedHero";
-import { TierBadge } from "@/components/ui/TierBadge";
 import { effectiveBucket, type Bucket } from "@/lib/results-buckets";
 &nbsp;
 /** The minimal per-row shape both the live Standing and a finalized snapshot
@@ -359,13 +332,6 @@ export interface RankedJoinedRow {
   item: Item;
 }
 &nbsp;
-/** Love/Like/Maybe live above the Onward fold; the badge names the tier. */
-const BUCKET_TO_TIER: Record&lt;Exclude&lt;Bucket, "low"&gt;, "love" | "like" | "maybe"&gt; = {
-  top: "love",
-  high: "like",
-  medium: "maybe",
-};
-&nbsp;
 interface RankedResultsProps {
   /** The loved tail (top/high/medium), most-loved first. loved[0] is the hero. */
   loved: RankedJoinedRow[];
@@ -379,11 +345,11 @@ interface RankedResultsProps {
   usageByItemId?: ReadonlyMap&lt;string, UsageAnswer&gt;;
 }
 &nbsp;
-/** The affirmation composition shared by the live Standing surface and the
- *  finalized snapshot viewer: most-loved hero → the full ranking → the
- *  forward-framed Onward section → an affirmation close. Callers derive
- *  loved/onward from the SAME partitionRanked/effectiveBucket source, so both
- *  surfaces read identically (TONE #1 affirmation-first, no counts). */
+/** The affirmation composition for a saved ranking (`/collections/[id]/results/[resultNumber]`):
+ *  most-loved hero → the full ranking → the forward-framed Onward section → an affirmation close.
+ *  The caller derives loved/onward from the partitionRanked/effectiveBucket source (TONE #1
+ *  affirmation-first, no counts). The welcome walkthrough's `WelcomeStanding` mirrors this shape
+ *  with its own rows. */
 export function RankedResults({ loved, onward, collectionId, coverUrl, usageByItemId }: RankedResultsProps) {
   return (
     &lt;div className="space-y-8"&gt;
@@ -398,23 +364,16 @@ export function RankedResults({ loved, onward, collectionId, coverUrl, usageByIt
         &lt;section className="space-y-4"&gt;
           &lt;h2 className="font-display text-2xl text-ink"&gt;The full ranking&lt;/h2&gt;
           &lt;div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"&gt;
-            {loved.slice(1).map(({ ri, item }) =&gt; {
-              const bucket = effectiveBucket(ri);
-              return (
-                &lt;div key={ri.id} className="space-y-2"&gt;
-                  {bucket !== "low" &amp;&amp; (
-                    &lt;TierBadge tier={BUCKET_TO_TIER[bucket]} showLabel={false} /&gt;
-                  )}
-                  &lt;ItemCard
-                    item={item}
-                    collectionId={collectionId}
-                    heroPhotoUrl={coverUrl(item.id)}
-                    bucket={bucket}
-                    usage={usageByItemId?.get(item.id)}
-                  /&gt;
-                &lt;/div&gt;
-              );
-            })}
+            {loved.slice(1).map(({ ri, item }) =&gt; (
+              &lt;ItemCard
+                key={ri.id}
+                item={item}
+                collectionId={collectionId}
+                heroPhotoUrl={coverUrl(item.id)}
+                bucket={effectiveBucket(ri)}
+                usage={usageByItemId?.get(item.id)}
+              /&gt;
+            ))}
           &lt;/div&gt;
         &lt;/section&gt;
       )}
@@ -431,8 +390,10 @@ export function RankedResults({ loved, onward, collectionId, coverUrl, usageByIt
 &nbsp;
       {/* Onward: the lowest tier, asked forward — where these go next — never
          tallied, never framed as discarding (TONE #1, #2). */}
+      {/* pt-2: the small eyebrow needs more air than the bare section gap — 32 + 8 = 40px, DESIGN.md
+         spacing xl (purses-w7ss.22). */}
       {onward.length &gt; 0 &amp;&amp; (
-        &lt;section className="space-y-4"&gt;
+        &lt;section className="space-y-4 pt-2"&gt;
           &lt;div className="space-y-1"&gt;
             {/* Onward is subordinate to the loved ranking (TONE #1): a quieter
                heading (text-xl vs the loved tail's text-2xl, ink-soft), with the
@@ -481,7 +442,7 @@ export function RankedResults({ loved, onward, collectionId, coverUrl, usageByIt
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-10-04T09:56:02.696Z
+                at 2026-10-04T18:56:56.685Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
