@@ -164,7 +164,7 @@ describe("SortResultService.createDraftResult", () => {
   // (sortResultMaterialization.test.ts) and the un-mocked materialization by the
   // integration suite. Here we prove the wiring: the pure ranking output flows
   // into the transactional primitive's tx-bound writes.
-  it("ranks preferences (score desc) and inserts one tx item per preference", async () => {
+  it("ranks preferences (score desc) and inserts every row in one multi-row insert", async () => {
     const created = sortResult();
     txResultRepo.insertWithNumber.mockResolvedValue(created);
     // Deliberately out of order to prove the service sorts by score desc.
@@ -195,23 +195,13 @@ describe("SortResultService.createDraftResult", () => {
         number: 1,
       }),
     );
-    expect(txItemRepo.create).toHaveBeenCalledTimes(2);
-    // Epic S: the create-input now carries the snapshot usage (null here — the
-    // stubbed log is empty, so no item is usage-known).
-    expect(txItemRepo.create).toHaveBeenNthCalledWith(1, {
-      sortResultId: created.id,
-      itemId: "a",
-      computedRank: 0,
-      computedBucket: "top",
-      usage: null,
-    });
-    expect(txItemRepo.create).toHaveBeenNthCalledWith(2, {
-      sortResultId: created.id,
-      itemId: "b",
-      computedRank: 1,
-      computedBucket: "medium",
-      usage: null,
-    });
+    expect(txItemRepo.create).not.toHaveBeenCalled();
+    expect(txItemRepo.createMany).toHaveBeenCalledTimes(1);
+    // Epic S: each row carries the snapshot usage (null here — the stubbed log is empty).
+    expect(txItemRepo.createMany).toHaveBeenCalledWith([
+      { sortResultId: created.id, itemId: "a", computedRank: 0, computedBucket: "top", manualRank: null, usage: null },
+      { sortResultId: created.id, itemId: "b", computedRank: 1, computedBucket: "medium", manualRank: null, usage: null },
+    ]);
   });
 
   it("throws ResultNumberExhaustedError when the number race loses all 5 attempts", async () => {
@@ -256,7 +246,7 @@ describe("SortResultService.createDraftResult", () => {
     ).createDraftResult(COLLECTION, CURATOR, "Empty sort");
 
     expect(result).toBe(created);
-    expect(txItemRepo.create).not.toHaveBeenCalled();
+    expect(txItemRepo.createMany).toHaveBeenCalledWith([]); // the repo no-ops an empty list
   });
 });
 
@@ -373,22 +363,15 @@ describe("SortResultService.supersedeResult", () => {
         status: "draft",
       }),
     );
-    // Fresh-fold: the clone drops manual fields and does not carry usage; usage
-    // is re-derived here (empty stubbed log → null) and stamped by the create.
-    expect(txItemRepo.create).toHaveBeenNthCalledWith(1, {
-      sortResultId: newResult.id,
-      itemId: "a",
-      computedRank: 0,
-      computedBucket: "top",
-      usage: null,
-    });
-    expect(txItemRepo.create).toHaveBeenNthCalledWith(2, {
-      sortResultId: newResult.id,
-      itemId: "b",
-      computedRank: 1,
-      computedBucket: "low",
-      usage: null,
-    });
+    // One multi-row insert; the saved loved order is pinned AT insert (a at slot 0), the low row
+    // is not (savedOrderPositions skips Onward). Never row by row, never a follow-up update.
+    expect(txItemRepo.create).not.toHaveBeenCalled();
+    expect(txItemRepo.update).not.toHaveBeenCalled();
+    expect(txItemRepo.createMany).toHaveBeenCalledTimes(1);
+    expect(txItemRepo.createMany).toHaveBeenCalledWith([
+      { sortResultId: newResult.id, itemId: "a", computedRank: 0, computedBucket: "top", manualRank: 0, usage: null },
+      { sortResultId: newResult.id, itemId: "b", computedRank: 1, computedBucket: "low", manualRank: null, usage: null },
+    ]);
   });
 
   it("guard: returns null when the source is absent (never opens a tx)", async () => {

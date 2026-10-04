@@ -214,6 +214,11 @@ export class SortResultService {
   }
 
   // Invariant: tx-bound repos only — a write on this.sortResultRepo would not roll back.
+  // One multi-row insert under the curator lock (purses-w7ss.23); `slots` pins rows at insert
+  // (a revision's saved loved order — distinct slots, see savedOrderPositions).
+  // ponytail: one createMany binds ~10 params per row, so it breaks past ~6,500 rows (Postgres'
+  // 65,535-param limit) — saveAndShare has the same ceiling; collections are hundreds of pieces.
+  // Chunk the insert if a collection ever nears it.
   private async insertResultWithItems(
     tx: Database,
     collectionId: string,
@@ -221,14 +226,19 @@ export class SortResultService {
     name: string,
     items: MaterializedItem[],
     usageByItemId: ReadonlyMap<string, UsageAnswer>,
+    slots: ReadonlyMap<string, number> = new Map(),
   ): Promise<SortResult> {
     const resultRepo = new SortResultRepository(tx);
-    const itemRepo = new SortResultItemRepository(tx);
     const number = await resultRepo.getNextResultNumber(collectionId);
     const result = await resultRepo.insertWithNumber({ collectionId, curatorId, name, status: "draft", number });
-    for (const item of items) {
-      await itemRepo.create({ sortResultId: result.id, ...item, usage: usageByItemId.get(item.itemId) ?? null });
-    }
+    await new SortResultItemRepository(tx).createMany(
+      items.map((item) => ({
+        sortResultId: result.id,
+        ...item,
+        manualRank: slots.get(item.itemId) ?? null,
+        usage: usageByItemId.get(item.itemId) ?? null,
+      })),
+    );
     return result;
   }
 
@@ -416,12 +426,8 @@ export class SortResultService {
       }
       await this.deleteDrafts(tx, source.collectionId, source.curatorId);
       const revision = await this.insertResultWithItems(
-        tx, source.collectionId, source.curatorId, `${source.name} (Revision)`, items, usageByItemId,
+        tx, source.collectionId, source.curatorId, `${source.name} (Revision)`, items, usageByItemId, slots,
       );
-      for (const row of await itemRepo.findByResult(revision.id)) {
-        const slot = slots.get(row.itemId);
-        if (slot !== undefined) await itemRepo.update(row.id, { manualRank: slot, manualBucket: null });
-      }
       return { revision };
     });
     if ("pinsLost" in outcome) throw new RevisionDiscardsPinsError(outcome.pinsLost);
