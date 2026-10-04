@@ -509,6 +509,41 @@ describe("SortResultService deleteResult", () => {
   });
 });
 
+describe("SortResultService.createShare (purses-w7ss.18)", () => {
+  function service(findById: () => Promise<SortResult | null>) {
+    return new SortResultService(
+      { findById } as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
+      txDb,
+    );
+  }
+
+  it("returns null and inserts nothing when the result is absent", async () => {
+    expect(await service(async () => null).createShare("missing")).toBeNull();
+    expect(txShareRepo.create).not.toHaveBeenCalled();
+  });
+
+  it("re-reads the result under its curator's lock; gone by then (an account deletion won) → null, nothing inserted", async () => {
+    txResultRepo.findByIdForUpdate.mockResolvedValue(null);
+    expect(await service(async () => sortResult()).createShare("res-1")).toBeNull();
+    expect(lockCollectionCurator).toHaveBeenCalledWith(expect.anything(), COLLECTION, CURATOR);
+    expect(txShareRepo.create).not.toHaveBeenCalled();
+  });
+
+  it("inserts on the tx-bound repo under the lock and returns the token", async () => {
+    txResultRepo.findByIdForUpdate.mockResolvedValue(sortResult());
+    const expiresAt = new Date("2027-01-01T00:00:00Z");
+    txShareRepo.create.mockImplementation(async (d: { sortResultId: string; shareToken: string }) => ({
+      id: "share-1", status: "active", expiresAt, createdAt: new Date(), updatedAt: new Date(), ...d,
+    }));
+    const share = await service(async () => sortResult()).createShare("res-1", expiresAt);
+    expect(txShareRepo.create).toHaveBeenCalledWith({ sortResultId: "res-1", shareToken: share!.shareToken, expiresAt });
+    expect(share!.shareToken).toMatch(/^[0-9a-f]{64}$/);
+    expect(lockCollectionCurator).toHaveBeenCalledWith(expect.anything(), COLLECTION, CURATOR);
+  });
+});
+
 describe("SortResultService.saveAndShare replay", () => {
   it("409s when the key's link is no longer active, and writes nothing", async () => {
     txResultRepo.findBySaveKey.mockResolvedValue(sortResult({ status: "finalized" }));

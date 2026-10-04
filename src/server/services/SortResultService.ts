@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import type { SortResult, SortResultItem } from "@/types";
+import type { SortResult, SortResultItem, SortResultShare } from "@/types";
 import type { Database } from "@/lib/db";
 import { lockCollectionCurator, lockSaveKey, withTransaction } from "@/lib/transactions";
 import {
@@ -453,6 +453,23 @@ export class SortResultService {
       await new SortResultItemRepository(tx).deleteByResult(id);
       await resultRepo.delete(id);
       return true;
+    });
+  }
+
+  /**
+   * Mint a share link under the result's curator lock (purses-w7ss.18): account deletion, a
+   * collection purge and a draft delete all remove sort_result_shares before sort_results, so a
+   * share inserted in between would 23503 their sort_results delete. The pre-tx read only supplies
+   * the lock key; the row is re-read under the lock, and gone → null (route 404).
+   */
+  async createShare(id: string, expiresAt?: Date): Promise<(SortResultShare & { shareToken: string }) | null> {
+    const owner = await this.sortResultRepo.findById(id);
+    if (!owner) return null;
+    return this.inCuratorTx(owner.collectionId, owner.curatorId, "create_share", async (tx) => {
+      if (!(await new SortResultRepository(tx).findByIdForUpdate(id))) return null;
+      const shareToken = randomBytes(32).toString("hex");
+      const share = await new SortResultShareRepository(tx).create({ sortResultId: id, shareToken, expiresAt });
+      return { ...share, shareToken };
     });
   }
 

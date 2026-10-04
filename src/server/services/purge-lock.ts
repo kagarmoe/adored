@@ -33,3 +33,26 @@ export async function lockCollectionCurators(
     order by hashtext(curator_id)
   `);
 }
+
+/**
+ * Account deletion's borrowed pass (Phase 2) erases one curator's private rows in every collection
+ * they are a member of. Take that curator's writer lock in each, so a pin, save, share or decision
+ * for the same (collection, curator) either commits before the deletes or waits for them — never
+ * lands between a child delete and the sort_results delete (no cascade → 23503).
+ *
+ * Memberships only: owned collections were already purged (under lockCollectionCurators), and a
+ * collection the user no longer belongs to has no writer that passes authz. Ordered by the lock
+ * key; a writer holds one curator lock (plus lockSaveKey, a disjoint keyspace taken last) and a
+ * purge locks one collection, so no cycle. Released at commit/rollback.
+ */
+export async function lockCuratorMemberships(
+  tx: Database,
+  curatorId: string,
+): Promise<void> {
+  await tx.execute(sql`
+    select pg_advisory_xact_lock(hashtext(collection_id), hashtext(${curatorId}))
+    from memberships
+    where user_id = ${curatorId}
+    order by hashtext(collection_id)
+  `);
+}

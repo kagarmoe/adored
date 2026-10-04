@@ -1,5 +1,6 @@
 import type { Database } from "@/lib/db";
 import { withTransaction } from "@/lib/transactions";
+import { lockCuratorMemberships } from "@/server/services/purge-lock";
 import { accountTombstone } from "@/server/services/account-tombstone";
 import { CollectionPurgeService } from "@/server/services/CollectionPurgeService";
 import { CollectionRepository } from "@/server/repositories/implementations/CollectionRepository";
@@ -31,7 +32,9 @@ import { AuditLogRepository } from "@/server/repositories/implementations/AuditL
  * collection). In ONE transaction, delete the user's curator-PRIVATE slice
  * child-first: sort_result_shares → sort_result_items → sort_results →
  * decision_events → sessions → preferences → memberships. The owner's own rows
- * are untouched.
+ * are untouched. It first takes the curator's writer lock in each of those
+ * collections (lockCuratorMemberships), so an in-flight pin, share or decision
+ * finishes first.
  *
  * Phase 3 — Scrub SHARED content the user contributed into OTHER owners'
  * collections (must SURVIVE, only de-identified): photos' uploaded_by and any
@@ -83,6 +86,8 @@ export class AccountDeletionService {
     // Child-first: shares + result-items are children of sort_results;
     // decision_events are children of sessions.
     await withTransaction(this.db, async (tx) => {
+      // Serialize with this curator's in-flight writers in each borrowed collection (purses-w7ss.18).
+      await lockCuratorMemberships(tx, userId);
       await new SortResultShareRepository(tx).deleteByCurator(userId);
       await new SortResultItemRepository(tx).deleteByCurator(userId);
       await new SortResultRepository(tx).deleteByCurator(userId);
