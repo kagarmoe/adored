@@ -26,4 +26,15 @@ describe("the local test-DB lock", () => {
     releaseDbLock(path);
     expect(existsSync(path)).toBe(false);
   });
+
+  it("under a live with-db-lock wrapper (ADORED_DB_LOCK_HELD), acquire is a no-op: no wait on itself", async () => {
+    const path = freshPath();
+    process.env.ADORED_DB_LOCK_HELD = String(process.ppid); // alive
+    try {
+      await acquireDbLock({ path, timeoutMs: 50, pollMs: 10 });
+      expect(existsSync(path)).toBe(false);
+    } finally {
+      delete process.env.ADORED_DB_LOCK_HELD;
+    }
+  });
 });

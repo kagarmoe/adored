@@ -326,7 +326,8 @@ forces one): it
 starts the DB via `test-db.sh running` / `up` if it is not already running, traps EXIT/INT/TERM, and tears it
 down **only if it started it** (`run-db-tests.sh:14–28`) — so it never kills a container you were already
 using. It holds the shared test-DB lock (`scripts/with-db-lock.ts`, ARCHITECTURE decision 11), so it waits
-for a running e2e or screenshot run instead of truncating under it.
+for a running e2e or screenshot run instead of truncating under it. Calling `run-db-tests.sh` directly, and
+the manual tools `scripts/seed-load*.ts` and `scripts/bench-*.ts`, bypass the lock.
 
 It runs **serially — `npx vitest run --no-file-parallelism src/lib/db`** (`run-db-tests.sh:34`). Not a
 performance preference: vitest parallelizes *files*, every DB test file calls `resetDb()` →
@@ -342,9 +343,11 @@ In CI these run in a dedicated **`db-tests` job** against a `postgres:16` **serv
 **E2E** — its own **ephemeral Postgres**, never Neon. `e2e/fixtures/test-db.sh` runs a disposable
 `postgres:16` container named **`pi-e2e-db`** on a **fixed port `5433`** (5433 avoids clashing with a local
 Postgres on 5432), bound to `127.0.0.1` only, and applies the schema with the real migrator
-(`DATABASE_URL=… npm run db:migrate`, `test-db.sh:64`). Subcommands: `up`, `down`, `reset`. Connection
+(`DATABASE_URL=… npm run db:migrate`, `test-db.sh:64`). Subcommands: `up`, `down`, `reset`, `running`. Connection
 string: `postgresql://postgres:test@localhost:5433/app_test`. Playwright's `globalSetup`
-(`e2e/global-setup.ts:8`) calls the script, so `npx playwright test` brings its own DB up. The e2e job in
+(`e2e/global-setup.ts`) takes the test-DB lock (a no-op under the npm scripts' `with-db-lock.ts` wrapper,
+which already holds it) and then runs `test-db.sh reset`, so every Playwright run starts on a fresh DB.
+`npm run test:e2e:ui` holds the lock for the whole UI session. The e2e job in
 `ci.yml` pins the same URL (`ci.yml:482`).
 
 The e2e DB helper **fails closed**: `e2e/fixtures/db.ts` allowlists `localhost` / `127.0.0.1` / `::1` and

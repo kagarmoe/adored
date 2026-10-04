@@ -26,7 +26,13 @@ function holder(path: string): number | null {
   }
 }
 
+// with-db-lock.ts sets this (to its pid) for the command it runs, so a Playwright globalSetup under
+// the wrapper does not wait on its own parent. releaseDbLock is then a no-op too: the pid differs.
+export const HELD_ENV = "ADORED_DB_LOCK_HELD";
+
 export async function acquireDbLock({ path = DB_LOCK, timeoutMs = 30 * 60_000, pollMs = 2_000 } = {}): Promise<void> {
+  const wrapper = Number(process.env[HELD_ENV]);
+  if (wrapper > 0 && alive(wrapper)) return;
   const deadline = Date.now() + timeoutMs;
   const tmp = `${path}.${process.pid}`;
   let said = false;
@@ -39,17 +45,22 @@ export async function acquireDbLock({ path = DB_LOCK, timeoutMs = 30 * 60_000, p
       // pid that the next run takes over.
       process.once("exit", () => releaseDbLock(path));
       return;
-    } catch {
+    } catch (e) {
       rmSync(tmp, { recursive: true, force: true });
+      const code = (e as NodeJS.ErrnoException).code;
+      if (code !== "ENOTEMPTY" && code !== "EEXIST") throw e; // e.g. a stray file there: fail fast
     }
     const pid = holder(path);
     if (pid !== null && !alive(pid)) {
       const stale = `${path}.stale.${process.pid}`;
       try {
-        renameSync(path, stale); // move aside atomically: only one taker gets the stale dir
-        rmSync(stale, { recursive: true, force: true });
+        renameSync(path, stale);
+        // Another taker may have replaced the dead lock with its live one between our read and
+        // the rename: if what we moved is not the dead holder's, put it back.
+        if (holder(stale) === pid) rmSync(stale, { recursive: true, force: true });
+        else renameSync(stale, path);
       } catch {
-        // someone else took it over first; go round again
+        // someone else moved it first; go round again
       }
       continue;
     }
