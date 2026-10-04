@@ -22,39 +22,34 @@ inputs:
         Comma-separated screenshot surfaces (SHOTS) to capture on tablet and phone,
         e.g. "home,ranking,login". Empty = skip.
 jobs:
-  - name: static
+  - name: gates
     description: >-
-      Gates that need no database. They share one model (adored-tests), so swamp runs
-      them in sequence on its per-model lock; that also keeps build and coverage output apart.
+      Every gate on the test-suite model runs in sequence: one fan-out gate call (lint,
+      auth:verify, build, test:db), then unit coverage. Steps on one model share swamp's
+      per-model lock, so parallel steps here would time out waiting for it.
     steps:
-      - name: lint
+      - name: gates
         task:
           type: model_method
           modelIdOrName: adored-tests
           methodName: gate
           inputs:
-            script: lint
-      - name: auth-verify
-        task:
-          type: model_method
-          modelIdOrName: adored-tests
-          methodName: gate
-          inputs:
-            script: auth:verify
+            scripts: ["lint", "auth:verify", "build", "test:db"]
       - name: unit
+        dependsOn:
+          - step: gates
+            condition:
+              type: completed
         task:
           type: model_method
           modelIdOrName: adored-tests
           methodName: coverage
-      - name: build
-        task:
-          type: model_method
-          modelIdOrName: adored-tests
-          methodName: gate
-          inputs:
-            script: build
-      # Swamp extensions are Deno code (outside eslint, vitest and tsc): type-check them
-      # and run their tests with swamp's pinned Deno (@swamp/deno-runner fails the step on error).
+  - name: extensions
+    description: >-
+      Swamp extensions are Deno code (outside eslint, vitest and tsc): type-check them and
+      run their tests with swamp's pinned Deno (@swamp/deno-runner fails the step on error).
+      A different model, so this job runs alongside the gates.
+    steps:
       - name: extensions-check
         task:
           type: model_method
@@ -63,31 +58,22 @@ jobs:
           inputs:
             args: ["check", "extensions/models/", "extensions/tests/"]
       - name: extensions-test
+        dependsOn:
+          - step: extensions-check
+            condition:
+              type: completed
         task:
           type: model_method
           modelIdOrName: adored-deno
           methodName: run
           inputs:
             args: ["test", "--no-check", "extensions/tests/"]
-  - name: db
-    description: DB-backed tests (take the test-DB lock)
-    steps:
-      - name: test-db
-        task:
-          type: model_method
-          modelIdOrName: adored-tests
-          methodName: gate
-          inputs:
-            script: test:db
   - name: e2e
     description: >-
-      Playwright runs. After static and db: Playwright's web server rebuilds .next
-      (must not overlap the build gate) and takes the same DB lock as test:db.
+      Playwright runs, after the gates (same model, and Playwright's web server rebuilds
+      .next, which must not overlap the build gate).
     dependsOn:
-      - job: static
-        condition:
-          type: completed
-      - job: db
+      - job: gates
         condition:
           type: completed
     steps:

@@ -188,21 +188,29 @@ export const model = {
   },
   methods: {
     gate: {
-      description: "Run one pre-PR gate (`npm run <script>`) and record its exit code; a failure is recorded, not thrown",
+      description:
+        "Run pre-PR gates (`npm run <script>` each, in order) and record one result per gate; a failure is recorded, not thrown. One call runs them all under one model lock (fan-out, swamp rule 6).",
       arguments: z.object({
-        script: z.enum(GATE_SCRIPTS).describe("The npm script to run: lint, test:ci, build, auth:verify or test:db"),
+        scripts: z.array(z.enum(GATE_SCRIPTS)).min(1).describe(
+          "npm scripts to run in order, from: lint, test:ci, build, auth:verify, test:db",
+        ),
       }),
-      execute: async (args: { script: (typeof GATE_SCRIPTS)[number] }, context: Ctx) => {
-        const run = await runNpm(context, args.script);
-        const handle = await context.writeResource("gate", `gate-${args.script.replace(":", "-")}`, {
-          ranAt: new Date().toISOString(),
-          script: args.script,
-          exitCode: run.code,
-          passed: run.code === 0,
-          durationMs: run.durationMs,
-          outputTail: run.tail,
-        });
-        return { dataHandles: [handle] };
+      execute: async (args: { scripts: Array<(typeof GATE_SCRIPTS)[number]> }, context: Ctx) => {
+        const handles = [];
+        for (const script of args.scripts) {
+          const run = await runNpm(context, script);
+          handles.push(
+            await context.writeResource("gate", `gate-${script.replace(":", "-")}`, {
+              ranAt: new Date().toISOString(),
+              script,
+              exitCode: run.code,
+              passed: run.code === 0,
+              durationMs: run.durationMs,
+              outputTail: run.tail,
+            }),
+          );
+        }
+        return { dataHandles: handles };
       },
     },
     coverage: {
