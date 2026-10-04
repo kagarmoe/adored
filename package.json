@@ -13,7 +13,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test": "vitest",
-    "test:db": "bash e2e/fixtures/run-db-tests.sh",
+    "test:db": "tsx scripts/with-db-lock.ts bash e2e/fixtures/run-db-tests.sh",
     "test:ci": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
