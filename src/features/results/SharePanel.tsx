@@ -189,7 +189,7 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
           )}
 
           {activeShares.length === 0 && !stopped && (
-            <p className="text-sm text-ink-soft text-center py-4">
+            <p className="text-sm text-ink-soft text-left sm:text-center py-4">
               Nothing shared yet — whenever you&apos;d like to, make a link.
             </p>
           )}
