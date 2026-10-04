@@ -31,7 +31,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${textareaId}-error` : undefined}
           className={`
-            w-full bg-surface border border-hairline rounded-control px-4 py-3 text-ink
+            w-full bg-glass border border-hairline rounded-control px-4 py-3 text-ink
             transition-shadow duration-200 ease-gentle
             placeholder:text-ink-soft focus:outline-hidden focus-visible:ring-2 focus-visible:ring-primary
             focus-visible:border-transparent disabled:opacity-50 disabled:cursor-not-allowed

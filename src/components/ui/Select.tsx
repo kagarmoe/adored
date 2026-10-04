@@ -23,7 +23,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       )}
       <select
         className={`
-          w-full bg-surface border border-hairline rounded-pill px-4 py-3 text-ink
+          w-full bg-glass border border-hairline rounded-pill px-4 py-3 text-ink
           transition-shadow duration-200 ease-gentle
           focus:outline-hidden focus:ring-2 focus:ring-primary
           focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed

@@ -275,7 +275,7 @@ export function ItemPhotoCarousel({
       >
         <div
           data-testid="carousel-stage"
-          className="relative aspect-4/3 touch-pan-y overflow-hidden rounded-card bg-ground"
+          className="relative aspect-4/3 touch-pan-y overflow-hidden rounded-card bg-glass"
           onTouchStart={(e) => {
             // React bubbles touches from the portalled zoom viewer through here; only
             // a touch that is really on the stage counts as a swipe.
@@ -328,7 +328,7 @@ export function ItemPhotoCarousel({
           >
             <span
               aria-hidden
-              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-hairline shadow-lift"
+              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md text-ink ring-1 ring-rim shadow-lift"
             >
               <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
                 <path
@@ -423,7 +423,7 @@ function NavArrow({
       onClick={() => {
         if (!disabled) onClick();
       }}
-      className={`absolute top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-surface text-ink ring-1 ring-hairline shadow-lift transition-colors hover:bg-surface-raised focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${side === "left" ? "left-3" : "right-3"} ${disabled ? "opacity-40" : ""}`}
+      className={`absolute top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md text-ink ring-1 ring-rim shadow-lift transition-colors hover:bg-surface-raised focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${side === "left" ? "left-3" : "right-3"} ${disabled ? "opacity-40" : ""}`}
     >
       <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5">
         <path

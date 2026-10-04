@@ -111,6 +111,9 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.inkSoft, t.groundMint, 4.5, "ink-soft on mint stop"],
     [t.primary, t.groundAqua, 4.5, "primary link on aqua stop"],
     [t.primary, t.groundMint, 4.5, "primary link on mint stop"],
+    [t.inkSoft, t.groundEnd, 4.5, "ink-soft on the wash's end stop"],
+    [t.primary, t.groundEnd, 4.5, "primary link on the wash's end stop"],
+    [t.inkSoft, t.groundMid, 4.5, "ink-soft on the wash's mid stop"],
     [t.ink, t.card, 4.5, "ink on card"],
     [t.inkSoft, t.card, 4.5, "ink-soft on card"],
     [t.primary, t.card, 4.5, "primary link on card"],
@@ -123,6 +126,8 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
       [t.inkSoft, t[k], 4.5, `ink-soft on ${k}`],
       // Text on glass is ink/ink-soft; primary on glass marks controls only (DESIGN §2).
       [t.primary, t[k], 3.0, `primary control edge on ${k}`],
+      // Danger sections are glass cards with an error rim (SC 1.4.11).
+      [t.error, t[k], 3.0, `error rim on ${k} (danger section)`],
     ]),
   ];
 }

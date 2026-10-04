@@ -2,7 +2,7 @@
 name: Adored
 description: A luminous gallery for recognizing what you love — calm, colour-forward, light or dark.
 colors:
-  ground: "#d3e2e5"
+  ground: "#dbe9ec"
   surface: "#e5eef0"
   surface-raised: "#ffffff"
   hairline: "#c7dade"
@@ -26,8 +26,10 @@ colors:
   tier-like: "#2f6e8c"
   tier-maybe: "#6fa0b8"
   tier-onward: "#b8d4dc"
-  ground-aqua: "#cfe6ec"
-  ground-mint: "#d5ebe1"
+  ground-aqua: "#a2d4d9"
+  ground-mint: "#c1dfd1"
+  ground-mid: "#e7f0ee"
+  ground-end: "#d9e7e2"
   card: "#fbfcfc"
   rim: "#ffffff"
   chip: "#e3eef1"
@@ -76,13 +78,13 @@ spacing:
 
 Adored looks like a bright, quiet gallery where one cherished object is presented at a time. The work is affirmation, not subtraction — recognizing what matters, with letting go following naturally from that clarity. Colour is a real protagonist (it lives in the chrome, not only the content), but it is calm and committed, never loud. The object's own photograph is still the loudest thing on screen; the room around it is airy and restrained so exactly one loving choice is ever in front of the person.
 
-The system ships in **two themes**: a default **light** (**Sea Glass** — a cool tinted ground from which cards rise to white) and a **dark** (**Sea Glass at Night** — the same teal spine inverted toward black, where the colours glow like a gallery at night). Both are first-class and honour `prefers-color-scheme`, with a manual toggle.
+The system ships in **two themes**: a default **light** (**Sea Glass** — a pale sea-glass wash under white frosted glass) and a **dark** (**Sea Glass at Night** — the same teal spine inverted toward black, where the colours glow like a gallery at night). Both are first-class and honour `prefers-color-scheme`, with a manual toggle.
 
 It rejects every frame that treats belongings as stock: **not a catalog**, **not an inventory tool**, **not a shopping site**. It does not gamify letting go (no confetti, streaks, points, or "you have too many").
 
 **Key characteristics:**
 
-- Sea-glass ground that recedes, cards rising to white (light) / deep cool `#001B21` (dark); never warm parchment, never pure black.
+- A pale sea-glass wash under white frosted glass (light) / deep cool `#001B21` under night-teal glass (dark); never warm parchment, never pure black.
 - One deep teal anchor for action; cool airy blues for content; a lone marigold spark; soft violet for decoration (now used freely).
 - Playfair Display for the tender display moments; Inter for everything functional. Headings are neutral ink, never coloured.
 - Calm density: one decision at a time, generous airy spacing.
@@ -100,17 +102,18 @@ Two **separate** colour systems that never trade places (see the named rule belo
 - **Spark — marigold** (`#EFCB77`): the lone affirmation spark. Sparing; dark text on it; never in a caution context.
 - **Decor — soft violet** (`#B5AACC`): non-state decoration, now used freely (fills, backgrounds, framing) — never a state, tier, or action colour.
 - **Ink** (`#16242B` light / `#ECF2F4` dark) and **Ink-soft**: text. Headings are ink, never teal.
-- **Ground / surface / hairline**: the room. The sea-glass ground recedes; cards rise to white by shadow + hairline, not tone.
+- **Ground / surface / hairline**: the room. The sea-glass wash recedes; frosted glass sits on it, lifted by a white rim + a soft shadow, not tone.
 
 ### Glass (Frosted shelf)
 
 **AA comes from each surface's own opacity, never from what sits behind it.** Three surface kinds, nothing else:
 
 - **Glass-strong** (`glass-strong`, ≥ 0.85 opaque — 0.88 light, 0.92 dark) — the only token that carries `backdrop-filter` blur, with a `rim` edge. At most three per screen.
-- **Decorative glass** (`glass`, ~0.5) — no blur, and only over the static ground wash, never over photos or moving content.
-- **Cards** (`card`) — pre-composited opaque hex, no blur.
+- **Glass** (`glass`, 0.52 white light / 0.5 night teal dark) — no blur, and only over the static ground wash, never over photos or moving content. It is the fill of every card (grid tiles, the item panel, danger sections), inputs, selects, textareas, secondary buttons and the `···` trigger.
+- **Photo controls** (expand, carousel arrows) sit over photos, so they use `glass-strong` + `backdrop-blur-md` + a `rim`.
+- **`card`** (pre-composited hex) survives only as a contrast reference and for the empty-carousel placeholder.
 
-**Ground wash** (`--ground-wash`): two soft radial stops over `ground` — `ground-aqua` (`#CFE6EC`, top-left) and `ground-mint` (`#D5EBE1`, bottom-right).
+**Ground wash** (`--ground-wash`, option A of the 2026-09-30 brainstorm): an aqua blob (`ground-aqua` `#A2D4D9`, top-left) and a mint blob (`ground-mint` `#C1DFD1`, bottom-right) — each the pre-composited centre of the mock's translucent blob, i.e. the darkest point text can sit on — over a 160° linear base `ground` → `ground-mid` → `ground-end`. Dark keeps the flat night ground under dim aqua/mint blobs. The wash is painted on `<body>`; nothing above it (the app shell, the footer) paints an opaque fill, and `html` uses `min-height` so the wash covers the whole page instead of tiling per viewport.
 
 **Fallbacks:** without `backdrop-filter` support, or under `prefers-reduced-transparency: reduce`, `glass` falls back to `surface` and `glass-strong` to `surface-raised` (opaque).
 
@@ -160,8 +163,8 @@ Flat by default. In **light**, surfaces sit on the sea-glass ground and lift by 
 
 - **Buttons:** pill radius (`rounded-pill`), min height 44px. **Primary:** teal fill, white text (dark: teal fill, dark text). **Secondary/ghost:** transparent or soft-aqua, ink/teal text. **Danger:** the reserved error red — only for truly destructive, irreversible actions; sober, not loud.
 - **Quiet links:** a secondary, non-dominant text link (shared `quiet-link` token, `src/lib/design/quiet-link.ts`): `primary`-token text, underlined, ≥44px tap height (`min-h-11`), visible focus ring. Used for the quieter actions beside a single dominant button (e.g. "View all items", "Add more photos") so each surface keeps exactly **one** dominant action.
-- **Cards:** 20px radius, `card` fill (pre-composited), hairline + soft shadow (light) / hairline + glow (dark), no backdrop-filter; the selected card uses a teal border + a check, never colour alone. Collection cards carry the owner's `···` (top-right, the `compact` trigger over the cover, above the stretched link) and no status badge — the Archived pill says it; item cards carry none — their rarer actions live on the item panel. A destructive section (delete account / delete collection) is `Card variant="danger"`: the card fill with a sober `error` rim (≥ 3:1 on `card`, a row in `contrast.test.ts`), never a red wash.
-- **Glass panel:** `Card variant="glass"` — glass-strong + blur + rim; reserved for decorative panels. The item panel's fields side uses the pre-composited `card` variant so field contrast stays AA-stable.
+- **Cards:** 20px radius, `glass` fill + `rim` edge + soft shadow (light) / glow (dark), no backdrop-filter; the selected card uses a teal border + a check, never colour alone. Collection cards carry the owner's `···` (top-right, the `compact` trigger over the cover, above the stretched link) and no status badge — the Archived pill says it; item cards carry none — their rarer actions live on the item panel. A destructive section (delete account / delete collection) is `Card variant="danger"`: the card glass with a sober `error` rim (≥ 3:1 on `card` and on both glass composites, rows in `contrast.test.ts`), never a red wash.
+- **Glass panel:** `Card variant="glass"` — glass-strong + blur + rim; reserved for panels over photos or moving content. The item panel's fields side uses the default `card` glass: it sits only on the static wash, and text on glass over the darkest wash stop is AA-gated, so field contrast stays stable.
 - **Action bar:** the page's one primary action (`ActionBar`, `src/components/layout/ActionBar.tsx`).
   From `md` up an inline row where the page places it; on phone a fixed bottom bar on `glass-strong`
   + backdrop blur + a `hairline` top edge; static on a short viewport (browser zoom), never a second fixed

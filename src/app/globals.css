@@ -98,7 +98,7 @@
   color-scheme: light;
 
   /* Surfaces — Sea Glass: cool ground recedes, cards rise to white */
-  --color-ground: #d3e2e5;
+  --color-ground: #dbe9ec;
   --color-surface: #e5eef0;
   --color-surface-raised: #ffffff;
   --color-hairline: #c7dade;
@@ -175,21 +175,25 @@
    * never from what sits behind it. Translucent tokens are rgb()/alpha; each has hex
    * composites (over both ground stops, and black/white for glass-strong) that
    * contrast.test.ts asserts text against and proves against the alpha. */
-  --color-ground-aqua: #cfe6ec;
-  --color-ground-mint: #d5ebe1;
-  --ground-wash: radial-gradient(120% 80% at 10% 0%, var(--color-ground-aqua), transparent 60%),
-    radial-gradient(120% 80% at 90% 100%, var(--color-ground-mint), transparent 60%),
-    var(--color-ground);
+  /* Option A of the 2026-09-30 brainstorm: aqua at 0.65 and mint at 0.55 over the ground,
+   * pre-composited at the blob centres (the darkest points the wash reaches). */
+  --color-ground-aqua: #a2d4d9;
+  --color-ground-mint: #c1dfd1;
+  --color-ground-mid: #e7f0ee;
+  --color-ground-end: #d9e7e2;
+  --ground-wash: radial-gradient(60% 50% at 10% 0%, var(--color-ground-aqua), transparent 70%),
+    radial-gradient(50% 50% at 95% 100%, var(--color-ground-mint), transparent 70%),
+    linear-gradient(160deg, var(--color-ground), var(--color-ground-mid) 60%, var(--color-ground-end));
   --color-card: #fbfcfc; /* surface-raised @ 0.9 over ground, pre-composited */
   --color-rim: #ffffff;
   --color-chip: #e3eef1;
   --color-chip-ink: #16242b;
-  --color-glass: rgb(255 255 255 / 0.5);
+  --color-glass: rgb(255 255 255 / 0.52);
   --color-glass-strong: rgb(255 255 255 / 0.88);
-  --color-glass-on-aqua: #e7f3f6;
-  --color-glass-on-mint: #eaf5f0;
-  --color-glass-strong-on-aqua: #f9fcfd;
-  --color-glass-strong-on-mint: #fafdfb;
+  --color-glass-on-aqua: #d2eaed;
+  --color-glass-on-mint: #e1f0e9;
+  --color-glass-strong-on-aqua: #f4fafa;
+  --color-glass-strong-on-mint: #f8fbf9;
   --color-glass-strong-on-black: #e0e0e0;
   --color-glass-strong-on-white: #ffffff;
 }
@@ -261,6 +265,8 @@
 
   --color-ground-aqua: #022a33;
   --color-ground-mint: #03261f;
+  --color-ground-mid: #001b21;
+  --color-ground-end: #001b21;
   --color-card: #10374a;
   --color-rim: #3f7fa0;
   --color-chip: #173f4d;
@@ -304,9 +310,15 @@
     box-sizing: border-box;
   }
 
-  html,
+  /* The ground wash is painted on <body> and propagates to the canvas, which is sized by
+   * <html>: html must grow with its content (min-height, not height), or the gradient is
+   * sized to one viewport and tiles with a seam on long pages. */
+  html {
+    min-height: 100%;
+  }
+
   body {
-    height: 100%;
+    min-height: 100dvh;
   }
 
   body {
