@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 
 const refresh = vi.fn();
@@ -15,10 +14,15 @@ const { triggerFlush, isInFlight } = vi.hoisted(() => ({
 }));
 vi.mock("./decisionFlusher", () => ({ triggerFlush, isInFlight }));
 
-import { TriageUndoProvider } from "./TriageUndoProvider";
+import { TriageUndoProvider, useTriageUndo } from "./TriageUndoProvider";
 import { TriageUndoNotice } from "./TriageUndoNotice";
-import { SetAsideButton } from "./SetAsideButton";
 import { readQueue, removeEntries, type QueueKey } from "./decisionQueue";
+
+// The live caller is TriageRound's Not mine (undoCtx.setAside); this stands in for it.
+function NotMineTap({ itemId, itemName }: { itemId: string; itemName: string | null }) {
+  const { setAside } = useTriageUndo();
+  return <button type="button" aria-label="Not mine — sets it aside" onClick={() => void setAside(itemId, itemName)}>Not mine</button>;
+}
 
 const KEY: QueueKey = { curatorId: "user_a", sessionId: "sess_1", collectionId: "c1" };
 
@@ -61,7 +65,7 @@ function Harness({
   return (
     <TriageUndoProvider curatorId="user_a" sessionId="sess_1" collectionId={collectionId}>
       <TriageUndoNotice />
-      {item && <SetAsideButton submit={{ kind: "session" }} itemId={itemId} itemName={itemName} />}
+      {item && <NotMineTap itemId={itemId} itemName={itemName} />}
     </TriageUndoProvider>
   );
 }
@@ -184,16 +188,6 @@ describe("set-aside undo (provider + button + notice) — dispositions ride the 
     const sep = notice.querySelector('[aria-hidden="true"]');
     expect(sep).not.toBeNull();
     expect(sep).toHaveTextContent("·");
-  });
-
-  it("local mode renders WITHOUT a TriageUndoProvider and never touches the network or the queue", async () => {
-    const fetchSpy = vi.spyOn(globalThis, "fetch");
-    const onDecision = vi.fn();
-    render(<SetAsideButton submit={{ kind: "local", onDecision }} itemId="i1" itemName="The lamp" />);
-    await userEvent.click(screen.getByRole("button", { name: /not mine/i }));
-    expect(onDecision).toHaveBeenCalledTimes(1);
-    expect(fetchSpy).not.toHaveBeenCalled();
-    expect(readQueue(KEY)).toEqual([]);
   });
 
   describe("storage-unavailable fallback (F18)", () => {

@@ -341,10 +341,6 @@ export class SortResultService {
     });
   }
 
-  async getDraftResult(collectionId: string, curatorId: string): Promise<SortResult | null> {
-    return this.sortResultRepo.findDraft(collectionId, curatorId);
-  }
-
   async getResult(id: string): Promise<{ result: SortResult; items: SortResultItem[] } | null> {
     const result = await this.sortResultRepo.findById(id);
     if (!result) return null;

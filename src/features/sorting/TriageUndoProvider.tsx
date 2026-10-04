@@ -10,16 +10,16 @@ import {
 } from "./decisionQueue";
 import { isInFlight, triggerFlush } from "./decisionFlusher";
 
-// The set-aside undo, hoisted out of the empty-state branch. The BUTTON
-// (SetAsideButton) lives inside the triage decision sub-row, but the NOTICE
+// The set-aside undo, hoisted out of the empty-state branch. Not mine
+// (TriageRound's `handleNotMine`, via `SetAsideButton`) lives inside the triage decision sub-row, but the NOTICE
 // (TriageUndoNotice) renders OUTSIDE the `{!item ? <EmptyState/> : …}` ternary —
 // so when the curator sets aside the LAST untriaged item and the item branch
 // unmounts (item === null), the "Bring back" undo still shows. The durable
 // "Set aside" list recovers it too, but the spec's promise is that the inline
 // undo survives a refresh (§11) — including the refresh that empties the queue.
 //
-// Epic P (spec §3.3): dispositions ride the decision queue — setAside/defer
-// enqueue a disposition entry and trigger a flush; there is NO awaited fetch
+// Epic P (spec §3.3): dispositions ride the decision queue — setAside
+// enqueues a disposition entry and trigger a flush; there is NO awaited fetch
 // and NO router.refresh() on the tap path (the optimistic advance is owned by
 // TriageRound; server truth reconciles at the round-end refresh). Undo of a
 // still-queued set-aside is pure client (removeQueued); once the entry has
@@ -42,7 +42,6 @@ interface TriageUndoContextValue {
   error: string;
   setAside: (itemId: string, name: string | null) => Promise<void>;
   bringBack: () => Promise<void>;
-  defer: (itemId: string) => Promise<void>;
 }
 
 const TriageUndoContext = createContext<TriageUndoContextValue | null>(null);
@@ -54,8 +53,7 @@ export function useTriageUndo(): TriageUndoContextValue {
 }
 
 // Non-throwing read of the context: returns null when no provider is mounted.
-// The walkthrough renders SetAsideButton in synchronous "local" mode with no
-// provider, so it needs to probe the context without the throwing guard above.
+// The walkthrough's buttons take a plain onDecision and never touch this provider.
 export function useOptionalTriageUndo(): TriageUndoContextValue | null {
   return useContext(TriageUndoContext);
 }
@@ -156,36 +154,8 @@ export function TriageUndoProvider({
     }
   }
 
-  // "Not yet" shares the disposition seam so DeferControl never fetches on the
-  // tap path either. No undo state — a deferred item simply rests at the tail.
-  async function defer(itemId: string) {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    try {
-      const persisted = await enqueue(key, dispositionEntry(itemId, "deferred"), () =>
-        triggerFlush(key),
-      );
-      if (persisted === "needs_fallback") {
-        try {
-          await fetch(`/api/collections/${collectionId}/dispositions`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ itemId, disposition: "deferred" }),
-          });
-        } catch {
-          // best-effort: the item still resurfaces next round — that IS the
-          // reconciliation; a defer never blocks the person.
-        }
-      } else {
-        void triggerFlush(key);
-      }
-    } finally {
-      inFlight.current = false;
-    }
-  }
-
   return (
-    <TriageUndoContext.Provider value={{ undo, error, setAside, bringBack, defer }}>
+    <TriageUndoContext.Provider value={{ undo, error, setAside, bringBack }}>
       {children}
     </TriageUndoContext.Provider>
   );

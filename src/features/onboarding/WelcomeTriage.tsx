@@ -35,29 +35,19 @@ export function WelcomeTriage({ index, onOutcome }: WelcomeTriageProps) {
       <p className="text-lg text-ink">{item.name}</p>
 
       <DecisionControls
-        submit={{
-          kind: "local",
-          onDecision: (d) =>
-            onOutcome(item.id, {
-              kind: "tier",
-              tier: RESULT_TO_TIER[d.result],
-            }),
-        }}
-        type="triage"
+        onDecision={(d) =>
+          onOutcome(item.id, {
+            kind: "tier",
+            tier: RESULT_TO_TIER[d.result],
+          })
+        }
         decisions={triageDecisions(item.id)}
       />
 
       <div className="w-full border-t border-hairline pt-4 flex flex-col items-center gap-3">
         <div className="flex flex-nowrap justify-center gap-2 sm:gap-3">
-          <DeferControl
-            submit={{ kind: "local", onDecision: () => onOutcome(item.id, { kind: "deferred" }) }}
-            itemId={item.id}
-          />
-          <SetAsideButton
-            submit={{ kind: "local", onDecision: () => onOutcome(item.id, { kind: "setAside" }) }}
-            itemId={item.id}
-            itemName={item.name}
-          />
+          <DeferControl onDecision={() => onOutcome(item.id, { kind: "deferred" })} />
+          <SetAsideButton onDecision={() => onOutcome(item.id, { kind: "setAside" })} />
         </div>
       </div>
     </section>

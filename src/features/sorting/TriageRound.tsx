@@ -224,19 +224,14 @@ export function TriageRound({ curatorId, sessionId, collectionId, collectionSlug
               )}
               {/* NOT keyed per piece: a re-keyed region is never announced (SC 4.1.3). */}
               <DecisionControls
-                submit={{ kind: "local", onDecision: (d) => handleTriage(shown.item, d) }}
-                type="triage"
+                onDecision={(d) => handleTriage(shown.item, d)}
                 decisions={triageDecisions(shown.item.id)}
                 priorAnswer={revisit?.label}
               />
               {revisit === null && (
                 <div className="flex flex-wrap items-start gap-x-6 gap-y-3 border-t border-hairline pt-3">
-                  <DeferControl submit={{ kind: "local", onDecision: () => void handleNotYet(shown) }} itemId={shown.item.id} />
-                  <SetAsideButton
-                    submit={{ kind: "local", onDecision: () => handleNotMine(shown.item) }}
-                    itemId={shown.item.id}
-                    itemName={shown.item.name}
-                  />
+                  <DeferControl onDecision={() => void handleNotYet(shown)} />
+                  <SetAsideButton onDecision={() => handleNotMine(shown.item)} />
                 </div>
               )}
             </div>
