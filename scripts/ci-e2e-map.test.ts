@@ -21,6 +21,9 @@ describe("ci.yml e2e area map", () => {
   it("lists only specs that exist", () => {
     expect([...listed].filter((s) => !onDisk.includes(s))).toEqual([]);
   });
+  it("sort-area changes also run lists-and-home (its ActionBar/archived-card geometry)", () => {
+    expect(block).toMatch(/A_SORT" = "true" \]; then\n(?:\s*#.*\n)*\s*add "[^"]*e2e\/lists-and-home\.spec\.ts/);
+  });
 });
 
 describe("ci.yml changes filters", () => {
