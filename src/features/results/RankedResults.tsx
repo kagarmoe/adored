@@ -2,7 +2,6 @@ import type { Item } from "@/types";
 import type { UsageAnswer } from "@/lib/derive-usage";
 import { ItemCard } from "@/features/items/ItemCard";
 import { MostLovedHero } from "@/features/results/MostLovedHero";
-import { TierBadge } from "@/components/ui/TierBadge";
 import { effectiveBucket, type Bucket } from "@/lib/results-buckets";
 
 /** The minimal per-row shape both the live Standing and a finalized snapshot
@@ -20,13 +19,6 @@ export interface RankedJoinedRow {
   item: Item;
 }
 
-/** Love/Like/Maybe live above the Onward fold; the badge names the tier. */
-const BUCKET_TO_TIER: Record<Exclude<Bucket, "low">, "love" | "like" | "maybe"> = {
-  top: "love",
-  high: "like",
-  medium: "maybe",
-};
-
 interface RankedResultsProps {
   /** The loved tail (top/high/medium), most-loved first. loved[0] is the hero. */
   loved: RankedJoinedRow[];
@@ -40,11 +32,11 @@ interface RankedResultsProps {
   usageByItemId?: ReadonlyMap<string, UsageAnswer>;
 }
 
-/** The affirmation composition shared by the live Standing surface and the
- *  finalized snapshot viewer: most-loved hero → the full ranking → the
- *  forward-framed Onward section → an affirmation close. Callers derive
- *  loved/onward from the SAME partitionRanked/effectiveBucket source, so both
- *  surfaces read identically (TONE #1 affirmation-first, no counts). */
+/** The affirmation composition for a saved ranking (`/collections/[id]/results/[resultNumber]`):
+ *  most-loved hero → the full ranking → the forward-framed Onward section → an affirmation close.
+ *  The caller derives loved/onward from the partitionRanked/effectiveBucket source (TONE #1
+ *  affirmation-first, no counts). The welcome walkthrough's `WelcomeStanding` mirrors this shape
+ *  with its own rows. */
 export function RankedResults({ loved, onward, collectionId, coverUrl, usageByItemId }: RankedResultsProps) {
   return (
     <div className="space-y-8">
@@ -59,23 +51,16 @@ export function RankedResults({ loved, onward, collectionId, coverUrl, usageByIt
         <section className="space-y-4">
           <h2 className="font-display text-2xl text-ink">The full ranking</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {loved.slice(1).map(({ ri, item }) => {
-              const bucket = effectiveBucket(ri);
-              return (
-                <div key={ri.id} className="space-y-2">
-                  {bucket !== "low" && (
-                    <TierBadge tier={BUCKET_TO_TIER[bucket]} showLabel={false} />
-                  )}
-                  <ItemCard
-                    item={item}
-                    collectionId={collectionId}
-                    heroPhotoUrl={coverUrl(item.id)}
-                    bucket={bucket}
-                    usage={usageByItemId?.get(item.id)}
-                  />
-                </div>
-              );
-            })}
+            {loved.slice(1).map(({ ri, item }) => (
+              <ItemCard
+                key={ri.id}
+                item={item}
+                collectionId={collectionId}
+                heroPhotoUrl={coverUrl(item.id)}
+                bucket={effectiveBucket(ri)}
+                usage={usageByItemId?.get(item.id)}
+              />
+            ))}
           </div>
         </section>
       )}
@@ -92,8 +77,10 @@ export function RankedResults({ loved, onward, collectionId, coverUrl, usageByIt
 
       {/* Onward: the lowest tier, asked forward — where these go next — never
          tallied, never framed as discarding (TONE #1, #2). */}
+      {/* pt-2: the small eyebrow needs more air than the bare section gap — 32 + 8 = 40px, DESIGN.md
+         spacing xl (purses-w7ss.22). */}
       {onward.length > 0 && (
-        <section className="space-y-4">
+        <section className="space-y-4 pt-2">
           <div className="space-y-1">
             {/* Onward is subordinate to the loved ranking (TONE #1): a quieter
                heading (text-xl vs the loved tail's text-2xl, ink-soft), with the

@@ -118,14 +118,14 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
 
       <Card padding="lg">
         <div className="space-y-4">
-          <div className="flex items-start justify-between">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h3 className="text-ink">Show someone what you love</h3>
               <p className="text-sm text-ink-soft mt-1">
                 A link they can open straight away — no account, no signing in.
               </p>
             </div>
-            <Button onClick={handleCreateShare} disabled={loading}>
+            <Button onClick={handleCreateShare} disabled={loading} className="shrink-0 self-start">
               {loading ? "Creating..." : "Create link"}
             </Button>
           </div>
@@ -133,7 +133,7 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
           {stopped && (
             <div className="flex items-center justify-between gap-3 pt-4 border-t border-hairline">
               <p className="text-sm text-ink-soft">That link is no longer shared.</p>
-              <Button size="sm" variant="secondary" onClick={() => handleUndoStop(stopped.id)}>
+              <Button variant="secondary" onClick={() => handleUndoStop(stopped.id)}>
                 Undo
               </Button>
             </div>
@@ -152,9 +152,8 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
                       className="text-xs"
                     />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Button
-                      size="sm"
                       variant="secondary"
                       onClick={() => {
                         navigator.clipboard.writeText(getShareUrl(share.shareToken));
@@ -168,12 +167,11 @@ export function SharePanel({ resultId, initialShares }: SharePanelProps) {
                       href={getShareUrl(share.shareToken)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={buttonVariants({ size: "sm", variant: "secondary" })}
+                      className={buttonVariants({ variant: "secondary" })}
                     >
                       Preview
                     </Link>
                     <Button
-                      size="sm"
                       variant="danger"
                       onClick={() => handleStopSharing(share.id)}
                     >
