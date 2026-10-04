@@ -10,7 +10,10 @@ import { TriageUndoProvider } from "./TriageUndoProvider";
 import { TriageUndoNotice } from "./TriageUndoNotice";
 
 const { refresh, push, replace } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push, replace }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh, push, replace }),
+  usePathname: () => "/collections/bags/sort",
+}));
 
 // The flusher is mocked (call counts / ordering); the queue module stays REAL so
 // persist-before-advance is asserted against actual localStorage writes.
@@ -88,10 +91,12 @@ describe("feelings phase: answers advance optimistically", () => {
   it("announces the saved tier in the live region that existed before the tap (SC 4.1.3)", async () => {
     const user = userEvent.setup();
     renderRound();
-    const region = screen.getByRole("status");
+    // The answer announcer, not the round's (always-mounted, empty) notice region.
+    const announcer = () => screen.getAllByRole("status").find((el) => el.classList.contains("sr-only"));
+    const region = announcer();
     await user.click(screen.getByRole("button", { name: "Love", exact: true }));
     expect(await screen.findByRole("img", { name: "Bag B" })).toBeInTheDocument();
-    expect(screen.getByRole("status")).toBe(region);
+    expect(announcer()).toBe(region);
     expect(region).toHaveTextContent("Love — saved.");
   });
 

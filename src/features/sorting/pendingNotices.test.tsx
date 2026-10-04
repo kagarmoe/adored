@@ -20,7 +20,10 @@ import { AUTH_REQUIRED_NOTICE, PendingNotices, QUARANTINE_NOTICE, REJECTED_NOTIC
 import { TriageRound } from "./TriageRound";
 
 const { refresh, push, replace } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh, push, replace }) }));
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh, push, replace }),
+  usePathname: () => "/collections/c1/sort",
+}));
 
 // jsdom in this setup does not expose a working localStorage on file:// URLs —
 // install the house Map-backed Storage (see decisionFlusher.test.ts).
@@ -88,7 +91,7 @@ beforeEach(() => {
 
 describe("PendingNotices — copy constants", () => {
   it("never uses machine-side words (TONE.md)", () => {
-    for (const copy of [REJECTED_NOTICE, QUARANTINE_NOTICE, SESSION_CONFLICT_NOTICE]) {
+    for (const copy of [REJECTED_NOTICE, QUARANTINE_NOTICE, SESSION_CONFLICT_NOTICE, AUTH_REQUIRED_NOTICE]) {
       expect(copy).not.toMatch(/error|failed|invalid/i);
     }
   });
@@ -97,6 +100,49 @@ describe("PendingNotices — copy constants", () => {
 describe("PendingNotices — a sort closed elsewhere", () => {
   it("a mid-round 409 says the sort was wrapped up elsewhere", async () => {
     global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    render(<PendingNotices sessionId={key.sessionId} />);
+    const region = screen.getByRole("status");
+    expect(region).toBeEmptyDOMElement(); // mounted empty BEFORE the notice (SC 4.1.3)
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    expect(region).toHaveTextContent(SESSION_CONFLICT_NOTICE); // the same node, now with text
+    expect(screen.getByRole("button", { name: "Reload" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Okay" })).not.toBeInTheDocument();
+  });
+
+  it("another sort's conflict never shows: not on a different sort, not on a surface with no sort", async () => {
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    render(
+      <>
+        <PendingNotices sessionId="sess_other" />
+        <PendingNotices />
+      </>,
+    );
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    expect(screen.queryByText(SESSION_CONFLICT_NOTICE)).not.toBeInTheDocument();
+  });
+});
+
+describe("PendingNotices — signed out mid-round", () => {
+  it("a 401 says to sign in again, with a Sign in link back to this page, and no Okay", async () => {
+    global.fetch = vi.fn(async () => ({ ok: false, status: 401, json: async () => ({}) })) as unknown as typeof fetch;
     render(<PendingNotices />);
     await enqueue(key, {
       kind: "decision",
@@ -108,14 +154,19 @@ describe("PendingNotices — a sort closed elsewhere", () => {
     await act(async () => {
       await drain([key]);
     });
-    expect(screen.getByText(SESSION_CONFLICT_NOTICE)).toBeInTheDocument();
+    expect(screen.getByText(AUTH_REQUIRED_NOTICE)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+      "href",
+      `/login?callbackUrl=${encodeURIComponent("/collections/c1/sort")}`,
+    );
+    expect(screen.queryByRole("button", { name: "Okay" })).not.toBeInTheDocument(); // signing in is the action
   });
 });
 
 describe("PendingNotices — engine clears reach a mounted surface", () => {
   it("a sign-in line leaves once answers save (2xx), and a dismissed notice leaves too", async () => {
     global.fetch = vi.fn(async () => ({ ok: false, status: 401, json: async () => ({}) })) as unknown as typeof fetch;
-    render(<PendingNotices />);
+    render(<PendingNotices sessionId={key.sessionId} />);
     await enqueue(key, {
       kind: "decision",
       clientKey: newClientKey(),

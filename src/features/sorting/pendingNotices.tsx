@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-import { getNoticeSet, subscribeNoticeSet, type FlushNotice } from "./decisionFlusher";
+import { useSyncExternalStore } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { quietLink } from "@/lib/design/quiet-link";
+import { dismissNotice, getNoticeSet, subscribeNoticeSet, type FlushNotice } from "./decisionFlusher";
 
 // Person-side copy for flush notices (spec §3.2/F9). Exported constants so
 // tests assert the exact strings; TONE.md register — never "error"/"failed"/
@@ -27,44 +30,58 @@ function isNoticed(kind: FlushNotice["kind"]): kind is NoticeKind {
   return kind in NOTICE_COPY;
 }
 
+// A conflict names its sort; only that sort's surface may voice it (a surface
+// with no sort, like the results page, never does).
+function isForThisSurface(notice: FlushNotice, sessionId: string | undefined): boolean {
+  return notice.kind !== "session_conflict" || notice.sessionId === sessionId;
+}
+
 /**
- * The quiet person-side notice slot: subscribes to the flush engine and renders
- * AT MOST one dismissible, non-blocking line per notice kind per surface mount —
- * a whole drain's worth of rejections (or N quarantined entries) collapses to a
- * single sentence. Mounted OUTSIDE the round's content swap so it survives the
- * round-end recap ("no later than the revert", F9). The engine never renders;
- * this is its only voice. `PendingDecisionsGate` reuses the same slot (Task 15).
+ * The quiet person-side notice slot (one always-mounted live region), fed by the
+ * engine's sticky notices: AT MOST one non-blocking line per notice kind — a whole
+ * drain's worth of rejections (or N quarantined entries) collapses to a single
+ * sentence. `auth_required` offers Sign in (back to this page) and is not
+ * dismissible: signing in is the action, and a later save clears it.
+ * `session_conflict` offers Reload, and shows only on the surface of the sort it
+ * names (`sessionId`). The rest offer Okay, which dismisses the line everywhere.
+ * Mounted OUTSIDE the round's content swap so it survives the round-end recap
+ * ("no later than the revert", F9). The engine never renders; this is its only
+ * voice. `PendingDecisionsGate` reuses the same slot (Task 15).
  */
-export function PendingNotices() {
-  // The engine's sticky set: read at render (no mount-effect gap), and a clear
-  // (a 2xx, dismissNotice) removes the line from a mounted surface.
+export function PendingNotices({ sessionId }: { sessionId?: string } = {}) {
+  // Read at render (no mount-effect gap); a clear (a 2xx, dismissNotice) removes
+  // the line from every mounted surface.
   const notices = useSyncExternalStore(subscribeNoticeSet, getNoticeSet, getNoticeSet);
-  const [dismissed, setDismissed] = useState<ReadonlySet<NoticeKind>>(new Set());
+  const pathname = usePathname();
 
   const visible = notices
+    .filter((notice) => isForThisSurface(notice, sessionId))
     .map((notice) => notice.kind)
-    .filter(isNoticed)
-    .filter((kind) => !dismissed.has(kind));
-  if (visible.length === 0) return null;
+    .filter(isNoticed);
 
+  // ONE region, mounted empty, so a line that lands is announced (a live region that appears
+  // with its text is not). aria-atomic=false: only the new line is read, not the whole set.
   return (
-    <div className="space-y-2">
+    <div role="status" aria-live="polite" aria-atomic="false" className="space-y-2 empty:mb-0">
       {visible.map((kind) => (
         <p
           key={kind}
-          role="status"
-          className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-control bg-content-soft px-4 py-3 text-sm text-ink-soft"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-control bg-content-soft px-4 py-2 text-sm text-ink-soft"
         >
           <span>{NOTICE_COPY[kind]}</span>
-          <button
-            type="button"
-            onClick={() =>
-              setDismissed((prev) => new Set(prev).add(kind))
-            }
-            className="font-medium text-primary underline underline-offset-2 hover:text-primary-hover focus:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-primary rounded-xs"
-          >
-            Okay
-          </button>
+          {kind === "auth_required" ? (
+            <Link href={`/login?callbackUrl=${encodeURIComponent(pathname ?? "/")}`} className={quietLink}>
+              Sign in
+            </Link>
+          ) : kind === "session_conflict" ? (
+            <button type="button" onClick={() => location.reload()} className={quietLink}>
+              Reload
+            </button>
+          ) : (
+            <button type="button" onClick={() => dismissNotice(kind)} className={quietLink}>
+              Okay
+            </button>
+          )}
         </p>
       ))}
     </div>

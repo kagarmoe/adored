@@ -17,7 +17,7 @@ const h = vi.hoisted(() => ({
 }));
 vi.mock("@/lib/auth", () => ({ getSession: async () => ({ user: { id: "u1" } }) }));
 vi.mock("@/lib/db", () => ({ getDb: () => ({}) }));
-vi.mock("next/navigation", () => ({ redirect: vi.fn() }));
+vi.mock("next/navigation", () => ({ redirect: vi.fn(), usePathname: () => "/collections/bags/sort" }));
 vi.mock("@/lib/collection-access", () => ({
   requireCollectionAccess: async () => ({ id: "coll_1", slug: "bags", name: "Bags" }),
 }));
