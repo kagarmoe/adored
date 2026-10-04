@@ -181,6 +181,7 @@ for (const theme of ["light", "dark"] as const) {
       // PR1a (purses-wew): editable display-name profile (no image — the img
       // wait below just times out harmlessly via .catch).
       ["profile", "/profile"],
+      ["collection-settings", `/collections/${slug}/edit`],
       // The one Sort screen: feelings, a waiting (Not yet) piece, and pairs.
       ["sort-feelings", `/collections/${triageSlug}/sort`],
       ["sort-not-yet", `/collections/${waitingSlug}/sort`],
