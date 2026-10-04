@@ -148,8 +148,8 @@ on reload, and the pieces involved come around again (quarantine) or stay visibl
    per-item `DELETE …/items/[rid]`, "the last unlocked draft writer, with no UI caller", removed in
    PR 2 (API.md). `ResultController.updateResult` and `UpdateResultSchema` go with it. After this
    and Decision 1's share move, every writer that inserts or updates `sort_results`,
-   `sort_result_items` or `sort_result_shares` rows is under the curator lock by construction (share
-   status PATCH/DELETE excepted, Decision 1). If the owner wants rename
+   `sort_result_items` or `sort_result_shares` rows is under the curator lock at every current call
+   site (share status PATCH/DELETE excepted, Decision 1; `SortResultRepository.create`, the unlocked allocate-and-retry insert, is used only by tests and the e2e seed). If the owner wants rename
    later, it comes back as `SortResultService.renameDraft` inside `inCuratorTx`, with a
    `findByIdForUpdate` status re-check.
 3. **`.19`: `computePreferences`' `events` parameter becomes required.**
@@ -255,8 +255,10 @@ on reload, and the pieces involved come around again (quarantine) or stay visibl
   stack; the button sits under the text, on one line.
 - **Saved ranking, share buttons taller:** Undo, Copy, Preview and Stop sharing grow from 36px to
   44px (the tap-target rule), and the Copy/Preview/Stop sharing row wraps on a narrow phone.
-- **New notice line** (a set-aside or not-yet that an answer had already settled): "One piece
-  already had a feeling from you, so it stays where you placed it", with Okay.
+- **New notice line** (a set-aside or not-yet that an answer had already settled): "Anything that
+  already had a feeling from you stays where you placed it", with Okay. Final wording after the
+  whole-branch review (U1): the earlier "One piece…" miscounted when several pieces collapse into the
+  one line.
 - **Notices stay on their collection:** a line about one collection's answers no longer shows on
   another collection's pages. Two lines still show everywhere: the sign-in line, and the lost-answers
   line ("A sort that was wrapped up somewhere else still had a few answers waiting…"), which may now
@@ -266,6 +268,12 @@ on reload, and the pieces involved come around again (quarantine) or stay visibl
   stops claiming it (no Undo for it) and refreshes.
 - **Recovery after sign-out:** the page reveals when the recovery drain settles (at most 5 s) rather
   than the instant the sign-out is seen.
+- **Sign-in line can blink off elsewhere:** while a recovery runs, the sign-in line may briefly
+  disappear on other open pages until the next sign-in check raises it again (ruling P2).
+- **Saved ranking, cards:** cards in "The full ranking" no longer carry an empty band under the
+  usage chip.
+- **Saved ranking, share panel on phone:** "Nothing shared yet…" aligns left with the rest of the
+  card (still centred on tablet).
 
 ## Rulings (controller)
 
@@ -448,8 +456,8 @@ route's own un-mocked crossing (201 + row read back, 400 on invalid JSON) alread
 same (collection, user) — in **every** one of the user's memberships — and a share is never inserted
 outside its result's curator lock. **Pinned by** the two new DB cases (real lock on a second
 connection; the deletion blocks while the lock on the collection it locks LAST is held; the share
-POST blocks on its result's lock). **Invariant (`.21`):** holds by construction — no unlocked
-`sort_results` writer remains. The enumeration test only forces a re-added `PATCH` to register an
+POST blocks on its result's lock). **Invariant (`.21`):** holds at every current call site — no unlocked
+`sort_results` writer remains in app code (exception: `SortResultRepository.create`, the unlocked allocate-and-retry insert, is used only by tests and the e2e seed). The enumeration test only forces a re-added `PATCH` to register an
 authz case; it does not check the lock. Re-adding a rename must go through `inCuratorTx` (Decision 2).
 
 - [ ] **Step 1: Failing DB cases for `.18`.** In `src/lib/db/purge-recompute-lock.integration.test.ts`,
