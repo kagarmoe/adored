@@ -5,8 +5,9 @@
 # Spins up a disposable postgres:16 container on port 5433 (5433 avoids
 # clashing with any local Postgres on 5432), applies the Drizzle schema, and
 # tears it down. When Docker is down it falls back to a throwaway Homebrew
-# postgresql@15 cluster on the same port; TEST_DB_BACKEND=docker|brew forces one. This DB is throwaway — e2e truncates it freely. It is NEVER
-# the Neon `main` (prod) or `development` branch.
+# postgresql@15 cluster on the same port; TEST_DB_BACKEND=docker|brew forces one.
+# This DB is throwaway — e2e truncates it freely. It is NEVER the Neon `main` (prod)
+# or `development` branch.
 #
 # Usage:
 #   e2e/fixtures/test-db.sh up      # start container + apply schema

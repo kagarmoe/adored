@@ -324,12 +324,12 @@ Run them with **`npm run test:db`** → `e2e/fixtures/run-db-tests.sh`, which **
 `postgresql@15` cluster on the same port when Docker is down; `TEST_DB_BACKEND=docker|brew`
 forces one): it
 starts the DB via `test-db.sh running` / `up` if it is not already running, traps EXIT/INT/TERM, and tears it
-down **only if it started it** (`run-db-tests.sh:14–28`) — so it never kills a container you were already
+down **only if it started it** — so it never kills a container you were already
 using. It holds the shared test-DB lock (`scripts/with-db-lock.ts`, ARCHITECTURE decision 11), so it waits
 for a running e2e or screenshot run instead of truncating under it. Calling `run-db-tests.sh` directly, and
 the manual tools `scripts/seed-load*.ts` and `scripts/bench-*.ts`, bypass the lock.
 
-It runs **serially — `npx vitest run --no-file-parallelism src/lib/db`** (`run-db-tests.sh:34`). Not a
+It runs **serially — `npx vitest run --no-file-parallelism src/lib/db`**. Not a
 performance preference: vitest parallelizes *files*, every DB test file calls `resetDb()` →
 `TRUNCATE ... CASCADE` (`e2e/fixtures/db.ts:60`), and two concurrent TRUNCATEs on the same Postgres
 **deadlock** (memory: `db-test-parallel-deadlock`). The directory is passed whole, so a new DB test file is
