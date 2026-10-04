@@ -17,7 +17,7 @@ export const SESSION_CONFLICT_NOTICE =
   "This sort was wrapped up somewhere else — reload to carry on from there";
 export const AUTH_REQUIRED_NOTICE = "Sign in again and your answers will finish saving on their own";
 export const CLOSED_SESSION_DISCARDED_NOTICE =
-  "A sort that was wrapped up somewhere else still had a few answers waiting — those ones couldn't be kept";
+  "A sort that was wrapped up somewhere else still had a few answers waiting, and those didn't make it in";
 
 const NOTICE_COPY = {
   rejected_unknown_item: REJECTED_NOTICE,
@@ -51,7 +51,7 @@ function isForThisSurface(notice: FlushNotice, sessionId: string | undefined): b
  * surface, since no surface belongs to the closed sort.
  * Mounted OUTSIDE the round's content swap so it survives the round-end recap
  * ("no later than the revert", F9). The engine never renders; this is its only
- * voice. `PendingDecisionsGate` reuses the same slot (Task 15).
+ * voice. `PendingDecisionsGate` reuses the same slot.
  */
 export function PendingNotices({ sessionId }: { sessionId?: string } = {}) {
   // Read at render (no mount-effect gap); a clear (a 2xx, dismissNotice) removes

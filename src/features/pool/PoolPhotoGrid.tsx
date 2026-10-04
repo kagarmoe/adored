@@ -211,7 +211,6 @@ export function PoolPhotoGrid({
         })}
       </div>
 
-
       <PoolActionBar
         count={selected.length}
         busy={busy}

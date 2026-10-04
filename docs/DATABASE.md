@@ -343,7 +343,7 @@ In CI these run in a dedicated **`db-tests` job** against a `postgres:16` **serv
 **E2E** — its own **ephemeral Postgres**, never Neon. `e2e/fixtures/test-db.sh` runs a disposable
 `postgres:16` container named **`pi-e2e-db`** on a **fixed port `5433`** (5433 avoids clashing with a local
 Postgres on 5432), bound to `127.0.0.1` only, and applies the schema with the real migrator
-(`DATABASE_URL=… npm run db:migrate`, `test-db.sh:64`). Subcommands: `up`, `down`, `reset`, `running`. Connection
+(`DATABASE_URL=… npm run db:migrate`, in `test-db.sh`). Subcommands: `up`, `down`, `reset`, `running`. Connection
 string: `postgresql://postgres:test@localhost:5433/app_test`. Playwright's `globalSetup`
 (`e2e/global-setup.ts`) takes the test-DB lock (a no-op under the npm scripts' `with-db-lock.ts` wrapper,
 which already holds it) and then runs `test-db.sh reset`, so every Playwright run starts on a fresh DB.

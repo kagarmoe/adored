@@ -180,12 +180,20 @@ costs more than the check is worth.
 - **Archived item card:** Bring back is a bordered secondary pill (it was a borderless ghost), and
   its busy text is "One moment…" (copy change; was "Bringing it back…").
 - **Ranking on phone:** a small position number shows on every row, and the phone Unpin control
-  shows the word "Unpin" (it was a pin glyph alone).
+  shows the word "Unpin" (it was a pin glyph alone). On phone a long name wraps in full instead of
+  clamping to two lines, so a row can grow taller.
 - **Mid-round sign-out:** the sign-in line moves into the notices region with a Sign in link that
   returns to the round: "Sign in again and your answers will finish saving on their own". It has no
   Okay (signing in is the way to clear it).
 - **Sort closed elsewhere:** after a sort is closed elsewhere the compare cards dim and hold, and
   Reload is offered (in place of Okay) beside "This sort was wrapped up somewhere else…".
+- **Answers from a sort closed elsewhere** (new `closed_session_discarded` notice; a 409 while
+  recovering saved answers): "A sort that was wrapped up somewhere else still had a few answers
+  waiting, and those didn't make it in", with Okay. It shows on any surface.
+- **Where notices show:** the notices region now also sits on the ranking (results) page and on the
+  sort's done phase, not only in the feelings and pairs phases.
+- **Notice lines restyled:** Okay / Reload / Sign in are the 44px underlined quiet link (Okay was a
+  bold inline button), and the line's padding is tighter (`py-2`, was `py-3`).
 - **Collection home without mode chips** (`purses-w7ss.14`, owner decision 2026-10-03): the
   Build / Sort / Decide chips are gone from the collection home. The home keeps Start/Keep sorting,
   the Add photos pill and See your ranking (tablet). The chips stay on the Photos and Decide
