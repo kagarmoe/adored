@@ -328,7 +328,7 @@ export function ItemPhotoCarousel({
           >
             <span
               aria-hidden
-              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md text-ink ring-1 ring-hairline shadow-lift"
+              className="absolute right-3 top-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md text-ink ring-1 ring-hairline shadow-lift transition-colors hover:ring-primary"
             >
               <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5">
                 <path
@@ -423,7 +423,7 @@ function NavArrow({
       onClick={() => {
         if (!disabled) onClick();
       }}
-      className={`absolute top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md text-ink ring-1 ring-hairline shadow-lift transition-colors hover:bg-surface focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${side === "left" ? "left-3" : "right-3"} ${disabled ? "opacity-40" : ""}`}
+      className={`absolute top-1/2 z-20 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-glass-strong backdrop-blur-md text-ink ring-1 ring-hairline shadow-lift transition-colors hover:ring-primary focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary ${side === "left" ? "left-3" : "right-3"} ${disabled ? "opacity-40" : ""}`}
     >
       <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5">
         <path

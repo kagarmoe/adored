@@ -23,7 +23,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         {label && (
           <label htmlFor={textareaId} className="block text-sm font-medium text-ink mb-2">
             {label}
-            {props.required && <span className="text-error">*</span>}
+            {props.required && <span className="text-error-deep">*</span>}
           </label>
         )}
         <textarea
@@ -44,7 +44,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
         {error && (
-          <p id={`${textareaId}-error`} className="text-error text-sm mt-2">
+          <p id={`${textareaId}-error`} className="text-error-deep text-sm mt-2">
             {error}
           </p>
         )}

@@ -114,6 +114,9 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.inkSoft, t.groundEnd, 4.5, "ink-soft on the wash's end stop"],
     [t.primary, t.groundEnd, 4.5, "primary link on the wash's end stop"],
     [t.inkSoft, t.groundMid, 4.5, "ink-soft on the wash's mid stop"],
+    [t.errorDeep, t.groundAqua, 4.5, "error text (error-deep) on aqua stop"],
+    [t.errorDeep, t.groundMint, 4.5, "error text (error-deep) on mint stop"],
+    [t.errorDeep, t.groundEnd, 4.5, "error text (error-deep) on the wash's end stop"],
     [t.ink, t.card, 4.5, "ink on card"],
     [t.inkSoft, t.card, 4.5, "ink-soft on card"],
     [t.primary, t.card, 4.5, "primary link on card"],
@@ -129,6 +132,8 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
       k.endsWith("Black") || k.endsWith("White")
         ? [t.primary, t[k], 3.0, `primary control edge on ${k}`]
         : [t.primary, t[k], 4.5, `primary text/link on ${k}`],
+      // Field error messages and required asterisks are error-deep text.
+      [t.errorDeep, t[k], 4.5, `error text (error-deep) on ${k}`],
       // Danger sections are glass cards with an error rim (SC 1.4.11).
       [t.error, t[k], 3.0, `error rim on ${k} (danger section)`],
     ]),
