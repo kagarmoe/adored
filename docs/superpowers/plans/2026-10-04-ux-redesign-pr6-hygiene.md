@@ -6,28 +6,34 @@
 > subagents at once (memory `sdd-never-overlap-implementers`); implementers never run
 > `graphify update .` (memory `sdd-implementers-must-not-run-graphify-update`).
 
-**Goal:** Close the epic's last ten P4 hygiene beads: every writer of a curator's ranking rows runs
-under the curator lock (or no longer exists), two pieces of dead code go, revisions insert their rows
-in one statement, the flusher's notices have one API and stay on their own collection, a recovery
-drain that joins a live one keeps its recovery meaning, every notice kind has words, and the saved
-ranking page loses its three visual flaws.
+**Goal:** Close the epic's last eleven beads (`purses-w7ss.18`–`.23`, `.30`–`.33`, `.35`): every
+writer of a curator's ranking rows (shares included) runs under the curator lock (or no longer
+exists), two pieces of dead code go, revisions insert their rows in one statement, the flusher's
+notices have one API and stay on their own collection, a recovery drain that joins a live one keeps
+its recovery meaning, a recovery 409 tells waiting answers they never landed, every notice kind has
+words, and the saved ranking page loses its three visual flaws and its 36px share buttons.
 
 **Architecture:** No schema change, no migration, no new route, no new token. One route method is
-**removed** (`PATCH /api/sort-results/[id]`, no caller). One new lock helper,
-`lockCuratorMemberships`, sits beside `lockCollectionCurators` in
+**removed** (`PATCH /api/sort-results/[id]`, no caller). Share creation moves from
+`ShareController.createShare` into `SortResultService.createShare` under `inCuratorTx`. One new lock
+helper, `lockCuratorMemberships`, sits beside `lockCollectionCurators` in
 `src/server/services/purge-lock.ts`. The notice engine (`src/features/sorting/decisionFlusher.ts`)
-keeps only its snapshot API (`subscribeNoticeSet` / `getNoticeSet`). Each notice carries its
-collection, and the in-flight drain map carries the run's options so a joiner can upgrade them.
+keeps only its snapshot API (`subscribeNoticeSet` / `getNoticeSet`). Each collection-scoped notice
+carries its collection, and the in-flight drain map carries the run's options so a joiner can
+upgrade them.
 
 **Tech Stack:** Next.js 16 App Router, React 19 (`useSyncExternalStore`), Tailwind 4, vitest +
 Testing Library (jsdom/node), Drizzle/Postgres advisory locks (DB tier), Playwright (WebKit tablet
 project in CI; a phone check inside it at 390×664).
 
-**Spec:** `docs/superpowers/specs/2026-10-01-adored-ux-redesign-design.md` §3 (the queue and its
-notices: quiet, gentle, one line per kind), §4 (the live Ranking, pins, Save, Make a revision), §5
-(Frosted shelf, tap targets, phone), §7 (every test runs in CI at the cheapest tier that can catch the
-regression), §8 (light/dark/phone screenshots). Bead texts:
-`/Users/kimberlygarmoe/.claude/jobs/61c105b1/tmp/pr6/beads.md` (`purses-w7ss.18`–`.23`, `.30`–`.33`).
+**Spec:** `docs/superpowers/specs/2026-10-01-adored-ux-redesign-design.md` §4 (the live Ranking,
+pins, Save, Make a revision), §5 (Frosted shelf, tap targets, phone), §7 (every test runs in CI at the
+cheapest tier that can catch the regression), §8 (light/dark/phone screenshots). The queue and its
+notices (quiet, gentle, one line per kind) are the decision-queue spec,
+`docs/archive/superpowers/specs/2026-07-06-epicP-batched-decisions-design.md` §3.2 (flusher) and §3.4
+(recovery gate) — the "spec §3.x" the code cites. Bead texts:
+`/Users/kimberlygarmoe/.claude/jobs/61c105b1/tmp/pr6/beads.md` (`purses-w7ss.18`–`.23`, `.30`–`.33`);
+`purses-w7ss.35` (filed by the plan review; `bd show purses-w7ss.35`).
 Context: `docs/superpowers/plans/2026-10-03-ux-redesign-pr5-polish.md` (Task 5, sticky notices;
 Rulings §1). ARCHITECTURE decision 42 (one lock for the ranking's draft writers), the account-deletion
 decision (`AccountDeletionService` phases), and the "a purge takes the same advisory lock" bullet.
@@ -70,35 +76,46 @@ tightened) and `dense-pins-splice` (pinned slots must stay distinct). Base: `ori
 These five inputs or conditions are the most likely to bite a person. The beads imply them, and
 before this plan no test exercised them. The test that pins each one is added in the task named.
 
-1. **Deleting your account while another tab is pinning or answering in a borrowed collection.**
-   Expected: the deletion waits for the in-flight write, then erases everything, with no 500 on either
-   side. Pinned in Task 2 (DB: the real writer lock held on a second connection, and the deletion
-   proven to block). *Try to break:* two borrowed collections plus a concurrent owner purge of one of
-   them (deadlock?); a deletion racing a second deletion of the same user.
+1. **Deleting your account while another tab is pinning, answering or creating a share link in a
+   borrowed collection.** Expected: the deletion waits for the in-flight write, then erases
+   everything, with no 500 on either side. Pinned in Task 2 (DB: the real writer lock held on a second
+   connection on the collection locked LAST of two memberships, and the deletion proven to block; and
+   the share POST proven to block on the same lock). *Try to break:* two borrowed collections plus a
+   concurrent owner purge of one of them (deadlock?); a deletion racing a second deletion of the same
+   user; a share link created for a result the deletion has already erased (404, never 500).
 2. **A sort page opened while a mid-round flush for the same sort is still in flight, and the sort
    was closed elsewhere (409).** Expected: the recovery meaning wins. The closed sort's waiting
    answers are let go with the "a few answers … didn't make it in" line, never held forever as a
-   mid-round conflict. Pinned in Task 4 (engine unit: a recovery joiner during a held request).
-   *Try to break:* the joiner arriving after the 409 was already classified; a keepalive joiner.
+   mid-round conflict. A comparison still waiting on one of those answers hears that it never
+   landed, so "it's safe" never outlives the discarded queue (`.35`). Pinned in Task 4 (engine unit: a
+   recovery joiner during a held request; a waiting ack resolved as rejected on a recovery 409).
+   *Try to break:* the joiner arriving after the 409 was already classified (accepted: Rulings); a
+   keepalive joiner.
 3. **Two collections open in one tab.** A notice raised by collection A's answers must never show on
-   collection B's pages. The sign-in line ("Sign in again…") shows everywhere, because signing in
-   is per person. Pinned in Task 4 (`pendingNotices.test.tsx`: two surfaces, two collections) and
-   the page wiring tests (sort and results pages pass their collection). *Try to break:* a recovery
-   gate on A's page that drains B's queue (B's lines wait for B's page, by design: Decision 9); a
-   queue envelope with no collection stamped.
+   collection B's pages. The sign-in line ("Sign in again…") and the lost-answers line ("A sort that
+   was wrapped up somewhere else…", `closed_session_discarded`) show everywhere: signing in is per
+   person, and news of answers that are gone must never wait for a page the person may not open.
+   Pinned in Task 4 (`pendingNotices.test.tsx`: two surfaces, two collections) and the page wiring
+   tests (sort and results pages pass their collection to both the gate and `PendingNotices`). *Try to
+   break:* a recovery gate on A's page that drains B's queue (B's quarantine/superseded lines wait for
+   B's page, by design: Decision 9; B's lost-answers line shows on A); a queue envelope with no
+   collection stamped; a second sort's conflict in the same collection (keyed by sort, so it never
+   replaces the first).
 4. **Recovery gate with a sign-in line left over from an earlier drain.** Expected: a recovery that
    lands still refreshes the page. A recovery that is still signed out reveals the page without a
    refresh and keeps the queue. Pinned in Task 4 (the existing gate tests "a sign-in notice left over
    from an earlier drain…" and "401 during the recovery drain…" run unchanged against the new
    no-`live`-flag gate). *Try to break:* a multi-key recovery where one key 401s and another lands.
 5. **The saved ranking on a 390px phone.** Expected: one tier mark per card, visible breathing room
-   above the Onward eyebrow, "Create link" on one line, and no sideways scroll. Pinned in Task 5
-   (`RankedResults.test.tsx` count, and a phone geometry e2e in `e2e/sort-journey.spec.ts`).
+   above the Onward eyebrow, "Create link" on one line, share-row and Undo buttons ≥ 44px tall, and
+   no sideways scroll. Pinned in Task 5 (`RankedResults.test.tsx` count, and a phone geometry e2e in
+   `e2e/sort-journey.spec.ts`).
 
-Accepted, not pinned: a notice raised for a collection the person never visits again in this tab is
-never shown. Notices are per tab and cleared on reload, and the pieces involved come around again
-(quarantine) or stay visibly placed (superseded). Pinning "not shown" would test an absence the
-design intends.
+Accepted, not pinned: a collection-scoped notice (quarantine, rejected, superseded) raised for a
+collection the person never visits again in this tab is never shown. Notices are per tab and cleared
+on reload, and the pieces involved come around again (quarantine) or stay visibly placed
+(superseded). Pinning "not shown" would test an absence the design intends. Lost answers
+(`closed_session_discarded`) are not in this set: that line is global.
 
 ---
 
@@ -115,14 +132,24 @@ design intends.
    `sort_results` delete 23503s and the account deletion 500s. The reverse order does the same to the
    pin. *Deadlock:* a writer holds one curator lock (plus `lockSaveKey`, a disjoint keyspace taken
    last). A purge holds locks for one collection only. So nothing waits on deletion's earlier locks
-   while holding a later one.
+   while holding a later one. *Shares too:* Phase 2 deletes `sort_result_shares` before
+   `sort_results`, and `POST /api/sort-results/[id]/shares` inserted a share with no transaction and
+   no lock (`ShareController.createShare`, `src/server/api/shares.ts:39`). A share committing between
+   those two deletes 23503s the deletion the same way (and the same race exists against
+   `CollectionPurgeService` and `deleteResult`). So share creation moves into
+   `SortResultService.createShare(id, expiresAt?)`, which runs in `inCuratorTx(result.collectionId,
+   result.curatorId)` and re-reads the row with `findByIdForUpdate` under the lock (gone → `null` →
+   route 404). The share PATCH/DELETE routes only update or remove an existing share row, which cannot
+   23503 a `sort_results` delete, so they stay as they are.
 2. **`.21` deletes the rename instead of locking it.** `PATCH /api/sort-results/[id]` has no caller
    in `src/` or `e2e/`: names are set at Save, and drafts are reached only through the live Ranking.
    Its draft-only check reads outside any transaction (the PR 4 Architect note: a concurrent save can
    finalize the row between check and update, and a saved keepsake gets renamed). The precedent is the
    per-item `DELETE …/items/[rid]`, "the last unlocked draft writer, with no UI caller", removed in
-   PR 2 (API.md). `ResultController.updateResult` and `UpdateResultSchema` go with it. After this,
-   every `sort_results` writer is under the curator lock by construction. If the owner wants rename
+   PR 2 (API.md). `ResultController.updateResult` and `UpdateResultSchema` go with it. After this
+   and Decision 1's share move, every writer that inserts or updates `sort_results`,
+   `sort_result_items` or `sort_result_shares` rows is under the curator lock by construction (share
+   status PATCH/DELETE excepted, Decision 1). If the owner wants rename
    later, it comes back as `SortResultService.renameDraft` inside `inCuratorTx`, with a
    `findByIdForUpdate` status re-check.
 3. **`.19`: `computePreferences`' `events` parameter becomes required.**
@@ -133,9 +160,10 @@ design intends.
    `usage-events.integration.test.ts` already pin the loader itself. No new test: a deletion guarded by
    `tsc` and the existing suite.
 4. **`.20`: the batch route and `scripts/bench-batch.ts` mint with `generateId("event")`.**
-   `generateOrderedIdFactory` and its first two tests go. The third test (factory order survives the
-   shared comparator) is kept, retargeted at `generateId("event")`, because it pins the property the
-   batch route relies on: a later array entry wins at a shared `createdAt`. The DB guard
+   `generateOrderedIdFactory` and its three tests go. Their one surviving property (a later array
+   entry wins at a shared `createdAt` under the shared comparator, in the `event_` format) folds into
+   the existing 200-id `generateId` loop, now minting `generateId("event")`: a tight loop guarantees
+   same-millisecond runs, so it fails deterministically where a two-sample test would not. The DB guard
    `decision-batch.integration.test.ts` "shared batch timestamp…" (line 466) and "case 6" (line 808)
    stay green unchanged.
 5. **`.23`: `insertResultWithItems` gains `slots: ReadonlyMap<string, number> = new Map()` and
@@ -145,50 +173,76 @@ design intends.
    `ranking-save-route.integration.test.ts:177` already pins the revision's saved-order pins through
    the DB (`listPins` → b at 1, a at 2), and `sort-results-usage-snapshot.integration.test.ts` pins
    usage and a low row's null `manualRank`. Slots come from `savedOrderPositions`, which are distinct
-   by construction (`dense-pins-splice`).
+   by construction (`dense-pins-splice`). *Accepted ceiling:* one `createMany` binds ~10 parameters
+   per row, so it fails past ~6,500 rows (Postgres' 65,535-parameter limit). `saveAndShare` already
+   has the same ceiling; collections are hundreds of pieces. A `ponytail:` comment on
+   `insertResultWithItems` records it (chunk the insert if a collection ever nears it).
 6. **`.30`: the snapshot API survives; the stream goes.** `subscribeNotices`, `noticeSubscribers`
    and the replay-on-subscribe are deleted. `CompareChoice` derives "closed elsewhere" from the
    snapshot (a standing `session_conflict` for its own sort). `PendingDecisionsGate` no longer
    subscribes at all. When its recovery drain settles, it reads `getNoticeSet()`: if `auth_required`
-   still stands, nothing landed, so it reveals without a refresh. Otherwise it refreshes. The `live`
-   flag goes, because a 2xx anywhere in the drain already clears `auth_required`, so a leftover line
-   can no longer skip the refresh after a recovery that lands. **Behaviour change:** on a 401 the gate
+   still stands, the drain ended signed out, so it reveals without a refresh. Otherwise it refreshes.
+   The `live` flag goes, because a 2xx that lands after the last 401 clears `auth_required`, so a
+   line left over from an earlier drain can no longer skip the refresh after a recovery that lands.
+   (Residual, accepted in Rulings: in a multi-key drain, a key that lands *before* another key's
+   later 401 leaves the line standing, so the gate skips a refresh it could have done; the old `live`
+   flag had the same flaw, and a refresh while signed out would redirect to sign-in anyway.)
+   **Behaviour change:** on a 401 the gate
    reveals when the drain settles (immediately for one queue, at the latest when the 5 s bound fires),
    not at the instant the 401 is classified.
-7. **`.31`: every notice except `auth_required` carries `collectionId: string | undefined`** (a
+7. **`.31`: every notice except the two global ones carries `collectionId: string | undefined`** (a
    required key, so TypeScript makes every emitter supply it). The value is the queue envelope's
    stamped collection (`readQueueCollectionId`), captured when the drain starts. Surfaces filter: same
    collection (a notice with no collection, from an envelope that predates stamping, shows anywhere),
-   **and** for `session_conflict`, same sort. `auth_required` has no collection and shows on every
-   surface: signing in is per person. The engine keys its map by kind + collection, so two
-   collections' lines coexist. `dismissNotice` takes the notice. `PendingNotices` and
-   `PendingDecisionsGate` take a required `collectionId`.
+   **and** for `session_conflict`, same sort. **Global, no collection, shown on every surface:**
+   `auth_required` (signing in is per person) and `closed_session_discarded` (answers that are gone;
+   PR 5 designed it as "surface once, then discard" — the gate on collection A deletes B's queue, so
+   scoping it to B could hide news of lost answers forever; its copy already says "somewhere else").
+   The engine keys its map: the two global kinds by kind alone; `session_conflict` by kind +
+   collection + sort (`sessionId`), so a later conflict from another sort in the same collection can
+   never replace the first and silently release `CompareChoice`'s hold; the rest by kind +
+   collection, so two collections' lines coexist. `dismissNotice` takes the notice. `PendingNotices`
+   and `PendingDecisionsGate` take a required `collectionId`.
 8. **`.32`: the in-flight map holds `{ promise, run }`**, where `run.opts` is a copy owned by the
    drain. A joiner passing `recovery: true` sets `run.opts.recovery = true`. The upgrade is one-way:
    recovery is never downgraded. The 409 branch reads `run.opts.recovery` when it classifies, so a
    join before the response lands takes the recovery path. A join after it was already classified
-   changes nothing (that drain already stopped). Keepalive is unchanged: its joiners already ride
-   `keepaliveNext` via `preemptBackoff`.
-9. **Notices raised during a recovery on another collection's page wait for that collection's
-   page.** The gate drains every pending queue of the curator (`listPendingKeysForCurator`), and with
-   `.31` a line about collection B no longer shows on collection A. This is accepted (Review Focus,
-   "Accepted, not pinned").
+   is ignored (accepted in Rulings: the queue is preserved with a `session_conflict` line and
+   recovered on the next recovery mount; nothing is lost). Keepalive is unchanged: its joiners already
+   ride `keepaliveNext` via `preemptBackoff`.
+   **`.35` (same branch):** the recovery 409 deletes the queue, but today it never resolves the
+   entries' pending acks, so a `CompareChoice` waiting on `awaitAck` keeps "Still saving that one —
+   it's safe" for answers that were let go. Before `deleteQueue`, the branch reads the queue and
+   calls `resolveAck(storageKey, entry.clientKey, { status: "rejected", reason: "closed" })` for each
+   entry. `CompareChoice.settle` already treats a rejected outcome as "never stood" (no Undo, no
+   claimed choice, the slow-save line cleared).
+9. **Collection-scoped notices raised during a recovery on another collection's page wait for that
+   collection's page.** The gate drains every pending queue of the curator
+   (`listPendingKeysForCurator`), and with `.31` a quarantine/rejected/superseded line about
+   collection B no longer shows on collection A. This is accepted (Review Focus, "Accepted, not
+   pinned"). The lost-answers line is global (Decision 7), so it shows on A.
 10. **`.33`: add copy rather than stop emitting.** A disposition 409 means the piece had already been
     given an answer, so "set aside" / "not yet" did not apply. Dropping it silently would hide a lost
-    intent. New constant `DISPOSITION_SUPERSEDED_NOTICE = "One piece already had your answer, so it
-    stays where that answer put it"`, with Okay. `NOTICE_COPY` becomes
+    intent. New constant `DISPOSITION_SUPERSEDED_NOTICE = "One piece already had a feeling from you,
+    so it stays where you placed it"` (no trailing period, like its siblings; "a feeling" is the
+    app's own noun for a triage answer — "your answer" was ambiguous right after a Set aside), with
+    Okay. `NOTICE_COPY` becomes
     `Record<FlushNotice["kind"], string>`, so a future kind without words fails to compile. That makes
     this class of bug structural.
 11. **`.22` saved ranking:**
     - (a) The glyph-only `TierBadge` above each "full ranking" card goes. `ItemCard` already carries
       the tier mark (its bucket `Badge`, with `role="img"` and an `aria-label`), so the pill was a
       duplicate floating above the card. The `space-y-2` wrapper and `BUCKET_TO_TIER` go with it.
-    - (b) The Onward section gets `pt-4`, giving 48px between the content above and the "Onward"
-      eyebrow. It was the bare 32px `space-y-8` gap, which reads as cramped above a small uppercase
-      label.
+    - (b) The Onward section gets `pt-2`, giving 40px (DESIGN.md spacing `xl`) between the content
+      above and the "Onward" eyebrow. It was the bare 32px `space-y-8` gap, which reads as cramped
+      above a small uppercase label.
     - (c) The share panel's header row stacks below `sm` (`flex flex-col gap-4 sm:flex-row
       sm:items-start sm:justify-between`), and the button is `shrink-0 self-start`, so "Create link"
       never wraps.
+    - (d) The share panel's Undo, Copy, Preview and Stop sharing controls drop `size="sm"` (`h-9`,
+      36px) for the default `md` (`h-11`, 44px), meeting the tap-target rule on the surface this PR
+      photographs. The share-row button group gains `flex-wrap` so the taller, wider buttons wrap
+      rather than push the page sideways at 390px.
 
 ## Owner-veto list (put in the PR body with screenshots)
 
@@ -196,19 +250,44 @@ design intends.
   saved ranking's name is the one given at Save.
 - **Saved ranking, cards:** the small tier pill floating above each card in "The full ranking" is
   gone. Each card's own tier dots remain.
-- **Saved ranking, Onward:** a little more room above the "Onward" eyebrow (48px, was 32px).
+- **Saved ranking, Onward:** a little more room above the "Onward" eyebrow (40px, was 32px).
 - **Saved ranking, share panel on phone:** the "Show someone what you love" text and "Create link"
   stack; the button sits under the text, on one line.
+- **Saved ranking, share buttons taller:** Undo, Copy, Preview and Stop sharing grow from 36px to
+  44px (the tap-target rule), and the Copy/Preview/Stop sharing row wraps on a narrow phone.
 - **New notice line** (a set-aside or not-yet that an answer had already settled): "One piece
-  already had your answer, so it stays where that answer put it", with Okay.
+  already had a feeling from you, so it stays where you placed it", with Okay.
 - **Notices stay on their collection:** a line about one collection's answers no longer shows on
-  another collection's pages. The sign-in line still shows everywhere.
+  another collection's pages. Two lines still show everywhere: the sign-in line, and the lost-answers
+  line ("A sort that was wrapped up somewhere else still had a few answers waiting…"), which may now
+  appear on this collection's page about another collection's sort.
+- **A comparison waiting on a discarded answer lets go:** when a recovery finds the sort was closed
+  elsewhere, a comparison still showing "Still saving that one — it's safe" for one of those answers
+  stops claiming it (no Undo for it) and refreshes.
 - **Recovery after sign-out:** the page reveals when the recovery drain settles (at most 5 s) rather
   than the instant the sign-out is seen.
 
 ## Rulings (controller)
 
-*(Empty at plan time. The controller records adversarial-review rulings here.)*
+Plan review (2026-10-04; Architect+Data+Security and QA+UX+Graphic, both CONCERNS; Security CLEAN).
+Folded: share creation under `inCuratorTx` + DB test (Decision 1, Task 2); the `.18` DB test seeds a
+second membership and holds the lock on the collection locked last; `session_conflict` keyed by
+sort; the `createMany` ceiling comment; `.35` into Task 4; phone screenshot runs; the `.21`
+"holds by construction" wording; the id test folded into the 200-id loop; the gate's `collectionId`
+asserted on both pages; the `.18` case in its own describe; `closed_session_discarded` global; the
+`.33` copy; before-shots kept; Onward `pt-2`; SharePanel buttons to 44px in Task 5; the nits.
+Accepted residuals:
+
+1. **`.32` late joiner.** A recovery caller that joins after the 409 was classified (between
+   `"stop"` and `drains.delete`) gets a promise that resolves after a mid-round stop: the queue is
+   preserved with a `session_conflict` line, which a results page never shows, and the gate
+   refreshes. Nothing is lost; the queue waits for the next recovery mount. Re-draining inside
+   `drainKey` would break the `toBe(live)` single-flight identity for one rare interleaving.
+2. **`.30` multi-key sign-out interleaving.** In a parallel multi-key recovery drain, key B's 2xx
+   clears `auth_required` and key A's later 401 raises it again; at settle the line stands, so the
+   gate reveals without the refresh B's landing earned. The old `live` flag had the same flaw; it
+   needs a session to expire mid-drain, and a refresh while signed out would redirect to sign-in.
+   Decision 6 says "a 2xx that lands after the last 401 clears it", which is exactly true.
 
 ## Rejected review findings
 
@@ -221,25 +300,26 @@ design intends.
 | Task | Beads | Create | Modify | Delete |
 |---|---|---|---|---|
 | 1 | `.19`, `.20` | — | `src/server/services/ScoringService.ts`, `src/server/services/ScoringService.test.ts`, `src/server/api/preferences.ts`, `src/lib/id.ts`, `src/lib/id.test.ts`, `src/app/api/sessions/[id]/decisions/batch/route.ts`, `scripts/bench-batch.ts` | — |
-| 2 | `.18`, `.21` | — | `src/server/services/purge-lock.ts`, `src/server/services/AccountDeletionService.ts`, `src/lib/db/purge-recompute-lock.integration.test.ts`, `src/app/api/sort-results/[id]/route.ts`, `src/server/api/results.ts`, `src/lib/db/route-authz-enumeration.integration.test.ts`, `src/lib/db/sort-results-authz.integration.test.ts`, `src/lib/db/sort-pipeline.integration.test.ts` | — |
+| 2 | `.18`, `.21` | — | `src/server/services/purge-lock.ts`, `src/server/services/AccountDeletionService.ts`, `src/lib/db/purge-recompute-lock.integration.test.ts`, `src/app/api/sort-results/[id]/route.ts`, `src/server/api/results.ts`, `src/lib/db/route-authz-enumeration.integration.test.ts`, `src/lib/db/sort-results-authz.integration.test.ts`, `src/lib/db/sort-pipeline.integration.test.ts`, `src/app/api/sort-results/[id]/shares/route.ts`, `src/server/api/shares.ts`, `src/server/services/SortResultService.ts`, `src/server/services/SortResultService.test.ts` | — |
 | 3 | `.23` | — | `src/server/services/SortResultService.ts`, `src/server/services/SortResultService.test.ts` | — |
-| 4 | `.30`–`.33` | — | `src/features/sorting/decisionFlusher.ts` (+ test), `src/features/sorting/pendingNotices.tsx` (+ test), `src/features/sorting/PendingDecisionsGate.tsx` (+ test), `src/features/sorting/CompareChoice.tsx`, `src/features/sorting/CompareChoice.test.tsx`, `src/features/sorting/TriageRound.tsx`, `src/app/collections/[id]/sort/page.tsx` (+ `page.test.tsx`), `src/app/collections/[id]/results/page.tsx` (+ `page.test.tsx`) | — |
-| 5 | `.22` | — | `src/features/results/RankedResults.tsx`, `src/features/results/RankedResults.test.tsx`, `src/features/results/SharePanel.tsx`, `e2e/sort-journey.spec.ts` | — |
+| 4 | `.30`–`.33`, `.35` | — | `src/features/sorting/decisionFlusher.ts` (+ test), `src/features/sorting/pendingNotices.tsx` (+ test), `src/features/sorting/PendingDecisionsGate.tsx` (+ test), `src/features/sorting/CompareChoice.tsx`, `src/features/sorting/CompareChoice.test.tsx`, `src/features/sorting/TriageRound.tsx`, `src/app/collections/[id]/sort/page.tsx` (+ `page.test.tsx`), `src/app/collections/[id]/results/page.tsx` (+ `page.test.tsx`) | — |
+| 5 | `.22` (+ G4 share buttons) | — | `src/features/results/RankedResults.tsx`, `src/features/results/RankedResults.test.tsx`, `src/features/results/SharePanel.tsx`, `e2e/sort-journey.spec.ts` | — |
 | 6 | all | — | `docs/ARCHITECTURE.md`, `docs/API.md`, `docs/DATABASE.md`, `graphify-out/` (controller) | — |
 
-Order: the tasks run in sequence. Tasks 2 and 3 both touch the curator-lock story but different
-files. Task 3's `SortResultService.ts` is untouched by Task 2, because the rename lived in
-`ResultController`. Task 4 is one engine change in one commit: `.30`/`.31`/`.32`/`.33` all reshape
-`FlushNotice`, the notice map and the drain map, and splitting them would mean three passes over the
-same lines and tests (memory `batch-changes-gate-once`). Task 5 is independent of 1–4. Task 6 runs
-last.
+Order: the tasks run in sequence. Tasks 2 and 3 both touch the curator-lock story and both edit
+`SortResultService.ts` (+ test): Task 2 adds `createShare` (a new method and a new describe), Task 3
+rewrites `insertResultWithItems` and `supersedeResult`. The hunks are disjoint; run them in order so
+Task 3 starts from Task 2's commit. Task 4 is one engine change in one commit:
+`.30`/`.31`/`.32`/`.33`/`.35` all reshape `FlushNotice`, the notice map, the drain map or the
+recovery-409 branch, and splitting them would mean several passes over the same lines and tests
+(memory `batch-changes-gate-once`). Task 5 is independent of 1–4. Task 6 runs last.
 
 ---
 
 ## Task 1: Dead code — `ScoringService.loadCuratorDecisionEvents` and `generateOrderedIdFactory` (`purses-w7ss.19`, `.20`)
 
-**Files:** see the file map. **Test:** existing suites, plus `src/lib/id.test.ts` (one test
-retargeted).
+**Files:** see the file map. **Test:** existing suites, plus `src/lib/id.test.ts` (the factory's
+property folded into the existing 200-id loop).
 
 **Interfaces:**
 - Produces: `ScoringService` has a no-argument constructor;
@@ -250,30 +330,29 @@ retargeted).
 This task is pure deletion behind existing tests (CLAUDE.md: trivial refactors need no new test). The
 red step is the type checker.
 
-- [ ] **Step 1: Retarget the id test first.** In `src/lib/id.test.ts`, replace the import and the
-  whole `describe("generateOrderedIdFactory", …)` block (lines 2 and 7–28) with:
+- [ ] **Step 1: Fold the factory's property into the 200-id test first.** In `src/lib/id.test.ts`,
+  change the import (line 2) to `import { generateId } from "./id";`, delete the whole
+  `describe("generateOrderedIdFactory", …)` block (lines 7–28), and replace the existing
+  `describe("generateId", …)` block (lines 30–35) with:
 
 ```ts
-import { generateId } from "./id";
-```
-
-```ts
-describe("generateId('event') in a batch", () => {
-  it("keeps the event_ format, and at an equal createdAt a later id orders after an earlier one under the shared comparator", () => {
+describe("generateId", () => {
+  it("event ids minted in the same millisecond strictly increase, so at a shared createdAt a later batch entry orders after an earlier one under the shared comparator (purses-w7ss.16, .20)", () => {
     const t = new Date(1000);
-    const a = { id: generateId("event"), createdAt: t };
-    const b = { id: generateId("event"), createdAt: t };
-    expect(a.id).toMatch(EVENT_ID);
-    expect(compareByCreatedAtThenId(a, b)).toBeLessThan(0);
-    // sign-equal with the retired comparators:
-    expect(a.id.localeCompare(b.id)).toBeLessThan(0);
-    expect(a.id < b.id).toBe(true);
+    // A tight loop guarantees same-ms runs; this is what the batch route relies on.
+    const rows = Array.from({ length: 200 }, () => ({ id: generateId("event"), createdAt: t }));
+    for (const r of rows) expect(r.id).toMatch(EVENT_ID);
+    for (let i = 1; i < rows.length; i++) {
+      expect(compareByCreatedAtThenId(rows[i - 1], rows[i])).toBeLessThan(0);
+      // sign-equal with the retired comparators:
+      expect(rows[i - 1].id.localeCompare(rows[i].id)).toBeLessThan(0);
+      expect(rows[i].id > rows[i - 1].id).toBe(true);
+    }
   });
 });
 ```
 
-  Keep `EVENT_ID`, the `compareByCreatedAtThenId` import and the existing `describe("generateId", …)`
-  block.
+  Keep `EVENT_ID` and the `compareByCreatedAtThenId` import.
 
 - [ ] **Step 2: Delete the factory and switch its callers.**
   - `src/lib/id.ts`: delete lines 14–20 (the comment and `generateOrderedIdFactory`).
@@ -346,65 +425,194 @@ Claude-Session: https://claude.ai/code/session_01BfKskkWb3LMmPkFkdDYp9s"
 
 ---
 
-## Task 2: Curator-lock writers — account deletion locks; the unlocked rename goes (`purses-w7ss.18`, `.21`)
+## Task 2: Curator-lock writers — account deletion locks; share creation locks; the unlocked rename goes (`purses-w7ss.18`, `.21`)
 
-**Files:** see the file map. **Test:** `src/lib/db/purge-recompute-lock.integration.test.ts` (one new
-DB case), `src/lib/db/route-authz-enumeration.integration.test.ts` (the exhaustiveness backstop).
+**Files:** see the file map. **Test:** `src/lib/db/purge-recompute-lock.integration.test.ts` (a new
+`describeDb` with two DB cases: the deletion blocks, the share POST blocks),
+`src/server/services/SortResultService.test.ts` (one unit describe for `createShare`'s branches),
+`src/lib/db/route-authz-enumeration.integration.test.ts` (the exhaustiveness backstop). The share
+route's own un-mocked crossing (201 + row read back, 400 on invalid JSON) already exists in
+`src/lib/db/sort-results-pipeline.integration.test.ts:323-355` and must stay green unchanged.
 
 **Interfaces:**
 - Produces: `export async function lockCuratorMemberships(tx: Database, curatorId: string): Promise<void>`
   in `src/server/services/purge-lock.ts`.
+- Produces: `SortResultService.createShare(id: string, expiresAt?: Date): Promise<(SortResultShare & { shareToken: string }) | null>`
+  (`null` → the result is gone → route 404).
+- Produces: `export const CreateShareSchema` in `src/server/api/shares.ts`;
+  `ShareController.createShare` no longer exists.
 - Produces: `src/app/api/sort-results/[id]/route.ts` exports `GET` and `DELETE` only;
   `ResultController` no longer has `updateResult`.
 
 **Invariant (`.18`):** account deletion's Phase 2 never interleaves with a curator-lock writer for the
-same (collection, user). **Pinned by** the new DB case (real lock on a second connection; the
-deletion blocks). **Invariant (`.21`):** no `sort_results` writer runs outside the curator lock.
-**Pinned by** the route-enumeration DB test (the method is gone, so the exhaustiveness check fails
-if it comes back without a registered case).
+same (collection, user) — in **every** one of the user's memberships — and a share is never inserted
+outside its result's curator lock. **Pinned by** the two new DB cases (real lock on a second
+connection; the deletion blocks while the lock on the collection it locks LAST is held; the share
+POST blocks on its result's lock). **Invariant (`.21`):** holds by construction — no unlocked
+`sort_results` writer remains. The enumeration test only forces a re-added `PATCH` to register an
+authz case; it does not check the lock. Re-adding a rename must go through `inCuratorTx` (Decision 2).
 
-- [ ] **Step 1: Failing DB case for `.18`.** In `src/lib/db/purge-recompute-lock.integration.test.ts`,
-  add the import after the `CollectionRepository` import (line 31):
+- [ ] **Step 1: Failing DB cases for `.18`.** In `src/lib/db/purge-recompute-lock.integration.test.ts`,
+  add the imports after the `CollectionRepository` import (line 31):
 
 ```ts
 import { AccountDeletionService } from "@/server/services/AccountDeletionService";
+import { SortResultService } from "@/server/services/SortResultService";
+import { SortResultRepository } from "@/server/repositories/implementations/SortResultRepository";
 ```
 
-  Then add, after `itemCount()` (line 99):
+  Then add a sibling block **after** the existing `describeDb("purge serializes against recompute …
+  purses-7x7m", …)` block (it ends at line 167), so a failure reports under its own contract:
 
 ```ts
+describeDb("account deletion and share creation serialize on the member's curator lock — purses-w7ss.18", () => {
+  let ownerId: string;
+  let memberId: string;
+  let collectionIds: string[];
+  let holder: ReturnType<typeof postgres>;
+  let probe: ReturnType<typeof postgres>;
+
+  beforeEach(async () => {
+    await resetDb();
+    vi.clearAllMocks();
+    mockBlobDel.mockResolvedValue(undefined);
+    ownerId = await seedBaseline();
+    memberId = await seedUserRow("collaborator");
+    // Two borrowed collections, so a lock on only the first membership cannot pass.
+    collectionIds = [await seedBareCollection(ownerId), await seedBareCollection(ownerId)];
+    for (const collectionId of collectionIds) {
+      await new MembershipRepository(getTestDb().db).create({ collectionId, userId: memberId, role: "curator" });
+    }
+    holder = extraClient();
+    probe = extraClient();
+  });
+
+  afterEach(async () => {
+    await holder.end({ timeout: 5 });
+    await probe.end({ timeout: 5 });
+    vi.restoreAllMocks();
+  });
+
+  afterAll(async () => {
+    await closeDb();
+  });
+
+  /** The collection lockCuratorMemberships locks LAST (largest hashtext): holding it proves every membership is locked. */
+  async function lastLockedCollection(): Promise<string> {
+    const rows = await probe<{ id: string }[]>`
+      select id from collections where id in ${probe(collectionIds)} order by hashtext(id) desc limit 1`;
+    return rows[0].id;
+  }
+
+  /** Hold the writer's real lock for the MEMBER curator in one collection, as an in-flight pin does. */
+  async function holdWriterLock(collectionId: string): Promise<void> {
+    await holder.unsafe("BEGIN");
+    await holder`select pg_advisory_xact_lock(hashtext(${collectionId}), hashtext(${memberId}))`;
+  }
+
   async function membershipCount(): Promise<number> {
     const rows = await probe<{ n: number }[]>`
       select count(*)::int as n from memberships where user_id = ${memberId}`;
     return rows[0].n;
   }
-```
 
-  Then add this case at the end of the `describeDb` block:
-
-```ts
-  // purses-w7ss.18: Phase 2 erases the member's curator rows in this collection. A pin holding this
-  // lock mid-write adds sort_result_items under a draft; the FK has no cascade, so an unlocked
-  // Phase 2 died on 23503 (500, retryable) — or killed the pin the same way.
-  it("AccountDeletionService waits on the member's writer lock before erasing their rows, then completes", async () => {
+  // Phase 2 erases the member's curator rows in every borrowed collection. A pin holding this lock
+  // mid-write adds sort_result_items under a draft; the FK has no cascade, so an unlocked Phase 2
+  // died on 23503 (500, retryable) — or killed the pin the same way.
+  it("AccountDeletionService waits on the member's writer lock in every borrowed collection before erasing, then completes", async () => {
     const { db } = getTestDb();
-    await holdWriterLock();
+    await holdWriterLock(await lastLockedCollection());
 
     const deleted = new AccountDeletionService(db)
       .deleteCurrentUser(memberId)
       .then(() => "done" as const);
 
     await new Promise((r) => setTimeout(r, 750));
-    // Pre-fix Phase 2 has already committed here and the membership is gone.
-    expect(await membershipCount()).toBe(1);
+    // Pre-fix (or a lock on only the first membership) Phase 2 has already committed here.
+    expect(await membershipCount()).toBe(2);
 
     await holder.unsafe("COMMIT");
     await expect(deleted).resolves.toBe("done");
     expect(await membershipCount()).toBe(0);
   }, 20_000);
+
+  // Phase 2 (and a purge, and a draft delete) deletes sort_result_shares before sort_results; a
+  // share inserted in between 23503s the sort_results delete. Creation takes the same lock.
+  it("SortResultService.createShare waits on its result's curator lock, then inserts the share", async () => {
+    const { db } = getTestDb();
+    const [collectionId] = collectionIds;
+    const result = await new SortResultRepository(db).insertWithNumber({
+      collectionId, curatorId: memberId, name: "Spring sort", status: "finalized", number: 1,
+    });
+    await holdWriterLock(collectionId);
+
+    const created = SortResultService.fromDb(db).createShare(result.id);
+
+    await new Promise((r) => setTimeout(r, 750));
+    // Pre-fix the share has already been inserted here.
+    const before = await probe<{ n: number }[]>`
+      select count(*)::int as n from sort_result_shares where sort_result_id = ${result.id}`;
+    expect(before[0].n).toBe(0);
+
+    await holder.unsafe("COMMIT");
+    const share = await created;
+    expect(share?.sortResultId).toBe(result.id);
+    expect(share?.shareToken).toMatch(/^[0-9a-f]{64}$/);
+    const after = await probe<{ n: number }[]>`
+      select count(*)::int as n from sort_result_shares where sort_result_id = ${result.id}`;
+    expect(after[0].n).toBe(1);
+  }, 20_000);
+});
 ```
 
-- [ ] **Step 2: Failing exhaustiveness check for `.21`.** In
+  (`mockBlobDel`, `extraClient`, `describeDb` and the fixture helpers are module-level in this file
+  already; the existing block's `beforeEach`/`holdWriterLock` stay untouched.)
+
+- [ ] **Step 2: Failing unit test for `createShare`'s branches.** In
+  `src/server/services/SortResultService.test.ts`, add after the `deleteResult` describe (it ends at
+  line 510):
+
+```ts
+describe("SortResultService.createShare (purses-w7ss.18)", () => {
+  function service(findById: () => Promise<SortResult | null>) {
+    return new SortResultService(
+      { findById } as unknown as SortResultRepository,
+      {} as unknown as SortResultItemRepository,
+      {} as unknown as CollectionPreferenceItemRepository,
+      txDb,
+    );
+  }
+
+  it("returns null and inserts nothing when the result is absent", async () => {
+    expect(await service(async () => null).createShare("missing")).toBeNull();
+    expect(txShareRepo.create).not.toHaveBeenCalled();
+  });
+
+  it("re-reads the result under its curator's lock; gone by then (an account deletion won) → null, nothing inserted", async () => {
+    txResultRepo.findByIdForUpdate.mockResolvedValue(null);
+    expect(await service(async () => sortResult()).createShare("res-1")).toBeNull();
+    expect(lockCollectionCurator).toHaveBeenCalledWith(expect.anything(), COLLECTION, CURATOR);
+    expect(txShareRepo.create).not.toHaveBeenCalled();
+  });
+
+  it("inserts on the tx-bound repo under the lock and returns the token", async () => {
+    txResultRepo.findByIdForUpdate.mockResolvedValue(sortResult());
+    const expiresAt = new Date("2027-01-01T00:00:00Z");
+    txShareRepo.create.mockImplementation(async (d: { sortResultId: string; shareToken: string }) => ({
+      id: "share-1", status: "active", expiresAt, createdAt: new Date(), updatedAt: new Date(), ...d,
+    }));
+    const share = await service(async () => sortResult()).createShare("res-1", expiresAt);
+    expect(txShareRepo.create).toHaveBeenCalledWith({ sortResultId: "res-1", shareToken: share!.shareToken, expiresAt });
+    expect(share!.shareToken).toMatch(/^[0-9a-f]{64}$/);
+    expect(lockCollectionCurator).toHaveBeenCalledWith(expect.anything(), COLLECTION, CURATOR);
+  });
+});
+```
+
+  (`txShareRepo.create`, `txResultRepo.findByIdForUpdate` and the `lockCollectionCurator` stub are
+  already mocked at the top of the file, lines 11–52.)
+
+- [ ] **Step 3: Failing exhaustiveness check for `.21`.** In
   `src/lib/db/route-authz-enumeration.integration.test.ts`, replace the PATCH case (lines 538–541,
   `c("sort-results/[id]/route.ts", "PATCH", … { name: "Stranger rename" }),`) with:
 
@@ -412,21 +620,23 @@ import { AccountDeletionService } from "@/server/services/AccountDeletionService
     // PATCH removed (purses-w7ss.21): no caller, and it renamed outside the curator lock.
 ```
 
-- [ ] **Step 3: Run both and see them fail.** `RUN_DB_TESTS=1` is set by the script:
-  `npm run test:db -- src/lib/db/purge-recompute-lock.integration.test.ts src/lib/db/route-authz-enumeration.integration.test.ts`.
-  (If `run-db-tests.sh` does not forward file arguments, run the whole `npm run test:db` and read
-  these two files' results.) Expected: FAIL. The account-deletion case sees `membershipCount() === 0`
-  at 750 ms, and the enumeration test reports `PATCH /api/sort-results/[param]` as a route with no
-  case.
+- [ ] **Step 4: Run them and see them fail.** `npx vitest run src/server/services/SortResultService.test.ts`
+  → FAIL (`createShare` is not a function). Then `npm run test:db -- src/lib/db/purge-recompute-lock.integration.test.ts src/lib/db/route-authz-enumeration.integration.test.ts`
+  (`RUN_DB_TESTS=1` is set by the script). Note: `run-db-tests.sh` passes `src/lib/db "$@"` and vitest
+  ORs positional filters, so this runs the **whole** DB suite; read these two files' results.
+  Expected: FAIL. The account-deletion case sees `membershipCount() === 0` at 750 ms, the share case
+  throws (`createShare` is not a function until Step 6; before that fix, an unlocked insert would show
+  the share already inserted at 750 ms), and the
+  enumeration test reports `PATCH /api/sort-results/[param]` as a route with no case.
 
-- [ ] **Step 4: Implement `.18`.** Append to `src/server/services/purge-lock.ts`:
+- [ ] **Step 5: Implement `.18` — the deletion lock.** Append to `src/server/services/purge-lock.ts`:
 
 ```ts
 /**
  * Account deletion's borrowed pass (Phase 2) erases one curator's private rows in every collection
- * they curate but don't own. Take that curator's writer lock in each, so a pin, save or decision
+ * they are a member of. Take that curator's writer lock in each, so a pin, save, share or decision
  * for the same (collection, curator) either commits before the deletes or waits for them — never
- * lands between the sort_result_items and sort_results deletes (no cascade → 23503).
+ * lands between a child delete and the sort_results delete (no cascade → 23503).
  *
  * Memberships only: owned collections were already purged (under lockCollectionCurators), and a
  * collection the user no longer belongs to has no writer that passes authz. Ordered by the lock
@@ -459,9 +669,52 @@ export async function lockCuratorMemberships(
 
   In the class doc comment's Phase 2 paragraph (lines 30–34), add after "The owner's own rows are
   untouched.": `It first takes the curator's writer lock in each of those collections
-  (lockCuratorMemberships), so an in-flight pin or decision finishes first.`
+  (lockCuratorMemberships), so an in-flight pin, share or decision finishes first.`
 
-- [ ] **Step 5: Implement `.21`.**
+- [ ] **Step 6: Implement `.18` — share creation under the lock.**
+  - `src/server/services/SortResultService.ts`: line 2 →
+    `import type { SortResult, SortResultItem, SortResultShare } from "@/types";` (`randomBytes` is
+    already imported, line 1). Add after `deleteResult` (it ends at line 457):
+
+```ts
+  /**
+   * Mint a share link under the result's curator lock (purses-w7ss.18): account deletion, a
+   * collection purge and a draft delete all remove sort_result_shares before sort_results, so a
+   * share inserted in between would 23503 their sort_results delete. The pre-tx read only supplies
+   * the lock key; the row is re-read under the lock, and gone → null (route 404).
+   */
+  async createShare(id: string, expiresAt?: Date): Promise<(SortResultShare & { shareToken: string }) | null> {
+    const owner = await this.sortResultRepo.findById(id);
+    if (!owner) return null;
+    return this.inCuratorTx(owner.collectionId, owner.curatorId, "create_share", async (tx) => {
+      if (!(await new SortResultRepository(tx).findByIdForUpdate(id))) return null;
+      const shareToken = randomBytes(32).toString("hex");
+      const share = await new SortResultShareRepository(tx).create({ sortResultId: id, shareToken, expiresAt });
+      return { ...share, shareToken };
+    });
+  }
+```
+
+  - `src/server/api/shares.ts`: `const CreateShareSchema` (line 7) → `export const CreateShareSchema`.
+    Delete `createShare` (lines 39–48) and the now-unused `randomBytes` import (line 3).
+  - `src/app/api/sort-results/[id]/shares/route.ts`: line 3 →
+    `import { CreateShareSchema, ShareController } from "@/server/api/shares";`; add
+    `import { SortResultService } from "@/server/services/SortResultService";`. Replace lines 37–39
+    (from `const body =` to the `return`) with:
+
+```ts
+    const { expiresAt } = CreateShareSchema.parse(await request.json());
+    // Under the curator lock (purses-w7ss.18): never between a deletion's shares and results deletes.
+    const share = await SortResultService.fromDb(db).createShare(id, expiresAt ? new Date(expiresAt) : undefined);
+    if (!share) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(share, { status: 201 });
+```
+
+    (`ShareController` stays imported for `GET`'s `listShares`. Invalid JSON still throws
+    `SyntaxError` → `errorResponse` → 400, and a bad body still throws `ZodError` → 400, both before
+    any write, as the existing pipeline test pins.)
+
+- [ ] **Step 7: Implement `.21`.**
   - `src/app/api/sort-results/[id]/route.ts`: delete the `PATCH` export (lines 26–48). Delete the
     `ResultController` import only if `GET` no longer uses it. It does (`getResult`), so keep it.
   - `src/server/api/results.ts`: delete `UpdateResultSchema` (lines 6–8), the `zod` import (line 1)
@@ -476,19 +729,26 @@ export async function lockCuratorMemberships(
     `import { DELETE as deleteResultRoute } from "@/app/api/sort-results/[id]/route";`. Delete the two
     PATCH cases (lines 428–479: "…rejects renaming a finalized result with 409…" and "…400s an
     invalid body (empty name)…").
-  - Check: `grep -rn "patchResult\|updateResult\b\|UpdateResultSchema" src e2e`. Expected: no output.
+  - Check: `grep -rn "patchResult\|updateResult\b\|UpdateResultSchema\|ShareController.fromDb(db).createShare" src e2e`.
+    Expected: no output.
 
-- [ ] **Step 6: Run and see them pass.** Re-run the Step 3 command (expected: PASS), then
-  `npx tsc --noEmit` and `npx vitest run src/server` (expected: PASS).
+- [ ] **Step 8: Run and see them pass.** `npx vitest run src/server` (expected: PASS) and
+  `npx tsc --noEmit` (expected: no errors). Then re-run the Step 4 `npm run test:db` command (the
+  whole DB suite; expected: PASS, including the unchanged share POST cases in
+  `sort-results-pipeline.integration.test.ts`). If Task 3 runs next in the same session, you may defer
+  this DB run and run it once for Tasks 2 and 3 together after Task 3 Step 4 (memory
+  `batch-changes-gate-once`), but before Task 3's commit.
 
-- [ ] **Step 7: Commit.**
+- [ ] **Step 9: Commit.**
 
 ```bash
 git add src/server/services/purge-lock.ts src/server/services/AccountDeletionService.ts \
   src/lib/db/purge-recompute-lock.integration.test.ts src/lib/db/route-authz-enumeration.integration.test.ts \
   "src/app/api/sort-results/[id]/route.ts" src/server/api/results.ts \
-  src/lib/db/sort-results-authz.integration.test.ts src/lib/db/sort-pipeline.integration.test.ts
-git commit -m "fix(ranking): account deletion takes the curator lock; drop the unlocked, uncalled result rename (purses-w7ss.18, purses-w7ss.21)
+  src/lib/db/sort-results-authz.integration.test.ts src/lib/db/sort-pipeline.integration.test.ts \
+  "src/app/api/sort-results/[id]/shares/route.ts" src/server/api/shares.ts \
+  src/server/services/SortResultService.ts src/server/services/SortResultService.test.ts
+git commit -m "fix(ranking): account deletion and share creation take the curator lock; drop the unlocked, uncalled result rename (purses-w7ss.18, purses-w7ss.21)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01BfKskkWb3LMmPkFkdDYp9s"
@@ -554,6 +814,9 @@ unit tests below (the shape), plus `ranking-save-route.integration.test.ts:177` 
   // Invariant: tx-bound repos only — a write on this.sortResultRepo would not roll back.
   // One multi-row insert under the curator lock (purses-w7ss.23); `slots` pins rows at insert
   // (a revision's saved loved order — distinct slots, see savedOrderPositions).
+  // ponytail: one createMany binds ~10 params per row, so it breaks past ~6,500 rows (Postgres'
+  // 65,535-param limit) — saveAndShare has the same ceiling; collections are hundreds of pieces.
+  // Chunk the insert if a collection ever nears it.
   private async insertResultWithItems(
     tx: Database,
     collectionId: string,
@@ -592,10 +855,10 @@ unit tests below (the shape), plus `ranking-save-route.integration.test.ts:177` 
 
 - [ ] **Step 4: Run and see them pass.** `npx vitest run src/server/services` (expected: PASS) and
   `npx tsc --noEmit` (expected: no errors). The DB guards (`ranking-save-route`,
-  `sort-results-usage-snapshot`, `sort-pipeline` "supersedeResult clones…") run in Task 6's
-  `npm run test:db`. If you want earlier evidence, run
-  `npm run test:db -- src/lib/db/ranking-save-route.integration.test.ts src/lib/db/sort-results-usage-snapshot.integration.test.ts`
-  now.
+  `sort-results-usage-snapshot`, `sort-pipeline` "supersedeResult clones…") run in the whole-suite
+  `npm run test:db` (any file arguments still run the whole DB suite: `run-db-tests.sh` passes
+  `src/lib/db "$@"`). If Task 2 deferred its DB run, run `npm run test:db` once now for both tasks
+  (expected: PASS) before committing; otherwise Task 6's full gate covers it.
 
 - [ ] **Step 5: Commit.**
 
@@ -609,36 +872,39 @@ Claude-Session: https://claude.ai/code/session_01BfKskkWb3LMmPkFkdDYp9s"
 
 ---
 
-## Task 4: The notice engine — one API, scoped by collection, recovery joins kept, every kind voiced (`purses-w7ss.30`, `.31`, `.32`, `.33`)
+## Task 4: The notice engine — one API, scoped by collection, recovery joins kept, discarded answers let go, every kind voiced (`purses-w7ss.30`, `.31`, `.32`, `.33`, `.35`)
 
 **Files:** see the file map.
 
 **Interfaces (all in `src/features/sorting/decisionFlusher.ts` unless noted):**
-- `export type FlushNotice` — every variant except `auth_required` gains
-  `collectionId: string | undefined`:
+- `export type FlushNotice` — every variant except the two global ones (`auth_required`,
+  `closed_session_discarded`) gains `collectionId: string | undefined`:
 
 ```ts
 // collectionId: the collection whose queue raised it (the envelope's stamp), so a surface shows only
 // its own collection's lines (purses-w7ss.31); undefined only for a queue that predates stamping.
-// auth_required has none: signing in is per person, not per collection.
+// Two kinds are global and carry none: auth_required (signing in is per person) and
+// closed_session_discarded (answers that are gone must never wait for a page the person may not open).
 export type FlushNotice =
   | { kind: "rejected_unknown_item"; count: number; collectionId: string | undefined }
   | { kind: "quarantined"; count: number; collectionId: string | undefined }
   | { kind: "session_conflict"; sessionId: string; collectionId: string | undefined } // mid-round batch 409; names its sort so it never holds another
-  | { kind: "closed_session_discarded"; collectionId: string | undefined } // recovery batch 409: a closed sort's waiting answers were let go
+  | { kind: "closed_session_discarded" } // recovery batch 409: a closed sort's waiting answers were let go
   | { kind: "disposition_superseded"; collectionId: string | undefined } // disposition POST 409 (PreferenceExistsError)
   | { kind: "auth_required" };
 ```
 
-- `export function noticeKey(n: FlushNotice): string` — `kind` for `auth_required`, else
+- `export function noticeKey(n: FlushNotice): string` — `kind` for the two global kinds;
+  `` `${kind}\u0000${collectionId ?? ""}\u0000${sessionId}` `` for `session_conflict` (a later conflict
+  from another sort in the same collection never replaces the first); else
   `` `${kind}\u0000${collectionId ?? ""}` ``.
 - `export function subscribeNoticeSet(listener: () => void): () => void` and
   `export function getNoticeSet(): readonly FlushNotice[]` — **the only notice API** (unchanged
   signatures).
 - `export function dismissNotice(notice: FlushNotice): void` — signature change (was `kind`).
 - **Removed:** `subscribeNotices`.
-- `pendingNotices.tsx`: `export const DISPOSITION_SUPERSEDED_NOTICE = "One piece already had your
-  answer, so it stays where that answer put it";`
+- `pendingNotices.tsx`: `export const DISPOSITION_SUPERSEDED_NOTICE = "One piece already had a
+  feeling from you, so it stays where you placed it";`
   `export function PendingNotices({ collectionId, sessionId }: { collectionId: string; sessionId?: string })`.
 - `PendingDecisionsGate.tsx`: `PendingDecisionsGate({ curatorId, collectionId, children }: { curatorId: string; collectionId: string; children: React.ReactNode })`.
 
@@ -648,11 +914,17 @@ export type FlushNotice =
   `CompareChoice.test.tsx` 409 tests (hold, no "it's safe" line, no Undo after a 409), and the gate
   tests "401 during the recovery drain…" and "a sign-in notice left over from an earlier drain never
   skips the refresh…" (unit, real engine).
-- *Scoped (`.31`):* a line raised by collection B's queue never renders on a surface for collection
-  A, and `auth_required` renders on both. Pinned by the new `pendingNotices.test.tsx` case (unit, real
-  engine) and the page wiring tests (sort and results pages pass their collection).
+- *Scoped (`.31`):* a collection-scoped line raised by collection B's queue never renders on a
+  surface for collection A; `auth_required` and `closed_session_discarded` render on both; two sorts'
+  conflicts in one collection both stand. Pinned by the new `pendingNotices.test.tsx` case (unit, real
+  engine), the new engine key test, and the page wiring tests (sort and results pages pass their
+  collection to both the gate and `PendingNotices`).
 - *Recovery joins (`.32`):* a recovery caller joining an in-flight drain gets recovery semantics on a
   409. Pinned by the new engine unit test.
+- *Discarded answers let go (`.35`):* a recovery 409 resolves every discarded entry's pending ack as
+  `{ status: "rejected", reason: "closed" }` before deleting the queue, so a waiting `CompareChoice`
+  never keeps "it's safe" for an answer that was let go. Pinned by the new engine unit test (real
+  engine; without the fix the ack never resolves).
 - *Every kind voiced (`.33`):* `NOTICE_COPY: Record<FlushNotice["kind"], string>` (compile-time), plus
   a render test of the new line with Okay.
 
@@ -669,8 +941,8 @@ export type FlushNotice =
     - 531 (401): `expect(engine.getNoticeSet()).toEqual([{ kind: "auth_required" }]);`
     - 560 (mid-round 409):
       `expect(engine.getNoticeSet()).toEqual([{ kind: "session_conflict", sessionId: "sess_1", collectionId: "col_1" }]);`
-    - 574 (recovery 409):
-      `expect(engine.getNoticeSet()).toEqual([{ kind: "closed_session_discarded", collectionId: "col_1" }]);`
+    - 574 (recovery 409; global, no collection):
+      `expect(engine.getNoticeSet()).toEqual([{ kind: "closed_session_discarded" }]);`
     - 587 (rejected):
       `expect(engine.getNoticeSet()).toEqual([{ kind: "rejected_unknown_item", count: 1, collectionId: "col_1" }]);`
   - **Replace** the "notices are sticky" describe (lines 613–636) with:
@@ -729,14 +1001,54 @@ describe("drain — a recovery caller joining a live drain (purses-w7ss.32)", ()
     respond?.(jsonRes(409));
     await recovery;
 
-    expect(engine.getNoticeSet()).toEqual([{ kind: "closed_session_discarded", collectionId: "col_1" }]);
+    expect(engine.getNoticeSet()).toEqual([{ kind: "closed_session_discarded" }]);
     expect(window.localStorage.getItem(pendingStorageKey(keyA))).toBeNull();
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("drain — a recovery 409 tells waiting answers they never landed (purses-w7ss.35)", () => {
+  it("resolves each discarded entry's ack as rejected (closed), so no 'it's safe' line outlives the queue", async () => {
+    const engine = await loadEngine();
+    global.fetch = vi.fn(async () => jsonRes(409)) as unknown as typeof fetch;
+    const e = triage();
+    await enqueue(keyA, e);
+    let outcome: AckOutcome | undefined;
+    void engine.awaitAck(keyA, e.clientKey).then((o) => {
+      outcome = o;
+    });
+
+    await engine.drain([keyA], { recovery: true });
+
+    // Pre-fix the queue is deleted and the waiter is never resolved.
+    await vi.waitFor(() => expect(outcome).toEqual({ status: "rejected", reason: "closed" }));
+    expect(window.localStorage.getItem(pendingStorageKey(keyA))).toBeNull();
+  });
+});
+
+describe("notice keys (purses-w7ss.31)", () => {
+  it("a second sort's conflict in the same collection stands beside the first, never replacing it", async () => {
+    const engine = await loadEngine();
+    const keyC: QueueKey = { ...keyA, sessionId: "sess_3" };
+    global.fetch = vi.fn(async () => jsonRes(409)) as unknown as typeof fetch;
+    await enqueue(keyA, triage());
+    await enqueue(keyC, triage());
+    await engine.drain([keyA, keyC]); // mid-round: two conflicts, one collection
+
+    expect(engine.getNoticeSet()).toHaveLength(2); // parallel drains: order not pinned
+    expect(engine.getNoticeSet()).toEqual(
+      expect.arrayContaining([
+        { kind: "session_conflict", sessionId: "sess_1", collectionId: "col_1" },
+        { kind: "session_conflict", sessionId: "sess_3", collectionId: "col_1" },
+      ]),
+    );
+  });
+});
 ```
 
-  Remove the `import type { FlushNotice }` line (line 14) if nothing else uses it.
+  Replace the `import type { FlushNotice }` line (line 14) with
+  `import type { AckOutcome } from "./decisionFlusher";` (keep `FlushNotice` in it only if something
+  else still uses it).
 
 - [ ] **Step 2: Failing surface tests** in `src/features/sorting/pendingNotices.test.tsx`.
   - Import `DISPOSITION_SUPERSEDED_NOTICE` from `./pendingNotices`. Add it to the TONE loop at line
@@ -751,7 +1063,7 @@ describe("drain — a recovery caller joining a live drain (purses-w7ss.32)", ()
 
 ```ts
 describe("PendingNotices — scoped by collection (purses-w7ss.31)", () => {
-  it("a line from another collection's answers stays on that collection; the sign-in line shows everywhere", async () => {
+  it("a line from another collection's answers stays on that collection; the sign-in and lost-answers lines show everywhere", async () => {
     const other: QueueKey = { ...key, sessionId: `${key.sessionId}_other`, collectionId: "coll_2" };
     render(
       <>
@@ -779,11 +1091,20 @@ describe("PendingNotices — scoped by collection (purses-w7ss.31)", () => {
     });
     expect(within(screen.getByTestId("here")).getByText(AUTH_REQUIRED_NOTICE)).toBeInTheDocument();
     expect(within(screen.getByTestId("there")).getByText(AUTH_REQUIRED_NOTICE)).toBeInTheDocument();
+
+    // A recovery (here: a gate on coll_1's page) finds coll_2's sort closed: the answers are gone, so
+    // the line is global — coll_1's page says it too (purses-w7ss.31, U2).
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    await act(async () => {
+      await drain([other], { recovery: true });
+    });
+    expect(within(screen.getByTestId("here")).getByText(CLOSED_SESSION_DISCARDED_NOTICE)).toBeInTheDocument();
+    expect(within(screen.getByTestId("there")).getByText(CLOSED_SESSION_DISCARDED_NOTICE)).toBeInTheDocument();
   });
 });
 
 describe("PendingNotices — a set-aside an answer had already settled (purses-w7ss.33)", () => {
-  it("says the piece stays where the answer put it, with Okay", async () => {
+  it("says the piece stays where you placed it, with Okay", async () => {
     global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
     render(<PendingNotices collectionId="coll_1" />);
     await enqueue(key, {
@@ -803,13 +1124,21 @@ describe("PendingNotices — a set-aside an answer had already settled (purses-w
 });
 ```
 
-- [ ] **Step 3: Failing page wiring tests.**
+- [ ] **Step 3: Failing page wiring tests** (both the gate and `PendingNotices` must get the page's
+  real collection id, never a slug: a wrong id on the gate silently hides its pre-reveal lines).
   - `src/app/collections/[id]/sort/page.test.tsx:62`: the mock becomes
     `PendingNotices: (p: { collectionId: string; sessionId?: string }) => <div data-testid="notices" data-collection={p.collectionId} data-session={p.sessionId} />,`.
+    Line 38's gate mock becomes
+    `vi.mock("@/features/sorting/PendingDecisionsGate", () => ({ PendingDecisionsGate: (p: { collectionId: string; children: ReactNode }) => <div data-testid="gate" data-collection={p.collectionId}>{p.children}</div> }));`.
     After the `data-session` assertions at lines 114 and 137, add
-    `expect(screen.getByTestId("notices")).toHaveAttribute("data-collection", "coll_1");`.
-  - `src/app/collections/[id]/results/page.test.tsx:39`: the same mock change. After line 86, add
-    `expect(screen.getByTestId("notices")).toHaveAttribute("data-collection", COLLECTION.id);`.
+    `expect(screen.getByTestId("notices")).toHaveAttribute("data-collection", "coll_1");` and
+    `expect(screen.getByTestId("gate")).toHaveAttribute("data-collection", "coll_1");`.
+  - `src/app/collections/[id]/results/page.test.tsx:39`: the same `PendingNotices` mock change. Line
+    35's gate mock becomes
+    `vi.mock("@/features/sorting/PendingDecisionsGate", () => ({ PendingDecisionsGate: (p: { collectionId: string; children: React.ReactNode }) => <div data-testid="gate" data-collection={p.collectionId}>{p.children}</div> }));`.
+    After line 86, add
+    `expect(screen.getByTestId("notices")).toHaveAttribute("data-collection", COLLECTION.id);` and
+    `expect(screen.getByTestId("gate")).toHaveAttribute("data-collection", COLLECTION.id);`.
 
 - [ ] **Step 4: Gate and compare test plumbing** (no new cases; these keep the existing tests
   compiling against the new signatures):
@@ -826,9 +1155,9 @@ describe("PendingNotices — a set-aside an answer had already settled (purses-w
 
 - [ ] **Step 5: Run and see them fail.**
   `npx vitest run src/features/sorting "src/app/collections/[id]/sort/page.test.tsx" "src/app/collections/[id]/results/page.test.tsx"`.
-  Expected: FAIL. The snapshot entries lack `collectionId`; the two-collections and join tests fail;
-  the scoped and disposition surface tests fail (no copy, no scoping); the page tests lack
-  `data-collection`. TypeScript errors in the editor (for example `dismissNotice(notice)`) are
+  Expected: FAIL. The snapshot entries lack `collectionId`; the two-collections, join, two-conflicts
+  and `.35` ack tests fail (the ack test times out in `vi.waitFor`: nothing resolves it); the scoped
+  and disposition surface tests fail (no copy, no scoping); the page tests lack `data-collection`. TypeScript errors in the editor (for example `dismissNotice(notice)`) are
   expected until Step 6.
 
 - [ ] **Step 6: Implement the engine** (`src/features/sorting/decisionFlusher.ts`).
@@ -863,8 +1192,19 @@ interface DrainRun {
     `dismissNotice`) with:
 
 ```ts
+// Global kinds key by kind alone (one line everywhere); a conflict keys by its sort too, so a later
+// conflict from another sort in the same collection never replaces it (and never silently releases
+// CompareChoice's hold); the rest key by kind + collection (purses-w7ss.31).
 export function noticeKey(n: FlushNotice): string {
-  return n.kind === "auth_required" ? n.kind : `${n.kind}\u0000${n.collectionId ?? ""}`;
+  switch (n.kind) {
+    case "auth_required":
+    case "closed_session_discarded":
+      return n.kind;
+    case "session_conflict":
+      return `${n.kind}\u0000${n.collectionId ?? ""}\u0000${n.sessionId}`;
+    default:
+      return `${n.kind}\u0000${n.collectionId ?? ""}`;
+  }
 }
 
 // The current set as an immutable snapshot (useSyncExternalStore), so adds AND clears reach a
@@ -949,10 +1289,26 @@ async function runDrain(key: QueueKey, run: DrainRun): Promise<void> {
       `run.rejected += 1`, `dismissNotice("auth_required")` →
       `dismissNotice({ kind: "auth_required" })`, and
       `return handleBatchFailure(key, res.status, valid, run);`.
-    - `handleBatchFailure(key, status, sent, run)`: `quarantine(key, sent, run)`; `if (opts.recovery)` →
-      `if (run.opts.recovery)`;
-      `emitNotice({ kind: "closed_session_discarded", collectionId: run.collectionId });`;
-      `emitNotice({ kind: "session_conflict", sessionId: key.sessionId, collectionId: run.collectionId });`.
+    - `handleBatchFailure(key, status, sent, run)`: `quarantine(key, sent, run)`;
+      `emitNotice({ kind: "session_conflict", sessionId: key.sessionId, collectionId: run.collectionId });`;
+      and the recovery branch (lines 348–353) becomes (`.32` reads `run.opts`; `.35` resolves the
+      discarded acks before the queue goes; the notice stays global, no collection):
+
+```ts
+    if (run.opts.recovery) {
+      // Terminal-session disposal: surface once, then discard. Its own kind, not a conflict, and
+      // global: no surface is that closed sort's, so every surface must say it. A comparison still
+      // awaiting one of these answers learns it never landed, so no "it's safe" outlives it
+      // (purses-w7ss.35).
+      const storageKey = pendingStorageKey(key);
+      for (const entry of readQueue(key)) {
+        resolveAck(storageKey, entry.clientKey, { status: "rejected", reason: "closed" });
+      }
+      emitNotice({ kind: "closed_session_discarded" });
+      deleteQueue(key);
+      return "done";
+    }
+```
     - `flushDisposition(key, entry, run)`: both `quarantine(…, run)`;
       `consumeKeepalive(storageKey, run.opts)` (×2);
       `dismissNotice({ kind: "auth_required" })`;
@@ -966,7 +1322,7 @@ async function runDrain(key: QueueKey, run: DrainRun): Promise<void> {
     After `CLOSED_SESSION_DISCARDED_NOTICE` add:
 
 ```ts
-export const DISPOSITION_SUPERSEDED_NOTICE = "One piece already had your answer, so it stays where that answer put it";
+export const DISPOSITION_SUPERSEDED_NOTICE = "One piece already had a feeling from you, so it stays where you placed it";
 
 // Every kind the engine can raise has words, or this does not compile (purses-w7ss.33).
 const NOTICE_COPY: Record<FlushNotice["kind"], string> = {
@@ -979,10 +1335,11 @@ const NOTICE_COPY: Record<FlushNotice["kind"], string> = {
 };
 
 // A line belongs to the collection whose answers raised it (one with no collection predates
-// stamping and shows anywhere); a conflict also names its sort. Signing in is per person, so
-// auth_required shows on every surface (purses-w7ss.31).
+// stamping and shows anywhere); a conflict also names its sort. Two lines are global and show on
+// every surface: auth_required (signing in is per person) and closed_session_discarded (answers that
+// are gone must never wait for a page the person may not open) (purses-w7ss.31).
 function isForThisSurface(notice: FlushNotice, collectionId: string, sessionId: string | undefined): boolean {
-  if (notice.kind === "auth_required") return true;
+  if (notice.kind === "auth_required" || notice.kind === "closed_session_discarded") return true;
   if (notice.collectionId !== undefined && notice.collectionId !== collectionId) return false;
   return notice.kind !== "session_conflict" || notice.sessionId === sessionId;
 }
@@ -991,9 +1348,10 @@ function isForThisSurface(notice: FlushNotice, collectionId: string, sessionId: 
     Delete the old `NOTICE_COPY` (`as const`), `NoticeKind`, `isNoticed` and `isForThisSurface`
     (lines 22–40). In the doc comment, replace "`closed_session_discarded` (a recovery-time 409) is
     one of them and shows on any surface, since no surface belongs to the closed sort." with "Every
-    line shows only on its own collection's surfaces; `closed_session_discarded` (a recovery-time 409)
-    and `disposition_superseded` (a set-aside an answer had already settled) offer Okay too." Then
-    change the component:
+    line shows only on its own collection's surfaces, except two global ones: `auth_required` and
+    `closed_session_discarded` (a recovery-time 409; no surface belongs to the closed sort, and lost
+    answers must be heard). `closed_session_discarded` and `disposition_superseded` (a set-aside a
+    feeling had already settled) offer Okay too." Then change the component:
 
 ```tsx
 export function PendingNotices({ collectionId, sessionId }: { collectionId: string; sessionId?: string }) {
@@ -1085,7 +1443,7 @@ git add src/features/sorting/decisionFlusher.ts src/features/sorting/decisionFlu
   src/features/sorting/CompareChoice.tsx src/features/sorting/CompareChoice.test.tsx src/features/sorting/TriageRound.tsx \
   "src/app/collections/[id]/sort/page.tsx" "src/app/collections/[id]/sort/page.test.tsx" \
   "src/app/collections/[id]/results/page.tsx" "src/app/collections/[id]/results/page.test.tsx"
-git commit -m "fix(sort): one notice API, notices scoped by collection, recovery joins keep recovery, every kind voiced (purses-w7ss.30, .31, .32, .33)
+git commit -m "fix(sort): one notice API, notices scoped by collection, recovery joins keep recovery, discarded answers let go, every kind voiced (purses-w7ss.30, .31, .32, .33, .35)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01BfKskkWb3LMmPkFkdDYp9s"
@@ -1093,7 +1451,7 @@ Claude-Session: https://claude.ai/code/session_01BfKskkWb3LMmPkFkdDYp9s"
 
 ---
 
-## Task 5: The saved ranking page — one tier mark, room above Onward, Create link on one line (`purses-w7ss.22`)
+## Task 5: The saved ranking page — one tier mark, room above Onward, Create link on one line, 44px share buttons (`purses-w7ss.22`)
 
 **Files:** `src/features/results/RankedResults.tsx`, `src/features/results/RankedResults.test.tsx`,
 `src/features/results/SharePanel.tsx`, `e2e/sort-journey.spec.ts`.
@@ -1101,15 +1459,21 @@ Claude-Session: https://claude.ai/code/session_01BfKskkWb3LMmPkFkdDYp9s"
 **Interfaces:** none cross-task. `RankedResults`' props are unchanged.
 
 **Invariants and what pins them:** each "full ranking" card carries exactly one tier mark (unit,
-`RankedResults.test.tsx`). On a 390px phone: ≥ 48px above the Onward eyebrow, "Create link" on a
-single line, and no sideways scroll (e2e, `sort-journey.spec.ts`, in CI's `results` area map).
+`RankedResults.test.tsx`). On a 390px phone: ≥ 40px above the Onward eyebrow, "Create link" on a
+single line, the share panel's Copy, Preview, Stop sharing and Undo controls ≥ 44px tall, and no
+sideways scroll before or after a link exists (e2e, `sort-journey.spec.ts`, in CI's `results` area
+map; jsdom has no layout, so the heights are pinned in the browser, not by a class-name unit test).
 
-- [ ] **Step 0: See it first** (systematic-debugging; no code). Run
-  `SHOTS=saved-ranking npm run screenshots` and open
+- [ ] **Step 0: See it first** (systematic-debugging; no code). `npm run screenshots` honours only
+  the `PW_VIEWPORT` project (tablet by default), so capture twice:
+  `SHOTS=saved-ranking npm run screenshots` and
+  `PW_VIEWPORT=phone SHOTS=saved-ranking npm run screenshots`. Open
   `pr-screenshots/saved-ranking-light-phone.png` and `…-light-tablet.png`. Confirm the three flaws
   are as described in Decision 11: the glyph pill above the single "full ranking" card (the seed is
   top/high/low, so the ranking has one card), the cramped Onward eyebrow, and "Create link" on two
-  lines on phone. If what you see differs, stop and report it to the controller before Step 1.
+  lines on phone. If what you see differs, stop and report it to the controller before Step 1. Then
+  keep the before-shots, since Step 5's re-capture overwrites the same filenames:
+  `mkdir -p pr-screenshots/before && cp pr-screenshots/saved-ranking-* pr-screenshots/before/`.
 
 - [ ] **Step 1: Failing unit test.** In `src/features/results/RankedResults.test.tsx`, replace the
   test at line 27 ("marks ranked rows with a tier badge but never a visible Love/Like/Maybe label")
@@ -1147,15 +1511,16 @@ test.describe("saved ranking on a phone", () => {
   });
 
   // purses-w7ss.22. Viewport-sensitive; runs in CI's tablet project at iPhone width.
-  test("Onward has room above it, Create link stays on one line, nothing scrolls sideways", async ({ page }) => {
+  test("Onward has room above it, Create link stays on one line, share controls are full-size taps, nothing scrolls sideways", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 664 });
     await page.goto(path);
+    const noSidewaysScroll = () => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
 
     const ranking = page.getByRole("heading", { name: "The full ranking" }).locator("xpath=ancestor::section[1]");
     const eyebrow = page.getByText("Onward", { exact: true });
     const above = (await ranking.boundingBox())!;
     const label = (await eyebrow.boundingBox())!;
-    expect(label.y - (above.y + above.height)).toBeGreaterThanOrEqual(47);
+    expect(label.y - (above.y + above.height)).toBeGreaterThanOrEqual(39);
 
     const create = page.getByRole("button", { name: "Create link" });
     const lines = await create.evaluate((el) => {
@@ -1164,7 +1529,24 @@ test.describe("saved ranking on a phone", () => {
       return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
     });
     expect(lines).toBe(1);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    expect(await noSidewaysScroll()).toBe(true);
+
+    // The share row and Undo: ≥ 44px taps (DESIGN.md / WCAG target size), and the row wraps, never scrolls.
+    await create.click();
+    const shareRow = [
+      page.getByRole("button", { name: "Copy" }),
+      page.getByRole("link", { name: "Preview" }),
+      page.getByRole("button", { name: "Stop sharing" }),
+    ];
+    for (const control of shareRow) {
+      await expect(control).toBeVisible();
+      expect((await control.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    }
+    expect(await noSidewaysScroll()).toBe(true);
+    await page.getByRole("button", { name: "Stop sharing" }).click();
+    const undo = page.getByRole("button", { name: "Undo" });
+    await expect(undo).toBeVisible();
+    expect((await undo.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   });
 });
 ```
@@ -1172,7 +1554,7 @@ test.describe("saved ranking on a phone", () => {
 - [ ] **Step 3: Run and see them fail.**
   `npx vitest run src/features/results/RankedResults.test.tsx` → FAIL (4 marks, not 2).
   `npm run test:e2e -- e2e/sort-journey.spec.ts --project=tablet -g "saved ranking on a phone"` →
-  FAIL (gap ≈ 32 < 47, and/or 2 lines).
+  FAIL (gap ≈ 32 < 39, and/or 2 lines, and the share controls at 36px).
 
 - [ ] **Step 4: Implement.**
   - `src/features/results/RankedResults.tsx`: delete the `TierBadge` import (line 5) and
@@ -1192,24 +1574,39 @@ test.describe("saved ranking on a phone", () => {
 ```
 
     Onward section (line 96): `<section className="space-y-4">` →
-    `<section className="space-y-4 pt-4">`. In the comment above it, add: "`pt-4`: the small eyebrow
-    needs more air than the bare section gap (purses-w7ss.22)."
-  - `src/features/results/SharePanel.tsx`: line 121 `<div className="flex items-start justify-between">` →
-    `<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">`. Line 128
-    `<Button onClick={handleCreateShare} disabled={loading}>` →
-    `<Button onClick={handleCreateShare} disabled={loading} className="shrink-0 self-start">`.
+    `<section className="space-y-4 pt-2">`. In the comment above it, add: "`pt-2`: the small eyebrow
+    needs more air than the bare section gap — 32 + 8 = 40px, DESIGN.md spacing `xl`
+    (purses-w7ss.22)."
+    Replace the stale doc comment on `RankedResults` (lines 43–47, "shared by the live Standing
+    surface and the finalized snapshot viewer") with: "The affirmation composition for a saved
+    ranking (`/collections/[id]/results/[resultNumber]`): most-loved hero → the full ranking → the
+    forward-framed Onward section → an affirmation close. The caller derives loved/onward from the
+    partitionRanked/effectiveBucket source (TONE #1 affirmation-first, no counts). The welcome
+    walkthrough's `WelcomeStanding` mirrors this shape with its own rows."
+  - `src/features/results/SharePanel.tsx`:
+    - Line 121 `<div className="flex items-start justify-between">` →
+      `<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">`. Line 128
+      `<Button onClick={handleCreateShare} disabled={loading}>` →
+      `<Button onClick={handleCreateShare} disabled={loading} className="shrink-0 self-start">`.
+    - Tap targets (G4): delete `size="sm"` from the Undo button (line 136), Copy (line 157) and Stop
+      sharing (line 176), so they take the default `md` (`h-11`, 44px). Preview (line 171):
+      `buttonVariants({ size: "sm", variant: "secondary" })` → `buttonVariants({ variant: "secondary" })`.
+      The share-row group (line 155) `<div className="flex gap-2">` →
+      `<div className="flex flex-wrap gap-2">`, so the wider buttons wrap at 390px.
 
 - [ ] **Step 5: Run and see them pass.** Re-run both Step 3 commands (expected: PASS), then
   `PW_VIEWPORT=phone npm run test:e2e -- e2e/sort-journey.spec.ts` (expected: PASS) and
-  `npx vitest run src/features/results` (expected: PASS). Re-capture
-  `SHOTS=saved-ranking npm run screenshots` and look at all four PNGs (light/dark × tablet/phone).
+  `npx vitest run src/features/results` (expected: PASS; `SharePanel.test.tsx` is unchanged). Re-capture
+  with both runs, `SHOTS=saved-ranking npm run screenshots` and
+  `PW_VIEWPORT=phone SHOTS=saved-ranking npm run screenshots`, and compare all four PNGs
+  (light/dark × tablet/phone) against `pr-screenshots/before/`.
 
 - [ ] **Step 6: Commit.**
 
 ```bash
 git add src/features/results/RankedResults.tsx src/features/results/RankedResults.test.tsx \
   src/features/results/SharePanel.tsx e2e/sort-journey.spec.ts
-git commit -m "fix(results): saved ranking drops the duplicate tier pill, gives Onward room, keeps Create link on one line (purses-w7ss.22)
+git commit -m "fix(results): saved ranking drops the duplicate tier pill, gives Onward room, keeps Create link on one line, 44px share buttons (purses-w7ss.22)
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01BfKskkWb3LMmPkFkdDYp9s"
@@ -1227,13 +1624,15 @@ only).
     - Decision 42 *Rationale* (line 307): replace "the `PATCH` rename stays a lock-free single-row
       update in `ResultController`; `AccountDeletionService` is `purses-w7ss.18`" with "the uncalled
       `PATCH /api/sort-results/[id]` rename, which wrote outside the lock, was deleted
-      (`purses-w7ss.21`), and account deletion takes the curator's lock in each borrowed collection
-      before erasing (`purses-w7ss.18`)".
+      (`purses-w7ss.21`); share creation runs in `SortResultService.createShare` under the lock with a
+      `findByIdForUpdate` re-check; and account deletion takes the curator's lock in each borrowed
+      collection before erasing (`purses-w7ss.18`)".
     - Decision 42 *Status* (line 308): append "PR 6: the flusher's notices are one snapshot
       (`subscribeNoticeSet`/`getNoticeSet`; the stream is gone), each line scoped to the collection
-      whose queue raised it (a conflict also to its sort; the sign-in line everywhere); a recovery
-      caller joining a live drain makes it a recovery drain; `disposition_superseded` has words.
-      Revisions and drafts insert their rows in one statement."
+      whose queue raised it (a conflict also to its sort; the sign-in and lost-answers lines
+      everywhere); a recovery caller joining a live drain makes it a recovery drain; a recovery 409
+      resolves the discarded answers' pending acks as not landed (`purses-w7ss.35`);
+      `disposition_superseded` has words. Revisions and drafts insert their rows in one statement."
     - Account-deletion decision (line 177): after "(2) delete the user's curator-private rows
       globally (…) in one transaction" insert ", first taking the curator's writer lock in every
       collection they are a member of (`lockCuratorMemberships`, ordered by key), so an in-flight pin
@@ -1246,13 +1645,20 @@ only).
     - Lines 345–347: replace "The result rename (`PATCH /api/sort-results/[id]`) runs outside the
       lock (`ResultController.updateResult` — a single-row `name` update on a draft; it never creates
       or deletes a draft)." with "The result rename (`PATCH /api/sort-results/[id]`), the last
-      `sort_results` write outside the lock, had no caller and was removed (`purses-w7ss.21`)."
+      `sort_results` write outside the lock, had no caller and was removed (`purses-w7ss.21`). Share
+      creation (`POST /api/sort-results/[id]/shares`) runs under the same lock
+      (`SortResultService.createShare`, `purses-w7ss.18`), so a share never lands between a
+      deletion's shares delete and its results delete."
     - Line 416 heading → `### `GET·DELETE /api/sort-results/[id]``, and in its paragraph delete
       "`PATCH` body → updated `SortResult` (`400` invalid JSON), but rejects a **finalized** result
       with **`409`** (`"Result is finalized"`) — a finalized result is immutable, name included (infra
       §11.3; `purses-gmn`, mirroring `purses-526`'s item-level guards)." Then add after the `DELETE`
       sentence: "(`PATCH`, the rename, was removed in UX redesign PR 6: no caller, and it wrote outside
       the curator lock.)"
+  - `docs/API.md` line 431 (`GET·POST /api/sort-results/[id]/shares`): replace "(e.g. `{ expiresAt? }`,
+    per `createShare`). `400` invalid JSON." with "(`{ expiresAt? }`, `CreateShareSchema`; minted by
+    `SortResultService.createShare` under the curator lock). `400` invalid JSON or body; `404` if the
+    result is gone by the time the lock is held."
   - `docs/DATABASE.md` lines 34–35: replace "`generateOrderedIdFactory()` (`src/lib/id.ts:19`) remains
     for batch inserts (one factory per request/batch; consolidating it is `purses-w7ss.20`)." with
     "The decisions batch route mints with `generateId("event")` too, so a later array entry wins a
@@ -1280,8 +1686,8 @@ npm run test:e2e
 PW_VIEWPORT=phone npm run test:e2e -- e2e/sort-journey.spec.ts e2e/decision-recovery.spec.ts e2e/lists-and-home.spec.ts
 ```
 
-  Expected: all green. `auth:verify` runs because this PR removes a route method (an API-surface
-  change); `test:db` runs because of locks, routes and repositories; the full `test:e2e` runs because
+  Expected: all green. `auth:verify` runs because this PR removes a route method and changes the
+  share POST (API-surface changes); `test:db` runs because of locks, routes and repositories; the full `test:e2e` runs because
   the sorting and results surfaces both changed. On any failure, use `superpowers:systematic-debugging`
   before changing anything; for a DB or e2e failure, read the report first (CLAUDE.md rule 11).
 
@@ -1296,10 +1702,13 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01BfKskkWb3LMmPkFkdDYp9s"
 ```
 
-- [ ] **Step 4: Screenshots.** `SHOTS=saved-ranking npm run screenshots` captures light + dark ×
-  tablet + phone into `pr-screenshots/` (gitignored, never staged). Embed them in the PR body per
-  `docs/cookbook/add-images-to-pr.md` (`pr-screenshots` skill), with the owner-veto list above. The
-  notice changes have no seeded screenshot surface. List the new copy line in the PR body instead.
+- [ ] **Step 4: Screenshots.** One run captures only the `PW_VIEWPORT` project, so run both:
+  `SHOTS=saved-ranking npm run screenshots` (light + dark, tablet) and
+  `PW_VIEWPORT=phone SHOTS=saved-ranking npm run screenshots` (light + dark, phone), into
+  `pr-screenshots/` (gitignored, never staged). Embed the after-shots and Task 5's
+  `pr-screenshots/before/` set side by side in the PR body per `docs/cookbook/add-images-to-pr.md`
+  (`pr-screenshots` skill), with the owner-veto list above. The notice changes have no seeded
+  screenshot surface. List the new copy line in the PR body instead.
 
 ---
 
@@ -1314,30 +1723,42 @@ Claude-Session: https://claude.ai/code/session_01BfKskkWb3LMmPkFkdDYp9s"
   a candidate for the same removal as the rename. It is locked, so it is not urgent.
 - **`ScoringService` is stateless after Task 1.** `computePreferences` could be a plain function
   beside `deriveOrder`. Left as a class to keep this PR's diff to the bead.
-- **Notices for a collection the person doesn't revisit in the tab are never heard** (Decision 9). If
-  that matters, the gate could voice "answers from another collection…" generically. That is a
-  product call.
+- **Collection-scoped notices for a collection the person doesn't revisit in the tab are never
+  heard** (Decision 9; the lost-answers line is global and exempt). If that matters, the gate could
+  voice "answers from another collection…" generically. That is a product call.
+- **`pr-screenshots` skill text** (`.claude/skills/pr-screenshots/SKILL.md:20`) claims one
+  `npm run screenshots` run captures tablet + phone; it captures only the `PW_VIEWPORT` project. This
+  plan runs both explicitly; fixing the skill or the screenshots config is a separate chore.
+- **Share status PATCH/DELETE** (`/api/sort-results/[id]/shares/[sid]`) stay outside the curator lock:
+  they update or remove an existing share row, which cannot 23503 a `sort_results` delete
+  (Decision 1).
 
 ## Self-review
 
-1. **Bead coverage.** `.18` → Task 2 (lock and DB proof). `.19` and `.20` → Task 1. `.21` → Task 2
-   (deleted; Decision 2). `.22` → Task 5 (all three flaws, each with a test). `.23` → Task 3. `.30`,
-   `.31`, `.32` and `.33` → Task 4 (one engine change; Decisions 6–10). No bead needs a schema change,
-   a migration or a new route.
+1. **Bead coverage.** `.18` → Task 2 (deletion lock and share creation under the lock, each with a
+   DB proof). `.19` and `.20` → Task 1. `.21` → Task 2 (deleted; Decision 2). `.22` → Task 5 (all
+   three flaws, each with a test; plus the 44px share buttons from the plan review). `.23` → Task 3.
+   `.30`, `.31`, `.32`, `.33` and `.35` → Task 4 (one engine change; Decisions 6–10). No bead needs a
+   schema change, a migration or a new route.
 2. **Placeholder scan.** No TBD/TODO. Every code step shows the code. The one "if what you see
    differs, stop" (Task 5 Step 0) is a diagnosis gate, not a deferral: Steps 1–4 carry the full fix.
-3. **Type consistency.** `FlushNotice.collectionId: string | undefined` is used by `noticeKey`,
-   `isForThisSurface` and every `emitNotice` call. `dismissNotice(notice: FlushNotice)` is used by the
+3. **Type consistency.** `FlushNotice.collectionId: string | undefined` (absent on the two global
+   kinds) is used by `noticeKey`, `isForThisSurface` and every collection-scoped `emitNotice` call. `dismissNotice(notice: FlushNotice)` is used by the
    engine (`{ kind: "auth_required" }`), `PendingNotices` and the three test files.
    `PendingNotices({ collectionId, sessionId? })` and `PendingDecisionsGate({ curatorId,
    collectionId, children })` are used by the sort page, the results page, `TriageRound` and the
    tests. `DrainRun` is used throughout the engine. `lockCuratorMemberships(tx, curatorId)` is defined
-   in Task 2 and used once. `insertResultWithItems(…, slots)` is used by `createDraftResult` (the
-   default) and `supersedeResult`.
+   in Task 2 and used once. `SortResultService.createShare(id, expiresAt?)` is defined in Task 2 and
+   used by the share POST route and its tests; `CreateShareSchema` moves to an export.
+   `insertResultWithItems(…, slots)` is used by `createDraftResult` (the default) and
+   `supersedeResult`.
 4. **Review Focus.** Each of the five lines names its pinning test and owning task. The emitter walk
    (memory `plan-mandated-shape-can-miss-its-own-invariant`) covers six kinds: `rejected_unknown_item`
    and `quarantined` (`runDrain` finally), `session_conflict` and `closed_session_discarded`
-   (`handleBatchFailure`), `disposition_superseded` (`flushDisposition`), and `auth_required` (×2,
-   global). The required `collectionId` key makes the compiler enforce the walk. The one consumer
-   whose filter tightened, the gate's pre-reveal `PendingNotices`, now gets its page's collection.
-   Recovery lines for other collections are Decision 9, accepted and listed.
+   (`handleBatchFailure`), `disposition_superseded` (`flushDisposition`), and `auth_required` (×2).
+   `auth_required` and `closed_session_discarded` are global (no collection); the other four carry
+   the required `collectionId` key, so the compiler enforces the walk. The one consumer whose filter
+   tightened, the gate's pre-reveal `PendingNotices`, now gets its page's collection (pinned by the
+   page tests' gate mock). Collection-scoped recovery lines for other collections are Decision 9,
+   accepted and listed. Uncovered by a test, by choice: a notice with `collectionId: undefined` (an
+   envelope that predates stamping) shows anywhere — a legacy path.
