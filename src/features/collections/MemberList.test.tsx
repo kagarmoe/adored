@@ -51,6 +51,17 @@ function invitation(over: Partial<Invitation> = {}): Invitation {
 }
 
 describe("MemberList", () => {
+  it("renders members and pending invites as one list, a row per person", () => {
+    render(
+      <MemberList
+        members={[membership({ id: "m1", role: "owner" }), membership({ id: "m2" })]}
+        pending={[invitation()]}
+      />,
+    );
+    expect(screen.getByRole("list")).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+  });
+
   it("shows an accepted member's name, email, and role Badge", () => {
     render(<MemberList members={[membership()]} pending={[]} />);
     expect(screen.getByText("Ada Lovelace")).toBeInTheDocument();

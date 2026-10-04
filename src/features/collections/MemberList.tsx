@@ -24,12 +24,12 @@ const rowBase =
 
 export function MemberList({ members, pending = [], canManage = false }: MemberListProps) {
   return (
-    <div className="space-y-3">
+    <ul className="space-y-3">
       {members.map((member) => {
         const isOwner = member.role === "owner";
         const display = member.name?.trim() || member.email || "Member";
         return (
-          <div key={member.id} className={rowBase}>
+          <li key={member.id} className={rowBase}>
             <span
               aria-hidden="true"
               className={`${avatarBase} ${isOwner ? "bg-content-deeper text-white" : "bg-content-soft text-ink"}`}
@@ -46,12 +46,12 @@ export function MemberList({ members, pending = [], canManage = false }: MemberL
             {canManage && !isOwner && (
               <MemberRemoveButton collectionId={member.collectionId} memberId={member.id} />
             )}
-          </div>
+          </li>
         );
       })}
 
       {pending.map((invite) => (
-        <div key={invite.id} className={rowBase}>
+        <li key={invite.id} className={rowBase}>
           <span
             aria-hidden="true"
             className={`${avatarBase} border border-dashed border-hairline text-ink-soft`}
@@ -64,8 +64,8 @@ export function MemberList({ members, pending = [], canManage = false }: MemberL
           </div>
           <Badge variant="pending">Pending</Badge>
           {canManage && <CopyInviteLinkButton token={invite.token} />}
-        </div>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
