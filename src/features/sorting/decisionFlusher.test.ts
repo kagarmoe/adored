@@ -571,7 +571,7 @@ describe("drain — failure taxonomy", () => {
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
-  it("batch 409 during recovery: one session_conflict surface, then the queue is deleted (terminal-session disposal)", async () => {
+  it("batch 409 during recovery: one closed_session_discarded notice (not a conflict), then the queue is deleted (terminal-session disposal)", async () => {
     const engine = await loadEngine();
     const notices: FlushNotice[] = [];
     engine.subscribeNotices((n) => notices.push(n));
@@ -580,7 +580,7 @@ describe("drain — failure taxonomy", () => {
     await enqueue(keyA, triage());
     await engine.drain([keyA], { recovery: true });
 
-    expect(notices).toEqual([{ kind: "session_conflict", sessionId: "sess_1" }]);
+    expect(notices).toEqual([{ kind: "closed_session_discarded" }]);
     expect(window.localStorage.getItem(pendingStorageKey(keyA))).toBeNull();
   });
 

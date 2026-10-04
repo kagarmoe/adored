@@ -47,7 +47,8 @@ export type AckOutcome =
 export type FlushNotice =
   | { kind: "rejected_unknown_item"; count: number }
   | { kind: "quarantined"; count: number }
-  | { kind: "session_conflict"; sessionId: string } // batch-route 409; names its sort so it never holds another
+  | { kind: "session_conflict"; sessionId: string } // mid-round batch 409; names its sort so it never holds another
+  | { kind: "closed_session_discarded" } // recovery batch 409: a closed sort's waiting answers were let go
   | { kind: "disposition_superseded" } // disposition POST 409 (PreferenceExistsError)
   | { kind: "auth_required" };
 
@@ -343,11 +344,14 @@ function handleBatchFailure(
     return "stop"; // preserve for this queue; retained until GC, never deleted live
   }
   if (status === 409) {
-    emitNotice({ kind: "session_conflict", sessionId: key.sessionId });
     if (opts.recovery) {
-      deleteQueue(key); // terminal-session disposal: surface once, then discard
+      // Terminal-session disposal: surface once, then discard. Its own kind, not a
+      // conflict: no surface is that closed sort's, so every surface must say it.
+      emitNotice({ kind: "closed_session_discarded" });
+      deleteQueue(key);
       return "done";
     }
+    emitNotice({ kind: "session_conflict", sessionId: key.sessionId });
     return "stop"; // mid-round: stop gently, preserve
   }
   if (status >= 500) return "backoff";

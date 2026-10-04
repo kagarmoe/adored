@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ulid } from "ulid";
 import type { Item } from "@/types";
@@ -16,7 +16,14 @@ import {
 } from "./decisionQueue";
 // REAL engine — these tests prove the wiring end-to-end (drain → notice → UI).
 import { dismissNotice, drain, type FlushNotice } from "./decisionFlusher";
-import { AUTH_REQUIRED_NOTICE, PendingNotices, QUARANTINE_NOTICE, REJECTED_NOTICE, SESSION_CONFLICT_NOTICE } from "./pendingNotices";
+import {
+  AUTH_REQUIRED_NOTICE,
+  CLOSED_SESSION_DISCARDED_NOTICE,
+  PendingNotices,
+  QUARANTINE_NOTICE,
+  REJECTED_NOTICE,
+  SESSION_CONFLICT_NOTICE,
+} from "./pendingNotices";
 import { TriageRound } from "./TriageRound";
 
 const { refresh, push, replace } = vi.hoisted(() => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }));
@@ -80,9 +87,10 @@ let key: QueueKey;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.unstubAllGlobals();
   installStorage();
   // Engine notices are sticky and module-level: never let one leak into the next test.
-  const kinds: FlushNotice["kind"][] = ["rejected_unknown_item", "quarantined", "session_conflict", "disposition_superseded", "auth_required"];
+  const kinds: FlushNotice["kind"][] = ["rejected_unknown_item", "quarantined", "session_conflict", "closed_session_discarded", "disposition_superseded", "auth_required"];
   for (const kind of kinds) dismissNotice(kind);
   // A fresh queue key per test: the engine's module state is keyed by storage key.
   sessionSeq += 1;
@@ -91,7 +99,7 @@ beforeEach(() => {
 
 describe("PendingNotices — copy constants", () => {
   it("never uses machine-side words (TONE.md)", () => {
-    for (const copy of [REJECTED_NOTICE, QUARANTINE_NOTICE, SESSION_CONFLICT_NOTICE, AUTH_REQUIRED_NOTICE]) {
+    for (const copy of [REJECTED_NOTICE, QUARANTINE_NOTICE, SESSION_CONFLICT_NOTICE, AUTH_REQUIRED_NOTICE, CLOSED_SESSION_DISCARDED_NOTICE]) {
       expect(copy).not.toMatch(/error|failed|invalid/i);
     }
   });
@@ -122,6 +130,9 @@ describe("PendingNotices — a sort closed elsewhere", () => {
     global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
     render(
       <>
+        <div data-testid="this-sort">
+          <PendingNotices sessionId={key.sessionId} />
+        </div>
         <PendingNotices sessionId="sess_other" />
         <PendingNotices />
       </>,
@@ -136,7 +147,28 @@ describe("PendingNotices — a sort closed elsewhere", () => {
     await act(async () => {
       await drain([key]);
     });
-    expect(screen.queryByText(SESSION_CONFLICT_NOTICE)).not.toBeInTheDocument();
+    // Positive control: the conflict did land, on its own sort's surface only.
+    expect(screen.getAllByText(SESSION_CONFLICT_NOTICE)).toHaveLength(1);
+    expect(within(screen.getByTestId("this-sort")).getByText(SESSION_CONFLICT_NOTICE)).toBeInTheDocument();
+  });
+
+  it("Reload reloads the page", async () => {
+    const reload = vi.fn();
+    vi.stubGlobal("location", { ...window.location, reload });
+    global.fetch = vi.fn(async () => ({ ok: false, status: 409, json: async () => ({}) })) as unknown as typeof fetch;
+    render(<PendingNotices sessionId={key.sessionId} />);
+    await enqueue(key, {
+      kind: "decision",
+      clientKey: newClientKey(),
+      type: "triage",
+      decision: { itemId: realItemId(), result: "top" },
+      enqueuedAt: new Date().toISOString(),
+    });
+    await act(async () => {
+      await drain([key]);
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Reload" }));
+    expect(reload).toHaveBeenCalledTimes(1);
   });
 });
 

@@ -1,14 +1,19 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { ulid } from "ulid";
 import {
   PendingDecisionsGate,
   GATE_CATCHUP_LINE,
   GATE_REVEAL_BOUND_MS,
 } from "./PendingDecisionsGate";
-import { AUTH_REQUIRED_NOTICE, PendingNotices } from "./pendingNotices";
+import {
+  AUTH_REQUIRED_NOTICE,
+  CLOSED_SESSION_DISCARDED_NOTICE,
+  PendingNotices,
+  SESSION_CONFLICT_NOTICE,
+} from "./pendingNotices";
 import {
   GC_TTL_MS,
   enqueue,
@@ -18,7 +23,7 @@ import {
   type PendingEntry,
   type QueueKey,
 } from "./decisionQueue";
-import { dismissNotice, drain, subscribeNotices, triggerFlush, type FlushNotice } from "./decisionFlusher";
+import { dismissNotice, drain, triggerFlush, type FlushNotice } from "./decisionFlusher";
 
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -79,6 +84,7 @@ const NOTICE_KINDS: FlushNotice["kind"][] = [
   "rejected_unknown_item",
   "quarantined",
   "session_conflict",
+  "closed_session_discarded",
   "disposition_superseded",
   "auth_required",
 ];
@@ -238,18 +244,20 @@ describe("PendingDecisionsGate", () => {
     expect(readQueue(key)).toHaveLength(0);
   });
 
-  it("recovery-409 → ONE session_conflict surface, terminal queue deleted, children mount", async () => {
+  it("recovery-409 → the discarded answers are told (ONE line, any surface), terminal queue deleted, Okay removes it", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonRes(409)));
     await enqueue(key, triage());
-    const notices: FlushNotice[] = [];
-    const unsubscribe = subscribeNotices((n) => notices.push(n));
 
     gate();
 
     await waitFor(() => expect(screen.getByTestId("content")).toBeInTheDocument());
-    expect(notices.filter((n) => n.kind === "session_conflict")).toHaveLength(1);
+    // The surface's PendingNotices has no sessionId, and still tells the person.
+    expect(screen.getAllByText(CLOSED_SESSION_DISCARDED_NOTICE)).toHaveLength(1);
+    expect(screen.queryByText(SESSION_CONFLICT_NOTICE)).not.toBeInTheDocument();
     expect(window.localStorage.getItem(pendingStorageKey(key))).toBeNull(); // disposed, not preserved
-    unsubscribe();
+
+    fireEvent.click(screen.getByRole("button", { name: "Okay" }));
+    expect(screen.queryByText(CLOSED_SESSION_DISCARDED_NOTICE)).not.toBeInTheDocument();
   });
 
   it("cross-curator isolation: curator B's mount leaves curator A's queue untouched and drains nothing", async () => {
