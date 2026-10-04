@@ -1,7 +1,7 @@
 # Graph Report - fs-wt  (2026-10-04)
 
 ## Corpus Check
-- 719 files · ~806,506 words
+- 719 files · ~806,812 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `527380b0`
+- Built from commit: `c557e3aa`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -300,10 +300,10 @@
 - [[_COMMUNITY_Community 293|Community 293]]
 - [[_COMMUNITY_Community 294|Community 294]]
 - [[_COMMUNITY_Community 295|Community 295]]
-- [[_COMMUNITY_Community 296|Community 296]]
 - [[_COMMUNITY_Community 297|Community 297]]
 - [[_COMMUNITY_Community 298|Community 298]]
 - [[_COMMUNITY_Community 299|Community 299]]
+- [[_COMMUNITY_Community 300|Community 300]]
 - [[_COMMUNITY_Community 309|Community 309]]
 
 ## God Nodes (most connected - your core abstractions)
@@ -413,8 +413,8 @@ Cohesion: 0.08
 Nodes (25): compilerOptions, allowJs, allowSyntheticDefaultImports, esModuleInterop, forceConsistentCasingInFileNames, incremental, isolatedModules, jsx (+17 more)
 
 ### Community 17 - "Community 17"
-Cohesion: 0.25
-Nodes (7): { GET, POST }, auth, env, EnvConfig, envSchema, previewTrustedOrigins(), validateEnv()
+Cohesion: 0.18
+Nodes (10): { GET, POST }, auth, getClient(), InvitationArgs, send(), env, EnvConfig, envSchema (+2 more)
 
 ### Community 18 - "Community 18"
 Cohesion: 0.08
@@ -885,12 +885,12 @@ Cohesion: 0.12
 Nodes (16): Adversarial review — round 1 record (2026-07-12), Adversarial review — round 2, Craftsman/ponytail (2026-07-12), Cross-cutting rules, Get on latest: every major dep — epic design (purses-9oxh), Ground truth this spec was written against, Open facts to verify during execution (not guesses to carry), PR 1 — `9oxh.3`: route async-params migration + test-oracle hardening (P0), ~~PR 2 — `9oxh.1`: Node version truth~~ — FOLDED INTO PR 7 (round 2) (+8 more)
 
 ### Community 149 - "Community 149"
-Cohesion: 0.10
-Nodes (16): { mockGetSession, UnauthorizedError }, seedCollectionItemSession(), seedPopulatedDraft(), addMember(), { mockGetSession }, seedForeignShare(), seedResult(), firstResultItem() (+8 more)
+Cohesion: 0.48
+Nodes (5): CAPABILITIES, Operation, resolveEffectiveRole(), Role, roleSatisfies()
 
 ### Community 150 - "Community 150"
-Cohesion: 0.14
-Nodes (7): CreateInvitationSchema, InvitationController, UpdateInvitationSchema, getClient(), InvitationArgs, send(), sendInvitation()
+Cohesion: 0.18
+Nodes (4): CreateInvitationSchema, InvitationController, UpdateInvitationSchema, sendInvitation()
 
 ### Community 151 - "Community 151"
 Cohesion: 0.40
@@ -1105,8 +1105,8 @@ Cohesion: 0.25
 Nodes (7): 1. Blocking today — shipped features that are dead without these, 2. External dashboards (no code, no redeploy), 3. Redeploys / restarts, 4. Better Auth Google login, 5. Needs no action (ships with the next deploy), Quick reference — env vars, Setup Checklist — keys, dashboards, redeploys
 
 ### Community 211 - "Community 211"
-Cohesion: 0.21
-Nodes (10): RESULT_TO_TIER, TriageOutcome, WelcomeTriage(), WelcomeTriageProps, DecisionControls(), DecisionControlsProps, TRIAGE_DECISIONS, ROUND_COPY (+2 more)
+Cohesion: 0.10
+Nodes (16): { mockGetSession, UnauthorizedError }, seedCollectionItemSession(), seedPopulatedDraft(), addMember(), { mockGetSession }, seedForeignShare(), seedResult(), firstResultItem() (+8 more)
 
 ### Community 212 - "Community 212"
 Cohesion: 0.11
@@ -1129,8 +1129,8 @@ Cohesion: 0.11
 Nodes (15): BatchEntry, BatchEntrySchema, BatchRequestSchema, BatchResult, BatchResultStatus, ClientKey, ItemId, SaveAndShare() (+7 more)
 
 ### Community 218 - "Community 218"
-Cohesion: 0.67
-Nodes (3): auth & user, `GET·PATCH·DELETE /api/users/me`, `GET·POST /api/auth/[...all]`
+Cohesion: 0.21
+Nodes (10): RESULT_TO_TIER, TriageOutcome, WelcomeTriage(), WelcomeTriageProps, DecisionControls(), DecisionControlsProps, TRIAGE_DECISIONS, ROUND_COPY (+2 more)
 
 ### Community 219 - "Community 219"
 Cohesion: 0.29
@@ -1185,8 +1185,8 @@ Cohesion: 0.18
 Nodes (10): 1. Layout, 2. Test image set, 3. Label overlay (diagnosability), 4. Spec migration, Alternatives considered, Design, Out of scope, Problem (+2 more)
 
 ### Community 238 - "Community 238"
-Cohesion: 0.20
-Nodes (8): SharePanel(), revoked, share, InvitationPage(), Button, ButtonProps, buttonVariants, EmptyStateProps
+Cohesion: 0.24
+Nodes (9): COLLECTION_PILLS, collectionsEmptyState(), CollectionsView, collectionsViewFrom(), collectionsViewHref(), filterCollections(), list, CollectionsPage() (+1 more)
 
 ### Community 239 - "Community 239"
 Cohesion: 0.20
@@ -1221,8 +1221,8 @@ Cohesion: 0.30
 Nodes (6): POST(), { mockGetSession, mockGetDb, mockAccept }, normalizeEmail(), InvitationAcceptError, InvitationPreview, InvitationStatus
 
 ### Community 247 - "Community 247"
-Cohesion: 0.22
-Nodes (7): BroughtBackNotice(), CollectionsPageProps, Param, ActionBar(), ActionBarProps, queryFrom(), shouldShowWelcome()
+Cohesion: 0.20
+Nodes (8): SharePanel(), revoked, share, InvitationPage(), Button, ButtonProps, buttonVariants, EmptyStateProps
 
 ### Community 248 - "Community 248"
 Cohesion: 0.29
@@ -1301,8 +1301,8 @@ Cohesion: 0.33
 Nodes (5): lastLockedCollection(), betterAuthUseSession, Probe(), signIn, signOut
 
 ### Community 269 - "Community 269"
-Cohesion: 0.42
-Nodes (4): hasHorizontalOverflow(), LOGGED_OUT, ROUTE, sessionEmail()
+Cohesion: 0.67
+Nodes (3): auth & user, `GET·PATCH·DELETE /api/users/me`, `GET·POST /api/auth/[...all]`
 
 ### Community 270 - "Community 270"
 Cohesion: 0.40
@@ -1333,8 +1333,8 @@ Cohesion: 0.22
 Nodes (8): Decisions needed from you, Delivery, if approved, Part 1 — The orientation dashboard (the substance), Part 1b — First-order amendments (PRODUCT.md; exact wording for review, applied only through the workflow), Part 2 — The language of sorting (owner verdicts → proposed replacements), Part 3 — The URL collapse (demoted), PROPOSAL rev 2 (owner review): the sort hub as an orientation dashboard — and the language of sorting, What the owner discussion established
 
 ### Community 280 - "Community 280"
-Cohesion: 0.27
-Nodes (7): ArchivedNotice(), ArchivedNoticeProps, replace, ItemsListRedirect(), go(), { redirectRetired }, isIdShaped()
+Cohesion: 0.42
+Nodes (4): hasHorizontalOverflow(), LOGGED_OUT, ROUTE, sessionEmail()
 
 ### Community 281 - "Community 281"
 Cohesion: 0.29
@@ -1350,11 +1350,11 @@ Nodes (17): CollectionCard(), CollectionCardProps, collection, ItemCardProps, Ca
 
 ### Community 284 - "Community 284"
 Cohesion: 0.48
-Nodes (5): CAPABILITIES, Operation, resolveEffectiveRole(), Role, roleSatisfies()
+Nodes (5): bootstrapDevSampleCollection(), ensureDevSampleCollection(), inFlight, selectRandomSampleItems(), SAMPLE_ITEMS
 
 ### Community 285 - "Community 285"
-Cohesion: 0.48
-Nodes (5): bootstrapDevSampleCollection(), ensureDevSampleCollection(), inFlight, selectRandomSampleItems(), SAMPLE_ITEMS
+Cohesion: 0.40
+Nodes (4): ItemsListRedirect(), go(), { redirectRetired }, queryFrom()
 
 ### Community 286 - "Community 286"
 Cohesion: 0.33
@@ -1377,8 +1377,8 @@ Cohesion: 0.24
 Nodes (9): classifyDbError(), DbErrorClass, DbErrorContext, logDbError(), readPgCode(), bucketMs(), logDbSlow(), lockSaveKey() (+1 more)
 
 ### Community 294 - "Community 294"
-Cohesion: 0.24
-Nodes (9): COLLECTION_PILLS, collectionsEmptyState(), CollectionsView, collectionsViewFrom(), collectionsViewHref(), filterCollections(), list, CollectionsPage() (+1 more)
+Cohesion: 0.18
+Nodes (10): BroughtBackNotice(), CollectionsPageProps, Param, ArchivedNotice(), ArchivedNoticeProps, replace, ActionBar(), ActionBarProps (+2 more)
 
 ### Community 295 - "Community 295"
 Cohesion: 0.50
@@ -1404,11 +1404,11 @@ Nodes (6): deleteVariants(), mockDel, mockList, variantPath(), variantPrefix(), 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `Item` connect `Community 44` to `Community 12`, `Community 271`, `Community 149`, `Community 278`, `Community 280`, `Community 27`, `Community 283`, `Community 155`, `Community 157`, `Community 165`, `Community 47`, `Community 50`, `Community 309`, `Community 182`, `Community 183`, `Community 204`, `Community 78`, `Community 216`, `Community 221`?**
+- **Why does `Item` connect `Community 44` to `Community 12`, `Community 271`, `Community 278`, `Community 27`, `Community 283`, `Community 157`, `Community 155`, `Community 285`, `Community 165`, `Community 47`, `Community 50`, `Community 309`, `Community 182`, `Community 183`, `Community 204`, `Community 78`, `Community 211`, `Community 216`, `Community 221`?**
   _High betweenness centrality (0.018) - this node is a cross-community bridge._
 - **Why does `h` connect `Community 257` to `Community 271`?**
   _High betweenness centrality (0.017) - this node is a cross-community bridge._
-- **Why does `Database` connect `Community 12` to `Community 258`, `Community 6`, `Community 8`, `Community 140`, `Community 13`, `Community 278`, `Community 150`, `Community 155`, `Community 285`, `Community 288`, `Community 35`, `Community 292`, `Community 296`, `Community 170`, `Community 44`, `Community 47`, `Community 177`, `Community 309`, `Community 184`, `Community 71`, `Community 75`, `Community 204`, `Community 214`, `Community 91`, `Community 98`, `Community 228`, `Community 103`, `Community 244`, `Community 246`, `Community 254`?**
+- **Why does `Database` connect `Community 12` to `Community 258`, `Community 6`, `Community 8`, `Community 140`, `Community 13`, `Community 278`, `Community 150`, `Community 155`, `Community 284`, `Community 288`, `Community 35`, `Community 292`, `Community 297`, `Community 170`, `Community 44`, `Community 47`, `Community 177`, `Community 309`, `Community 184`, `Community 71`, `Community 75`, `Community 204`, `Community 214`, `Community 91`, `Community 98`, `Community 228`, `Community 103`, `Community 244`, `Community 246`, `Community 254`?**
   _High betweenness centrality (0.016) - this node is a cross-community bridge._
 - **Are the 36 inferred relationships involving `getDb()` (e.g. with `EditCollectionPage()` and `ItemEditRedirect()`) actually correct?**
   _`getDb()` has 36 INFERRED edges - model-reasoned connections that need verification._
