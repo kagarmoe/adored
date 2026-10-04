@@ -320,8 +320,10 @@ gated by:
 const describeDb = process.env.RUN_DB_TESTS === "1" ? describe : describe.skip;
 ```
 
-Run them with **`npm run test:db`** → `e2e/fixtures/run-db-tests.sh`, which **self-manages Docker**: it
-starts the container via `test-db.sh up` if it is not already running, traps EXIT/INT/TERM, and tears it
+Run them with **`npm run test:db`** → `e2e/fixtures/run-db-tests.sh`, which **self-manages the test DB** (Docker, or a throwaway Homebrew
+`postgresql@15` cluster on the same port when Docker is down; `TEST_DB_BACKEND=docker|brew`
+forces one): it
+starts the DB via `test-db.sh running` / `up` if it is not already running, traps EXIT/INT/TERM, and tears it
 down **only if it started it** (`run-db-tests.sh:14–28`) — so it never kills a container you were already
 using. It holds the shared test-DB lock (`scripts/with-db-lock.ts`, ARCHITECTURE decision 11), so it waits
 for a running e2e or screenshot run instead of truncating under it.
