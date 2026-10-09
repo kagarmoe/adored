@@ -252,12 +252,12 @@ matches what changed:
 
 | Lens → engine | Invoke when the change touches… | Typical paths |
 |---|---|---|
-| **Security** → `vibe-security` | auth, access control, user input, secrets, API surface | `src/app/api/**`, `src/proxy.ts`, `**/*auth*` |
+| **Security** | auth, access control, user input, secrets, API surface | `src/app/api/**`, `src/proxy.ts`, `**/*auth*` |
 | **Data/Persistence** → `postgres-review` | schema, migrations, queries, indexes | `src/lib/db/**`, `drizzle/**`, `*.sql` |
 | **Architect** → `system-design-review` | cross-layer seams, concurrency, idempotency, silent failures, type design | service/repo/route wiring |
 | **Craftsman** → `ponytail` | any non-trivial logic (simplicity / YAGNI) | `**/*.ts`, `**/*.tsx` |
 | **Graphic Design** → `DESIGN.md` | components, tokens, styling, theming | `**/*.tsx`, `**/*.css`, `tailwind*` |
-| **UX** → `ui-ux-pro-max` | rendered UI, interaction, accessibility | `src/app/**/*.tsx` (view/page components) |
+| **UX** | rendered UI, interaction, accessibility | `src/app/**/*.tsx` (view/page components) |
 | **QA/Test** | new/changed behavior — and proof the test runs in CI | `**/*.test.ts`, `**/*.spec.ts`, `.github/**` |
 
 The skill and its engines are global (personal `~/.claude/skills/`), so there's no per-repo setup.
