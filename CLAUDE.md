@@ -73,17 +73,19 @@ bd close <id>         # Complete work
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
 
-## Agent Modes
+## Agent Models
 
-Agents and subagents MUST use one of these models:
+Match model strength to the task. Running the largest model on every subagent was this repo's
+biggest token cost; reserve it for judgment.
 
-Anthropic/Claude:
-  model: Opus 4.8
-  effort: ultracode
+| Task | Claude (subagent `model:`) | Codex (reasoning effort) |
+|---|---|---|
+| Judgment: adversarial-review personas, spec review, architecture decisions, systematic-debugging of non-obvious bugs | `opus` | `high` |
+| Executing a written plan step, writing tests to a spec, routine edits | `sonnet` | `medium` |
+| Searches and read-only sweeps | `haiku` (or the Explore agent) | `low` |
 
-OpenAI/Codex:
-  model: gpt-5.5
-  effort: "xhigh"
+- If a task fits no row, don't set a model — let the agent type use its own default.
+- Use aliases (`opus`, `sonnet`, `haiku`), never pinned versions, so this stays current.
 
 ## Agent Context Profiles
 

@@ -27,6 +27,7 @@ git status --short --branch
 
 - Track work in Beads (`bd`), not ad hoc TODO files.
 - For substantive work, follow the Superpowers workflow described in `CLAUDE.md`: spec, review, plan, implementation, review, verification.
+- Pick model strength / reasoning effort per task using the **Agent Models** table in `CLAUDE.md` (high effort only for review, architecture, and hard debugging).
 - Prefer the repo's existing patterns over new abstractions.
 - Preserve unrelated local changes. Do not reset or revert user work unless explicitly asked.
 - Create a feature branch off `main` for code or docs changes. Do not push unless asked.
