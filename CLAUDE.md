@@ -205,6 +205,9 @@ skip ahead. Track work in **beads** (`bd`), never TodoWrite.
   agent's uncommitted changes. For substantial/parallel work, branch into your own git worktree (or
   `EnterWorktree`); never switch branches with uncommitted changes (commit or stash first).
 - **Commit:** frequent, one logical change per commit; don't park work only in the working tree.
+- **Commit and PR style:** Conventional Commits (`type(scope): summary`) for commits and PR titles.
+  Write messages and PR bodies in Simplified Technical English (STE): short sentences, active voice,
+  one idea per sentence. Be brief.
 
 ## PR lifecycle automation
 

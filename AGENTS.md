@@ -31,6 +31,7 @@ git status --short --branch
 - Prefer the repo's existing patterns over new abstractions.
 - Preserve unrelated local changes. Do not reset or revert user work unless explicitly asked.
 - Create a feature branch off `main` for code or docs changes. This repo uses the Team-maintainer git profile (commit, push, PR, merge); see `CLAUDE.md`.
+- Commits and PRs: Conventional Commits, written in Simplified Technical English (STE). Be brief.
 
 ## Verification
 
