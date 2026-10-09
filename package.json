@@ -12,8 +12,10 @@
     "vercel-build": "npm run db:migrate && next build",
     "start": "next start",
     "lint": "eslint .",
+    "lint:md": "markdownlint-cli2 \"**/*.md\"",
     "test": "vitest",
     "test:db": "tsx scripts/with-db-lock.ts bash e2e/fixtures/run-db-tests.sh",
+    "test:db:changed": "tsx scripts/test-db-if-changed.ts",
     "test:ci": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui",
     "test:e2e": "tsx scripts/with-db-lock.ts playwright test",
@@ -65,9 +67,11 @@
     "@vitest/ui": "^4.1.11",
     "culori": "^4.0.2",
     "drizzle-kit": "^0.31.6",
+    "esbuild": "^0.28.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.3.8",
     "jsdom": "^29.1.1",
+    "markdownlint-cli2": "^0.23.3",
     "postcss": "^8.5.28",
     "typescript": "^6.0.3",
     "vite": "^8.1.0",
@@ -78,6 +82,8 @@
     "@esbuild-kit/core-utils": {
       "esbuild": "0.25.12"
     },
-    "sharp": "$sharp"
+    "sharp": "$sharp",
+    "katex": "0.18.9",
+    "smol-toml": "1.9.0"
   }
 }

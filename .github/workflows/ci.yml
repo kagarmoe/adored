@@ -22,6 +22,13 @@ jobs:
     name: Lint, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # A docs/config-only PR (.github/code-paths.json) gets only the supply-chain
+    # scan + Markdown lint; the job still reports, so the required check passes.
+    # main pushes and a failed `changes` job run everything.
+    needs: changes
+    if: ${{ !cancelled() }}
+    env:
+      FULL: ${{ github.event_name == 'push' || needs.changes.result != 'success' || needs.changes.outputs.code == 'true' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -43,16 +50,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint Markdown
+        run: npm run lint:md
+
       - name: Lint
+        if: env.FULL == 'true'
         run: npm run lint
 
       - name: Unit tests (coverage → blob)
+        if: env.FULL == 'true'
         run: npm run test:ci -- --coverage --reporter=blob --outputFile=.vitest-reports/blob-unit.json
 
       # Per-tier blob only; the `coverage` job merges this with the db tier into
       # the union total + the dashboard report.
       - name: Upload unit coverage blob
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && env.FULL == 'true' }}
         uses: actions/upload-artifact@v7
         with:
           name: blob-unit
@@ -60,6 +72,7 @@ jobs:
           retention-days: 7
 
       - name: Cache Next.js build cache
+        if: env.FULL == 'true'
         uses: actions/cache@v5
         with:
           path: .next/cache
@@ -68,6 +81,7 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
 
       - name: Build
+        if: env.FULL == 'true'
         run: npm run build
         env:
           # next build imports src/lib/env.ts, which validates these at module
@@ -85,13 +99,16 @@ jobs:
     name: DB integration tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Spinning up Postgres + running the whole integration suite proves nothing
-    # about a docs-only change, so gate it on `code` (see the filter). `coverage`
-    # needs this job to SUCCEED, so it skips in lockstep — which is right: a change
-    # that touches no code cannot move the coverage floor. A docs-only PR is then
-    # left with exactly one job, Lint/test/build, which is the point.
+    # On a PR, runs only when the change touches a path in .github/db-test-paths.json
+    # (the `db` filter, shared with the local `npm run test:db:changed`);
+    # scripts/test-db-if-changed.test.ts fails if a DB test, route or DB-job script
+    # loads a file outside it. Excluded by design: src/components and src/features,
+    # which DB tests reach only by rendering pages — backstopped by build, unit,
+    # e2e and this job running on EVERY push to main. Fails open: if `changes`
+    # itself fails, the suite runs. `coverage` needs this job to succeed, so it
+    # skips in lockstep (merged floor + dashboard stay current via the main push).
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    if: ${{ !cancelled() && (github.event_name == 'push' || needs.changes.result != 'success' || needs.changes.outputs.db == 'true') }}
     services:
       postgres:
         image: postgres:16
@@ -208,12 +225,11 @@ jobs:
     outputs:
       ui: ${{ steps.filter.outputs.ui }}
       hot: ${{ steps.filter.outputs.hot }}
-      # Does this change touch anything that can alter runtime or test behaviour?
-      # If not — docs, the governance .md files, the committed graph, beads, agent
-      # config — the DB integration suite has nothing to prove, so it skips (and
-      # `coverage` skips with it, since it needs db-tests to succeed). A docs-only
-      # PR then runs exactly one job: Lint, test, build.
-      code: ${{ steps.filter.outputs.code }}
+      # Can this change move a DB test or auth:verify? Gates db-tests.
+      db: ${{ steps.dbfilter.outputs.db }}
+      # Anything besides docs/agent/git config? Gates gate's lint/unit/build.
+      # docs/doc-ownership.md counts: scripts/hooks/doc-check.test.ts reads it.
+      code: ${{ steps.codefilter.outputs.code == 'true' || steps.codefilter.outputs.docmap == 'true' }}
       # Blast-radius: a change here can't be safely narrowed to one flow, so the
       # e2e job runs the FULL suite (see the "Select e2e specs" step).
       broad: ${{ steps.filter.outputs.broad }}
@@ -259,33 +275,6 @@ jobs:
               - 'scripts/seed-load.ts'
               - 'scripts/seed-load-core.ts'
               - 'scripts/bench-recompute.ts'
-            # Anything that can change runtime or test behaviour. Gates the DB
-            # integration suite (and, transitively, the coverage floor): a change
-            # confined to docs/, graphify-out/, .beads/, .claude/, or the root
-            # *.md governance files cannot affect a DB test, so running the whole
-            # Postgres suite for it is pure cost.
-            #
-            # POSITIVE patterns ONLY, and deliberately a SUPERSET — see the
-            # paths-filter negation note below for why "!" is not an option here.
-            # The failure mode we care about is skipping the suite when it WAS
-            # needed, so anything ambiguous (public/, vercel.json, the workflows
-            # themselves) is listed and simply over-triggers. Root-level globs
-            # ('*.json' etc.) have no slash, so they match only the repo root and
-            # catch every config file (package.json, tsconfig, *.config.*).
-            code:
-              - 'src/**'
-              - 'drizzle/**'
-              - 'e2e/**'
-              - 'scripts/**'
-              - 'bench/**'
-              - 'public/**'
-              - '.github/workflows/**'
-              - '.githooks/**'
-              - '*.json'
-              - '*.ts'
-              - '*.mts'
-              - '*.mjs'
-              - '*.js'
             # Blast-radius paths: shared UI primitives, design tokens, global
             # styles, build/dep config, the e2e harness itself, and broad
             # server/db changes. A change here can affect ANY flow, so we can't
@@ -362,6 +351,19 @@ jobs:
             profile:
               - 'src/features/profile/**'
               - 'src/app/profile/**'
+      # A file (not inline) so `npm run test:db:changed` reads the same list.
+      - uses: dorny/paths-filter@v4
+        id: dbfilter
+        with:
+          filters: .github/db-test-paths.json
+      # "every": a file counts only if it matches ALL patterns, so "**" minus the
+      # "!" paths works here (negation is broken under the default "some").
+      # Shared with the pre-push hook (scripts/hooks/code-changed.mjs).
+      - uses: dorny/paths-filter@v4
+        id: codefilter
+        with:
+          predicate-quantifier: every
+          filters: .github/code-paths.json
 
   # E2E only runs when `changes` says the UI moved. When it doesn't, this job is
   # skipped — which GitHub reports as success, so it can be a REQUIRED check
@@ -588,8 +590,8 @@ jobs:
         with:
           node-version: 24
 
-      # Absent on a docs-only push: db-tests skips, so `coverage` skips and never
-      # uploads. The assemble step below already no-ops on an empty dir, leaving
+      # Normally present: db-tests (and so `coverage`) runs on every main push.
+      # Absent only if db-tests failed/was cancelled. The assemble step below already no-ops on an empty dir, leaving
       # the previously published coverage in place — correct, since a docs-only
       # push didn't change it. Without continue-on-error this download would hard-
       # fail the dashboard (the e2e download below has always needed the same).

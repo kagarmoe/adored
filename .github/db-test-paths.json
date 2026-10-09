@@ -1,0 +1,25 @@
+{
+  "db": [
+    "src/server/**",
+    "src/app/**",
+    "src/lib/**",
+    "src/features/onboarding/sampleData.ts",
+    "drizzle/**",
+    "drizzle.config.ts",
+    "e2e/fixtures/**",
+    "scripts/migrate.ts",
+    "scripts/lock-timeout.ts",
+    "scripts/migration-url.ts",
+    "scripts/verify-auth.ts",
+    "scripts/load-env.js",
+    "scripts/with-db-lock.ts",
+    "scripts/db-lock.ts",
+    "scripts/test-db-if-changed.ts",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    "vitest.config.mts",
+    ".github/workflows/ci.yml",
+    ".github/db-test-paths.json"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "code": [
+    "**",
+    "!**/*.md",
+    "!graphify-out/**",
+    "!.beads/**",
+    "!.claude/**",
+    "!.impeccable/**",
+    "!.githooks/**",
+    "!.gitignore",
+    "!.gitattributes"
+  ],
+  "docmap": ["docs/doc-ownership.md"]
+}

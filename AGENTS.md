@@ -35,7 +35,7 @@ git status --short --branch
 
 ## Verification
 
-Run the gates in `CLAUDE.md` → Build & Test for the level of change. For docs-only changes, run the smallest meaningful checks and report what was not run. Before pushing, follow the doc-sync and graphify steps in `CLAUDE.md` → PR lifecycle.
+Run the gates in `CLAUDE.md` → Build & Test for the level of change. For docs-only changes, `npm run lint:md` is the gate (CI and the pre-push hook skip lint/test/build). Before pushing, follow the doc-sync and graphify steps in `CLAUDE.md` → PR lifecycle.
 
 ## Keep This File Small
 

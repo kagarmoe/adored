@@ -18,7 +18,7 @@ const GlobalArgsSchema = z.object({
 type GlobalArgs = z.infer<typeof GlobalArgsSchema>;
 
 /** The npm scripts `gate` may run (allow-list: never an arbitrary command). */
-const GATE_SCRIPTS = ["lint", "test:ci", "build", "auth:verify", "test:db"] as const;
+const GATE_SCRIPTS = ["lint", "test:ci", "build", "auth:verify", "test:db", "test:db:changed"] as const;
 const VIEWPORTS = ["tablet", "phone"] as const;
 /** How much of a gate's combined output the record keeps. */
 const OUTPUT_TAIL_CHARS = 4000;
@@ -192,7 +192,7 @@ export const model = {
         "Run pre-PR gates (`npm run <script>` each, in order) and record one result per gate; a failure is recorded, not thrown. One call runs them all under one model lock (fan-out, swamp rule 6).",
       arguments: z.object({
         scripts: z.array(z.enum(GATE_SCRIPTS)).min(1).describe(
-          "npm scripts to run in order, from: lint, test:ci, build, auth:verify, test:db",
+          "npm scripts to run in order, from: lint, test:ci, build, auth:verify, test:db, test:db:changed (test:db only when DB-relevant files changed)",
         ),
       }),
       execute: async (args: { scripts: Array<(typeof GATE_SCRIPTS)[number]> }, context: Ctx) => {
@@ -200,7 +200,7 @@ export const model = {
         for (const script of args.scripts) {
           const run = await runNpm(context, script);
           handles.push(
-            await context.writeResource("gate", `gate-${script.replace(":", "-")}`, {
+            await context.writeResource("gate", `gate-${script.replaceAll(":", "-")}`, {
               ranAt: new Date().toISOString(),
               script,
               exitCode: run.code,
