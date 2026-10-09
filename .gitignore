@@ -125,3 +125,6 @@ graphify-out/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]/
 
 # beads gate lock (runtime, per-clone)
 .beads.gate.lock
+
+# swamp repo config (version bumps on every upgrade; per-clone)
+.swamp.yaml
