@@ -125,12 +125,15 @@ run `/close-out` when finishing a branch, unless the user says otherwise.
 
 ## Build & Test
 
-Gates (CI runs all five; the pre-push hook mirrors lint + test:ci + build):
+Gates (CI runs all five; the pre-push hook mirrors lint + test:ci + build). A docs/config-only change
+(everything outside `.github/code-paths.json`'s code set: `*.md`, `.claude/`, `.beads/`, `.githooks/`,
+`.gitignore`, `graphify-out/`) gets only `npm run lint:md`, in CI and in the hook:
 
 ```bash
 npm run build         # next build
 npm run test:ci       # unit tests
 npm run lint          # eslint
+npm run lint:md       # markdownlint-cli2, broken-Markdown rules only (.markdownlint-cli2.jsonc)
 npm run auth:verify   # auth wiring check
 npm run test:db       # DB-backed tests (Docker; RUN_DB_TESTS=1)
 npm run test:db:changed  # test:db only if DB-relevant files changed vs origin/main

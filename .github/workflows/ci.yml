@@ -22,6 +22,13 @@ jobs:
     name: Lint, test, build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # A docs/config-only PR (.github/code-paths.json) gets only the supply-chain
+    # scan + Markdown lint; the job still reports, so the required check passes.
+    # main pushes and a failed `changes` job run everything.
+    needs: changes
+    if: ${{ !cancelled() }}
+    env:
+      FULL: ${{ github.event_name == 'push' || needs.changes.result != 'success' || needs.changes.outputs.code == 'true' }}
     steps:
       - uses: actions/checkout@v6
 
@@ -43,16 +50,21 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint Markdown
+        run: npm run lint:md
+
       - name: Lint
+        if: env.FULL == 'true'
         run: npm run lint
 
       - name: Unit tests (coverage → blob)
+        if: env.FULL == 'true'
         run: npm run test:ci -- --coverage --reporter=blob --outputFile=.vitest-reports/blob-unit.json
 
       # Per-tier blob only; the `coverage` job merges this with the db tier into
       # the union total + the dashboard report.
       - name: Upload unit coverage blob
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && env.FULL == 'true' }}
         uses: actions/upload-artifact@v7
         with:
           name: blob-unit
@@ -60,6 +72,7 @@ jobs:
           retention-days: 7
 
       - name: Cache Next.js build cache
+        if: env.FULL == 'true'
         uses: actions/cache@v5
         with:
           path: .next/cache
@@ -68,6 +81,7 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
 
       - name: Build
+        if: env.FULL == 'true'
         run: npm run build
         env:
           # next build imports src/lib/env.ts, which validates these at module
@@ -213,6 +227,9 @@ jobs:
       hot: ${{ steps.filter.outputs.hot }}
       # Can this change move a DB test or auth:verify? Gates db-tests.
       db: ${{ steps.dbfilter.outputs.db }}
+      # Anything besides docs/agent/git config? Gates gate's lint/unit/build.
+      # docs/doc-ownership.md counts: scripts/hooks/doc-check.test.ts reads it.
+      code: ${{ steps.codefilter.outputs.code == 'true' || steps.codefilter.outputs.docmap == 'true' }}
       # Blast-radius: a change here can't be safely narrowed to one flow, so the
       # e2e job runs the FULL suite (see the "Select e2e specs" step).
       broad: ${{ steps.filter.outputs.broad }}
@@ -339,6 +356,14 @@ jobs:
         id: dbfilter
         with:
           filters: .github/db-test-paths.json
+      # "every": a file counts only if it matches ALL patterns, so "**" minus the
+      # "!" paths works here (negation is broken under the default "some").
+      # Shared with the pre-push hook (scripts/hooks/code-changed.mjs).
+      - uses: dorny/paths-filter@v4
+        id: codefilter
+        with:
+          predicate-quantifier: every
+          filters: .github/code-paths.json
 
   # E2E only runs when `changes` says the UI moved. When it doesn't, this job is
   # skipped — which GitHub reports as success, so it can be a REQUIRED check

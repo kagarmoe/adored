@@ -13,7 +13,7 @@ set -e
 # Doc-sync backstop (soft): soft-block a push whose changed source files have
 # un-synced docs (docs/doc-ownership.md). Override: git push --no-verify.
 echo "pre-push: doc-sync check…"
-docs_only=1   # cleared if any pushed file is outside docs (*.md, docs/)
+docs_only=1   # cleared if any pushed file is code (.github/code-paths.json, shared with CI)
 while read -r _local_ref local_sha _remote_ref remote_sha; do
   [ "$local_sha" = "0000000000000000000000000000000000000000" ] && continue   # deleting a ref
   case "$remote_sha" in
@@ -23,12 +23,15 @@ while read -r _local_ref local_sha _remote_ref remote_sha; do
   esac
   files=$(git diff --name-only --diff-filter=ACMRT "$base".."$local_sha")
   [ -n "$files" ] && printf '%s\n' "$files" | node scripts/hooks/doc-check.mjs
-  if [ -n "$files" ] && printf '%s\n' "$files" | grep -qvE '\.md$|^docs/'; then docs_only=0; fi
+  if [ -n "$files" ] && printf '%s\n' "$files" | node scripts/hooks/code-changed.mjs; then docs_only=0; fi
 done
 
-# Docs-only pushes can't break lint/tests/build; CI still runs on the PR.
+echo "pre-push: markdown lint…"
+npm run lint:md
+
+# Docs/config-only pushes can't break lint/tests/build; CI applies the same skip.
 if [ "$docs_only" = 1 ]; then
-  echo "pre-push: docs-only push — skipping lint/test/build (CI still runs)"
+  echo "pre-push: docs/config-only push — skipping lint/test/build"
 else
   echo "pre-push: lint…"
   npm run lint

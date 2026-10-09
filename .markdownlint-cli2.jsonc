@@ -1,0 +1,16 @@
+{
+  // Catch broken Markdown, not style: the docs predate any linter.
+  "config": {
+    "default": false,
+    "MD011": true, // reversed link syntax (text)[url]
+    "MD039": true, // spaces inside link text
+    "MD042": true, // empty links
+    "MD045": true, // images without alt text
+    "MD051": true, // links to missing #fragments
+    "MD052": true, // undefined reference links
+    "MD053": true, // unused reference definitions
+    "MD056": true  // table rows with the wrong column count
+  },
+  "gitignore": true,
+  "ignores": ["node_modules/**", "graphify-out/**", ".claude/worktrees/**", "docs/archive/**"]
+}
