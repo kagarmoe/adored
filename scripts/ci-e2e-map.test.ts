@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { globSync, readFileSync, readdirSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 // CI runs e2e selectively from an area -> spec map in ci.yml ("Select e2e specs").
 // A spec missing from the map silently never runs on a selective PR; a listed spec
@@ -20,5 +20,23 @@ describe("ci.yml e2e area map", () => {
   });
   it("lists only specs that exist", () => {
     expect([...listed].filter((s) => !onDisk.includes(s))).toEqual([]);
+  });
+});
+
+describe("ci.yml changes filters", () => {
+  // A filter pattern that matches nothing silently selects nothing (e.g. a renamed lib file
+  // drops its e2e area). Every pattern must match at least one path in the repo.
+  const repoRoot = new URL("../", import.meta.url).pathname;
+  const filters = ci.slice(ci.indexOf("filters: |"), ci.indexOf("\n  e2e:"));
+  const paths = [...filters.matchAll(/^\s+- '([^']+)'$/gm)].map((m) => m[1]);
+  it("finds the filter list", () => {
+    expect(paths.length).toBeGreaterThan(20);
+  });
+  it("every pattern matches at least one path", () => {
+    // Root extension catch-alls ('*.js' under code:) guard future root configs; they may match nothing.
+    const rootCatchAll = /^\*\.[a-z]+$/;
+    const skipNodeModules = (p: string) => /(^|\/)node_modules$/.test(p);
+    const missing = paths.filter((p) => !rootCatchAll.test(p) && globSync(p, { cwd: repoRoot, exclude: skipNodeModules }).length === 0);
+    expect(missing).toEqual([]);
   });
 });

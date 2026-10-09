@@ -4,14 +4,18 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   padding?: "md" | "lg" | "none";
   interactive?: boolean;
-  /** "card": grid/list tile, opaque pre-composited fill, no blur (cheap to scroll).
-   *  "glass": a text-carrying panel over photos/scroll — glass-strong + blur + rim. */
-  variant?: "card" | "glass";
+  /** "card": grid/list tile and the item panel — translucent white glass with a white rim
+   *  over the static ground wash. No blur: nothing but the wash sits behind it, so a scrolling
+   *  grid stays cheap on an iPad (Frosted shelf, option A).
+   *  "glass": a text-carrying panel over photos/scroll — glass-strong + blur + rim.
+   *  "danger": a destructive section (delete account / collection) — the card glass with a sober error rim. */
+  variant?: "card" | "glass" | "danger";
 }
 
 const surfaceMap = {
-  card: "bg-card shadow-card border border-hairline",
+  card: "bg-glass shadow-card border border-rim",
   glass: "bg-glass-strong backdrop-blur-xl shadow-lift border border-rim",
+  danger: "bg-glass shadow-card border border-error",
 };
 
 const paddingMap = {

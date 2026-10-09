@@ -1,7 +1,8 @@
 "use client";
 
 // decisionFlusher — ONE module-level drain engine per realm; the ONLY code
-// that POSTs queued decisions/dispositions (spec §3.2, F12).
+// that drains queued decisions/dispositions (spec §3.2, F12); `directSubmit`
+// sends one un-queued entry when storage is unavailable (F18).
 //
 // Single-flight is promise-based, not skip-based: a caller that finds a drain
 // in flight for the same queue awaits the SAME promise. A drain resolves only
@@ -15,6 +16,11 @@
 // ack-removal can never clobber another tab's concurrent enqueue (enqueue
 // stays synchronous and lock-free; removal re-reads under the lock). Backoff
 // waits happen OUTSIDE the lock so a stalled tab never starves the others.
+//
+// Notices are sticky per tab and read as one snapshot (subscribeNoticeSet/getNoticeSet — the only
+// notice API; purses-w7ss.30): the engine keeps the current line per kind per collection, and a
+// surface reads the set whenever it renders. An entry stands until dismissed (dismissNotice) or
+// resolved (a 2xx clears auth_required); a reload clears them all.
 import { useEffect } from "react";
 import { withWebLock } from "@/lib/web-lock";
 import { BatchEntrySchema, type BatchResult } from "@/lib/decision-batch-schema";
@@ -39,11 +45,16 @@ export type AckOutcome =
   | { status: "created" | "duplicate" }
   | { status: "rejected"; reason?: string };
 
+// collectionId: the collection whose queue raised it (the envelope's stamp), so a surface shows only
+// its own collection's lines (purses-w7ss.31); undefined only for a queue that predates stamping.
+// Two kinds are global and carry none: auth_required (signing in is per person) and
+// closed_session_discarded (answers that are gone must never wait for a page the person may not open).
 export type FlushNotice =
-  | { kind: "rejected_unknown_item"; count: number }
-  | { kind: "quarantined"; count: number }
-  | { kind: "session_conflict" } // batch-route 409 mid-round
-  | { kind: "disposition_superseded" } // disposition POST 409 (PreferenceExistsError)
+  | { kind: "rejected_unknown_item"; count: number; collectionId: string | undefined }
+  | { kind: "quarantined"; count: number; collectionId: string | undefined }
+  | { kind: "session_conflict"; sessionId: string; collectionId: string | undefined } // mid-round batch 409; names its sort so it never holds another
+  | { kind: "closed_session_discarded" } // recovery batch 409: a closed sort's waiting answers were let go
+  | { kind: "disposition_superseded"; collectionId: string | undefined } // disposition POST 409 (PreferenceExistsError)
   | { kind: "auth_required" };
 
 export const BACKOFF_MS = [1_000, 4_000, 15_000, 60_000] as const;
@@ -61,17 +72,21 @@ type DispositionEntry = Extract<PendingEntry, { kind: "disposition" }>;
 // or recovery disposal).
 type StepResult = "done" | "continue" | "stop" | "backoff";
 
-interface DrainTallies {
+// One drain's state. `opts` is the drain's own copy: a recovery caller that joins it upgrades
+// `recovery` (purses-w7ss.32). `collectionId` scopes the notices it raises (purses-w7ss.31).
+interface DrainRun {
+  opts: DrainOptions;
+  collectionId: string | undefined;
   rejected: number;
   quarantined: number;
 }
 
 // ---- module-level engine state (per JS realm) -------------------------------
-const drains = new Map<string, Promise<void>>();
+const drains = new Map<string, { promise: Promise<void>; run: DrainRun }>();
 const attempts = new Map<string, number>();
 const backoffPreempts = new Map<string, () => void>();
 const keepaliveNext = new Set<string>();
-const noticeSubscribers = new Set<(n: FlushNotice) => void>();
+const currentNotices = new Map<string, FlushNotice>(); // keyed by noticeKey
 const ackWaiters = new Map<string, Array<(o: AckOutcome) => void>>();
 const ackOutcomes = new Map<string, AckOutcome>();
 const ACK_OUTCOME_BUFFER = 200;
@@ -83,13 +98,47 @@ function lockName(key: QueueKey): string {
   return `adored.flush.v1.${key.curatorId}.${key.sessionId}`;
 }
 
-function emitNotice(notice: FlushNotice): void {
-  for (const subscriber of [...noticeSubscribers]) subscriber(notice);
+// Global kinds key by kind alone (one line everywhere); a conflict keys by its sort too, so a later
+// conflict from another sort in the same collection never replaces it (and never silently releases
+// CompareChoice's hold); the rest key by kind + collection (purses-w7ss.31).
+export function noticeKey(n: FlushNotice): string {
+  switch (n.kind) {
+    case "auth_required":
+    case "closed_session_discarded":
+      return n.kind;
+    case "session_conflict":
+      return `${n.kind}\u0000${n.collectionId ?? ""}\u0000${n.sessionId}`;
+    default:
+      return `${n.kind}\u0000${n.collectionId ?? ""}`;
+  }
 }
 
-export function subscribeNotices(fn: (n: FlushNotice) => void): () => void {
-  noticeSubscribers.add(fn);
-  return () => void noticeSubscribers.delete(fn);
+// The current set as an immutable snapshot (useSyncExternalStore), so adds AND clears reach a
+// mounted surface.
+let noticeSet: readonly FlushNotice[] = [];
+const noticeSetListeners = new Set<() => void>();
+
+function publishNoticeSet(): void {
+  noticeSet = [...currentNotices.values()];
+  for (const listener of [...noticeSetListeners]) listener();
+}
+
+function emitNotice(notice: FlushNotice): void {
+  currentNotices.set(noticeKey(notice), notice);
+  publishNoticeSet();
+}
+
+export function subscribeNoticeSet(listener: () => void): () => void {
+  noticeSetListeners.add(listener);
+  return () => void noticeSetListeners.delete(listener);
+}
+
+export function getNoticeSet(): readonly FlushNotice[] {
+  return noticeSet;
+}
+
+export function dismissNotice(notice: FlushNotice): void {
+  if (currentNotices.delete(noticeKey(notice))) publishNoticeSet();
 }
 
 function ackId(storageKey: string, clientKey: string): string {
@@ -145,20 +194,25 @@ export function triggerFlush(key: QueueKey): Promise<void> {
 function drainKey(key: QueueKey, opts: DrainOptions): Promise<void> {
   const storageKey = pendingStorageKey(key);
   const inFlight = drains.get(storageKey);
-  if (inFlight !== undefined) return inFlight;
-  const run = runDrain(key, opts).finally(() => {
-    if (drains.get(storageKey) === run) drains.delete(storageKey);
+  if (inFlight !== undefined) {
+    // A recovery caller joining a live drain makes it a recovery drain (one-way): a 409 then means a
+    // closed sort's answers to let go, not a mid-round conflict to hold (purses-w7ss.32).
+    if (opts.recovery) inFlight.run.opts.recovery = true;
+    return inFlight.promise;
+  }
+  const run: DrainRun = { opts: { ...opts }, collectionId: readQueueCollectionId(key), rejected: 0, quarantined: 0 };
+  const promise = runDrain(key, run).finally(() => {
+    if (drains.get(storageKey)?.promise === promise) drains.delete(storageKey);
   });
-  drains.set(storageKey, run);
-  return run;
+  drains.set(storageKey, { promise, run });
+  return promise;
 }
 
-async function runDrain(key: QueueKey, opts: DrainOptions): Promise<void> {
+async function runDrain(key: QueueKey, run: DrainRun): Promise<void> {
   const storageKey = pendingStorageKey(key);
-  const tallies: DrainTallies = { rejected: 0, quarantined: 0 };
   try {
     for (;;) {
-      const step = await withWebLock(lockName(key), () => performStep(key, opts, tallies));
+      const step = await withWebLock(lockName(key), () => performStep(key, run));
       if (step === "continue") continue;
       if (step === "backoff") {
         const attempt = attempts.get(storageKey) ?? 0;
@@ -171,26 +225,27 @@ async function runDrain(key: QueueKey, opts: DrainOptions): Promise<void> {
   } finally {
     // One notice per kind per drain (F9) — a set of rejections/quarantines
     // collapses to a single quiet line.
-    if (tallies.rejected > 0) emitNotice({ kind: "rejected_unknown_item", count: tallies.rejected });
-    if (tallies.quarantined > 0) emitNotice({ kind: "quarantined", count: tallies.quarantined });
+    const { collectionId } = run;
+    if (run.rejected > 0) emitNotice({ kind: "rejected_unknown_item", count: run.rejected, collectionId });
+    if (run.quarantined > 0) emitNotice({ kind: "quarantined", count: run.quarantined, collectionId });
   }
 }
 
-async function performStep(key: QueueKey, opts: DrainOptions, tallies: DrainTallies): Promise<StepResult> {
+async function performStep(key: QueueKey, drainRun: DrainRun): Promise<StepResult> {
   const entries = readQueue(key); // re-read from storage under the lock, every iteration
   if (entries.length === 0) return "done";
   const head = entries[0];
-  if (head.kind === "decision") return flushDecisionRun(key, entries, opts, tallies);
-  return flushDisposition(key, head, opts, tallies);
+  if (head.kind === "decision") return flushDecisionRun(key, entries, drainRun);
+  return flushDisposition(key, head, drainRun);
 }
 
-function quarantine(key: QueueKey, entries: PendingEntry[], tallies: DrainTallies): void {
+function quarantine(key: QueueKey, entries: PendingEntry[], drainRun: DrainRun): void {
   quarantineEntries(key, entries);
   removeEntries(
     key,
     entries.map((e) => e.clientKey),
   );
-  tallies.quarantined += entries.length;
+  drainRun.quarantined += entries.length;
   const storageKey = pendingStorageKey(key);
   for (const entry of entries) {
     resolveAck(storageKey, entry.clientKey, { status: "rejected", reason: "quarantined" });
@@ -205,8 +260,7 @@ function consumeKeepalive(storageKey: string, opts: DrainOptions): boolean {
 async function flushDecisionRun(
   key: QueueKey,
   entries: PendingEntry[],
-  opts: DrainOptions,
-  tallies: DrainTallies,
+  drainRun: DrainRun,
 ): Promise<StepResult> {
   const storageKey = pendingStorageKey(key);
   // Longest contiguous run of decision entries from the head, chunked ≤50,
@@ -231,7 +285,7 @@ async function flushDecisionRun(
     if (parsed.success) valid.push(entry);
     else offenders.push(entry);
   }
-  if (offenders.length > 0) quarantine(key, offenders, tallies);
+  if (offenders.length > 0) quarantine(key, offenders, drainRun);
   if (valid.length === 0) return "continue";
 
   const flightIds = valid.map((e) => ackId(storageKey, e.clientKey));
@@ -242,7 +296,7 @@ async function flushDecisionRun(
       res = await fetch(`/api/sessions/${key.sessionId}/decisions/batch`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        keepalive: consumeKeepalive(storageKey, opts),
+        keepalive: consumeKeepalive(storageKey, drainRun.opts),
         body: JSON.stringify({
           decisions: valid.map((e) => ({ type: e.type, decision: e.decision, clientKey: e.clientKey })),
         }),
@@ -253,6 +307,7 @@ async function flushDecisionRun(
 
     if (res.ok) {
       attempts.set(storageKey, 0); // success resets the backoff schedule
+      dismissNotice({ kind: "auth_required" }); // signed in again
       let results: BatchResult[] = [];
       try {
         results = ((await res.json()) as { results?: BatchResult[] }).results ?? [];
@@ -269,7 +324,7 @@ async function flushDecisionRun(
         let outcome: AckOutcome;
         if (result?.status === "rejected") {
           outcome = { status: "rejected", reason: result.reason };
-          tallies.rejected += 1;
+          drainRun.rejected += 1;
         } else {
           outcome = { status: result?.status === "created" ? "created" : "duplicate" };
         }
@@ -280,7 +335,7 @@ async function flushDecisionRun(
       return "continue";
     }
 
-    return handleBatchFailure(key, res.status, valid, opts, tallies);
+    return handleBatchFailure(key, res.status, valid, drainRun);
   } finally {
     for (const id of flightIds) inFlightEntries.delete(id);
   }
@@ -290,8 +345,7 @@ function handleBatchFailure(
   key: QueueKey,
   status: number,
   sent: DecisionEntry[],
-  opts: DrainOptions,
-  tallies: DrainTallies,
+  drainRun: DrainRun,
 ): StepResult {
   if (status === 400) {
     // Whole-batch shape rejection. Everything sent already passed the shared
@@ -299,7 +353,7 @@ function handleBatchFailure(
     // so re-validating here can find no offender — this is client/server
     // skew, and retrying would hot-loop. Quarantine the whole chunk;
     // resurfacing is the reconciliation (spec §3.1).
-    quarantine(key, sent, tallies);
+    quarantine(key, sent, drainRun);
     return "continue";
   }
   if (status === 401) {
@@ -310,11 +364,20 @@ function handleBatchFailure(
     return "stop"; // preserve for this queue; retained until GC, never deleted live
   }
   if (status === 409) {
-    emitNotice({ kind: "session_conflict" });
-    if (opts.recovery) {
-      deleteQueue(key); // terminal-session disposal: surface once, then discard
+    if (drainRun.opts.recovery) {
+      // Terminal-session disposal: surface once, then discard. Its own kind, not a conflict, and
+      // global: no surface is that closed sort's, so every surface must say it. A comparison still
+      // awaiting one of these answers learns it never landed, so no "it's safe" outlives it
+      // (purses-w7ss.35).
+      const storageKey = pendingStorageKey(key);
+      for (const entry of readQueue(key)) {
+        resolveAck(storageKey, entry.clientKey, { status: "rejected", reason: "closed" });
+      }
+      emitNotice({ kind: "closed_session_discarded" });
+      deleteQueue(key);
       return "done";
     }
+    emitNotice({ kind: "session_conflict", sessionId: key.sessionId, collectionId: drainRun.collectionId });
     return "stop"; // mid-round: stop gently, preserve
   }
   if (status >= 500) return "backoff";
@@ -325,14 +388,13 @@ function handleBatchFailure(
 async function flushDisposition(
   key: QueueKey,
   entry: DispositionEntry,
-  opts: DrainOptions,
-  tallies: DrainTallies,
+  drainRun: DrainRun,
 ): Promise<StepResult> {
   const storageKey = pendingStorageKey(key);
   const collectionId = readQueueCollectionId(key);
   if (collectionId === undefined) {
     // Unroutable without a collection — same terminal shelf as a stale shape.
-    quarantine(key, [entry], tallies);
+    quarantine(key, [entry], drainRun);
     return "continue";
   }
 
@@ -343,13 +405,13 @@ async function flushDisposition(
     if (entry.disposition === "clear") {
       res = await fetch(`/api/collections/${collectionId}/dispositions/${entry.itemId}`, {
         method: "DELETE",
-        keepalive: consumeKeepalive(storageKey, opts),
+        keepalive: consumeKeepalive(storageKey, drainRun.opts),
       });
     } else {
       res = await fetch(`/api/collections/${collectionId}/dispositions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        keepalive: consumeKeepalive(storageKey, opts),
+        keepalive: consumeKeepalive(storageKey, drainRun.opts),
         body: JSON.stringify({ itemId: entry.itemId, disposition: entry.disposition }),
       });
     }
@@ -361,6 +423,7 @@ async function flushDisposition(
 
   if (res.ok) {
     attempts.set(storageKey, 0);
+    dismissNotice({ kind: "auth_required" }); // signed in again
     removeEntries(key, [entry.clientKey]);
     return "continue";
   }
@@ -370,7 +433,7 @@ async function flushDisposition(
     // gentle notice, and the drain CONTINUES: recovery of [set_aside X (409),
     // triage Y] never discards Y (F4).
     removeEntries(key, [entry.clientKey]);
-    emitNotice({ kind: "disposition_superseded" });
+    emitNotice({ kind: "disposition_superseded", collectionId: drainRun.collectionId });
     return "continue";
   }
   if (res.status === 404) {
@@ -378,7 +441,7 @@ async function flushDisposition(
     return "continue";
   }
   if (res.status === 400) {
-    quarantine(key, [entry], tallies);
+    quarantine(key, [entry], drainRun);
     return "continue";
   }
   if (res.status === 401) {

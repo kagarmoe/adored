@@ -3,7 +3,9 @@
 // as the items grid (one primary + Add photos, search, pills), the phone action bar's
 // geometry (viewport-sensitive, checked here in CI at iPhone width), and wayfinding.
 import { test, expect, type Page } from "@playwright/test";
-import { closeDb } from "./fixtures/db";
+import { closeDb, getTestDb } from "./fixtures/db";
+import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
 import {
   seedBaseline,
   seedJourneyScenario,
@@ -23,6 +25,8 @@ let startable: SeededCollectionRef;
 let shelf: { name: string } & SeededCollectionRef;
 let long: { slug: string };
 let ranked: { slug: string };
+let archivedHome: string;
+let pool: SeededCollectionRef;
 
 test.beforeAll(async () => {
   ownerId = await seedBaseline();
@@ -34,7 +38,11 @@ test.beforeAll(async () => {
   const name = `E2E Shelf ${Date.now()}`;
   shelf = { name, ...(await seedNamedCollection(ownerId, name)) };
   long = await seedJourneyScenario(ownerId, 8); // enough cards to scroll on a phone
-  ranked = await seedSortScenario(ownerId); // has a finalized ranking, so the chip row carries See your ranking
+  pool = await seedPool(ownerId, 12); // enough tiles to scroll on a phone
+  const withArchived = await seedJourneyScenario(ownerId, 2);
+  await new ItemRepository(getTestDb().db).softDelete(withArchived.itemIds[0]);
+  archivedHome = `/collections/${withArchived.slug}?status=archived`;
+  ranked = await seedSortScenario(ownerId); // has a finalized ranking, so the header carries See your ranking
 });
 
 test.afterAll(async () => {
@@ -48,6 +56,19 @@ test.beforeEach(async ({ page }) => {
 });
 
 const card = (page: Page, name: string) => page.getByRole("link", { name, exact: true });
+
+// A collection with n loose pool photos named "shelf photo 1…n" (the tile's accessible name).
+async function seedPool(owner: string, n: number): Promise<SeededCollectionRef> {
+  const ref = await seedNamedCollection(owner, `E2E Pool ${Date.now()}`);
+  const photos = new PhotoRepository(getTestDb().db);
+  for (let i = 1; i <= n; i++) {
+    await photos.create({
+      itemId: null, collectionId: ref.collectionId, blobKey: "e2e-placeholder",
+      filename: `shelf-photo-${i}.jpg`, mimeType: "image/jpeg", fileSize: 1, uploadedBy: owner, isHero: false,
+    });
+  }
+  return ref;
+}
 
 test("collections: search, archive with Undo, Archived, Bring back", async ({ page }) => {
   await page.goto("/collections");
@@ -199,7 +220,51 @@ async function focusableNamesInDomOrder(page: Page): Promise<string[]> {
   });
 }
 
-test("keyboard order on the home: trail → menu → chips → primary → pill → search → cards", async ({ page }, testInfo) => {
+test("pool: the selection bar is pinned at phone and tablet widths and never hides the last tile or the footer", async ({ page }) => {
+  // Viewport-sensitive: unlike ActionBar this bar stays fixed on tablet, so both sizes run here in CI.
+  for (const size of [PHONE, { width: 1080, height: 810 }]) {
+    await page.setViewportSize(size);
+    await page.goto(`/collections/${pool.slug}/pool`);
+    await page.getByRole("button", { name: "shelf photo 1", exact: true }).click();
+    await page.getByRole("button", { name: "shelf photo 2", exact: true }).click();
+    const bar = page.getByRole("region", { name: "Grouping actions" });
+    await expect(bar).toBeVisible();
+    expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe("fixed");
+    const pinned = async () => {
+      const box = (await bar.boundingBox())!;
+      expect(Math.round(box.y + box.height)).toBe(size.height);
+      return box;
+    };
+    // A focused tile scrolls clear of the bar: the scroll padding matches the reserve.
+    expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollPaddingBottom)).toBe(
+      size === PHONE ? "224px" : "144px",
+    );
+
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const barBox = await pinned();
+    const last = page.getByRole("button", { name: "shelf photo 12", exact: true });
+    await expect(last).toBeInViewport();
+    expect(((await last.boundingBox())!.y + (await last.boundingBox())!.height)).toBeLessThanOrEqual(barBox.y);
+    const footer = (await page.getByText("Find the things you love").boundingBox())!;
+    expect(footer.y + footer.height).toBeLessThanOrEqual(barBox.y);
+
+    // The Move to… chooser grows the bar upward; the bar stays on the bottom edge.
+    await bar.getByRole("button", { name: "Move to…" }).click();
+    await expect(bar.getByRole("button", { name: "New item" })).toBeVisible();
+    await pinned();
+    await page.keyboard.press("Escape");
+  }
+
+  // Short (browser zoom): the bar goes static and nothing is reserved.
+  await page.setViewportSize({ width: PHONE.width, height: 480 });
+  const bar = page.getByRole("region", { name: "Grouping actions" });
+  expect(await bar.evaluate((el) => getComputedStyle(el).position)).toBe("static");
+  expect(["0px", "auto"]).toContain(
+    await page.evaluate(() => getComputedStyle(document.documentElement).scrollPaddingBottom),
+  );
+});
+
+test("keyboard order on the home: trail → menu → primary → pill → search → cards", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== "tablet", "DOM order is viewport-independent; the phone trail collapses");
   await page.goto(`/collections/${itemsOnly.slug}`); // never sorted: no other test opens a sort here
   await expect(card(page, "E2E Workspace Tote")).toBeVisible();
@@ -208,8 +273,7 @@ test("keyboard order on the home: trail → menu → chips → primary → pill 
   const idx = (label: string) => order.indexOf(label);
   expect(idx("Collections"), seen).toBeGreaterThanOrEqual(0);
   expect(idx("More for E2E Workspace items-only"), seen).toBeGreaterThan(idx("Collections"));
-  expect(idx("Decide"), seen).toBeGreaterThan(idx("More for E2E Workspace items-only"));
-  expect(idx("Start sorting"), seen).toBeGreaterThan(idx("Decide"));
+  expect(idx("Start sorting"), seen).toBeGreaterThan(idx("More for E2E Workspace items-only"));
   expect(idx("Add photos"), seen).toBeGreaterThan(idx("Start sorting"));
   expect(idx("Search"), seen).toBeGreaterThan(idx("Add photos"));
   expect(idx("E2E Workspace Tote"), seen).toBeGreaterThan(idx("Search"));
@@ -261,4 +325,33 @@ test("phone: the trail collapses to a single accessible back link", async ({ pag
 
   await back.click();
   await expect(page).toHaveURL(new RegExp(`/collections/${poolOnly.slug}$`));
+});
+
+test("phone: an archived card's Bring back lines up with the name and fits the card, idle and busy", async ({ page }) => {
+  // Viewport-sensitive: a 390px two-column card is the narrowest column the pill must fit.
+  await page.setViewportSize(PHONE);
+  await page.goto(archivedHome);
+  const tile = page.getByRole("list", { name: "Your items" }).getByRole("listitem").first();
+  const name = (await tile.getByRole("heading").boundingBox())!;
+  const cardBox = (await tile.boundingBox())!;
+  const fits = async (label: RegExp) => {
+    const pill = tile.getByRole("button", { name: label });
+    const box = (await pill.boundingBox())!;
+    expect(Math.abs(box.x - name.x)).toBeLessThanOrEqual(1); // the pill's edge is the name's edge
+    expect(box.x + box.width).toBeLessThanOrEqual(cardBox.x + cardBox.width - 12); // inside p-3
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    // The label never spills sideways or downward, and stays on one line.
+    expect(
+      await pill.evaluate((el) => {
+        const line = document.createRange();
+        line.selectNodeContents(el);
+        return el.scrollWidth <= el.clientWidth && el.scrollHeight <= el.clientHeight && line.getClientRects().length === 1;
+      }),
+    ).toBe(true);
+  };
+  await fits(/^Bring back$/);
+  // Hold the restore open so the busy label can be measured.
+  await page.route("**/api/items/*/restore", () => {});
+  await tile.getByRole("button", { name: /^Bring back$/ }).click();
+  await fits(/^One moment…$/);
 });

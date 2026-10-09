@@ -4,8 +4,6 @@ import type {
   PairwiseDecision,
   TriageDecision,
 } from "@/types";
-import type { DecisionEventRepository } from "@/server/repositories/implementations/DecisionEventRepository";
-import type { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { compareByCreatedAtThenId } from "@/lib/decision-order";
 
 // Triage seeds each item at the CENTER of its tier band, so triage -> getBucket
@@ -26,11 +24,6 @@ const UNTRIAGED_DEFAULT = TIER_SEED.medium;
 type ItemState = { score: number; count: number };
 
 export class ScoringService {
-  constructor(
-    private decisionRepo: DecisionEventRepository,
-    private sessionRepo: SessionRepository,
-  ) {}
-
   private scoreFromTriageEvent(
     result: "top" | "high" | "medium" | "low",
   ): number {
@@ -48,25 +41,8 @@ export class ScoringService {
     return "low";
   }
 
-  // The curator's non-deleted sessions across the collection, each session's
-  // decision events flattened. Fetched in parallel (one query per session, all
-  // in flight at once). recalculatePreferences reads this ONCE and shares the
-  // same list with the comparison mapping, so the decision log isn't read twice.
-  async loadCuratorDecisionEvents(
-    collectionId: string,
-    curatorId: string,
-  ): Promise<DecisionEvent[]> {
-    const sessions = await this.sessionRepo.findByCollection(collectionId);
-    const curatorSessions = sessions.filter((s) => s.curatorId === curatorId);
-    const perSession = await Promise.all(
-      curatorSessions.map((s) => this.decisionRepo.findBySession(s.id)),
-    );
-    return perSession.flat();
-  }
-
-  // `events` lets the caller supply an already-fetched decision log (see
-  // loadCuratorDecisionEvents), avoiding a second read of the same events. When
-  // omitted, they're fetched here — the standalone contract is unchanged.
+  // `events` is the curator's decision log, read once by the caller through the shared loader
+  // (decision-log.ts) and shared with the comparison mapping.
   //
   // purses-5g1g: `liveItemIds` is the collection's live (non-deleted) item set.
   // decision_events are append-only and SURVIVE an item purge (ItemPurgeService
@@ -81,11 +57,8 @@ export class ScoringService {
     collectionId: string,
     curatorId: string,
     liveItemIds: ReadonlySet<string>,
-    events?: DecisionEvent[],
+    events: DecisionEvent[],
   ): Promise<CollectionPreferenceItem[]> {
-    const allDecisions =
-      events ?? (await this.loadCuratorDecisionEvents(collectionId, curatorId));
-
     const itemState = new Map<string, ItemState>();
     const ensure = (itemId: string): ItemState => {
       let state = itemState.get(itemId);
@@ -98,7 +71,7 @@ export class ScoringService {
 
     // Chronological order so the LAST triage per item wins its bucket. Ties on
     // createdAt fall back to id via the shared comparator (spec §2.4).
-    const ordered = [...allDecisions].sort(compareByCreatedAtThenId);
+    const ordered = [...events].sort(compareByCreatedAtThenId);
 
     // Pass 1: triage seeds the score at its tier center — latest triage wins.
     for (const decision of ordered) {

@@ -111,16 +111,31 @@ function pairings(t: ThemeTokens): [string, string, number, string][] {
     [t.inkSoft, t.groundMint, 4.5, "ink-soft on mint stop"],
     [t.primary, t.groundAqua, 4.5, "primary link on aqua stop"],
     [t.primary, t.groundMint, 4.5, "primary link on mint stop"],
+    [t.inkSoft, t.groundEnd, 4.5, "ink-soft on the wash's end stop"],
+    [t.primary, t.groundEnd, 4.5, "primary link on the wash's end stop"],
+    [t.inkSoft, t.groundMid, 4.5, "ink-soft on the wash's mid stop"],
+    [t.errorDeep, t.groundAqua, 4.5, "error text (error-deep) on aqua stop"],
+    [t.errorDeep, t.groundMint, 4.5, "error text (error-deep) on mint stop"],
+    [t.errorDeep, t.groundEnd, 4.5, "error text (error-deep) on the wash's end stop"],
     [t.ink, t.card, 4.5, "ink on card"],
     [t.inkSoft, t.card, 4.5, "ink-soft on card"],
     [t.primary, t.card, 4.5, "primary link on card"],
+    // Danger sections (Card variant="danger"): the error rim must read as an edge on the card fill (SC 1.4.11).
+    [t.error, t.card, 3.0, "error rim on card (danger section)"],
     [t.chipInk, t.chip, 4.5, "chip ink on chip (selected pill / chip)"],
     [t.primary, t.chip, 3.0, "selected border (primary) on chip"],
     ...GLASS_COMPOSITES.flatMap((k): [string, string, number, string][] => [
       [t.ink, t[k], 4.5, `ink on ${k}`],
       [t.inkSoft, t[k], 4.5, `ink-soft on ${k}`],
-      // Text on glass is ink/ink-soft; primary on glass marks controls only (DESIGN §2).
-      [t.primary, t[k], 3.0, `primary control edge on ${k}`],
+      // Links on glass panels over the wash (revision note, profile, share rows) are primary
+      // text: 4.5. Over photos (black/white backdrops) glass-strong only backs controls: 3.0.
+      k.endsWith("Black") || k.endsWith("White")
+        ? [t.primary, t[k], 3.0, `primary control edge on ${k}`]
+        : [t.primary, t[k], 4.5, `primary text/link on ${k}`],
+      // Field error messages and required asterisks are error-deep text.
+      [t.errorDeep, t[k], 4.5, `error text (error-deep) on ${k}`],
+      // Danger sections are glass cards with an error rim (SC 1.4.11).
+      [t.error, t[k], 3.0, `error rim on ${k} (danger section)`],
     ]),
   ];
 }

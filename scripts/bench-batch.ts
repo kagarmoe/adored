@@ -30,7 +30,7 @@ import { PgTable } from "drizzle-orm/pg-core";
 import { ulid } from "ulid";
 import * as schema from "@/lib/db/schema";
 import { decisionEventsTable } from "@/lib/db/schema";
-import { generateId, generateOrderedIdFactory } from "@/lib/id";
+import { generateId } from "@/lib/id";
 import { withTransaction, lockCollectionCurator } from "@/lib/transactions";
 import { PreferenceController } from "@/server/api/preferences";
 import type { Database } from "@/lib/db";
@@ -101,7 +101,6 @@ async function runBatch(
   c: SeededCollection,
   curatorId: string,
 ): Promise<number> {
-  const nextId = generateOrderedIdFactory();
   const t0 = performance.now();
   await withTransaction(db, async (tx) => {
     await lockCollectionCurator(tx, c.collectionId, curatorId);
@@ -109,7 +108,7 @@ async function runBatch(
       await tx
         .insert(decisionEventsTable)
         .values({
-          id: nextId(),
+          id: generateId("event"),
           sessionId: c.sessionId,
           type: "triage",
           decision: triageDecision(c.itemIds[i], i),

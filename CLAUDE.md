@@ -138,12 +138,23 @@ npm run test:db       # DB-backed tests (Docker; RUN_DB_TESTS=1)
 not discover predictable failures. Before opening or updating a PR, run the complete local gate set
 for the branch's blast radius and record the exact commands/results in the PR body or handoff:
 
+**Run it as the swamp workflow** (records every gate's exit code as queryable data; the verdict
+asserts name every failing gate):
+
+```bash
+swamp workflow run adored-pre-pr --input "phoneSpecs=e2e/<spec>.spec.ts" --input "shots=<surface>,<surface>"
+```
+
+It runs lint, auth:verify, unit (coverage), build, the swamp-extension Deno type-check and tests,
+test:db, the full tablet e2e suite, then the phone specs and screenshots you pass (empty = skipped).
+Per-gate results: `swamp data query 'modelName == "adored-tests"' --json`. The individual commands:
+
 - **Every code PR:** `npm run lint`, `npm run test:ci`, and `npm run build`.
 - **Auth/session/proxy/env changes:** also run `npm run auth:verify`.
 - **DB/schema/repository/service/API persistence changes:** also run `npm run test:db`.
 - **UI, page, route-flow, onboarding/tutorial, copy, responsive, or interaction changes:** run the
   mapped Playwright spec(s) locally, for example
-  `npx playwright test e2e/welcome-walkthrough.spec.ts --project=tablet`.
+  `npm run test:e2e -- e2e/welcome-walkthrough.spec.ts --project=tablet`.
 - **Broad/unknown UI blast radius:** run `npm run test:e2e` locally instead of relying on CI's
   selective Playwright mapping.
 - **Phone/responsive changes:** run the mapped Playwright spec with `PW_VIEWPORT=phone` as well as

@@ -20,7 +20,7 @@ interface AppLayoutProps {
 
 export function AppLayout({ breadcrumbs, actions, reserveActionBar, children }: AppLayoutProps) {
   return (
-    <div className={`flex min-h-screen flex-col bg-ground ${reserveActionBar ? "pb-36 md:pb-0 [@media(max-height:500px)]:pb-0" : ""}`}>
+    <div data-app-shell className={`flex min-h-screen flex-col ${reserveActionBar ? "pb-36 md:pb-0 [@media(max-height:500px)]:pb-0" : ""}`}>
       <Header />
 
       <main className="flex-1 pt-20">
@@ -43,7 +43,7 @@ export function AppLayout({ breadcrumbs, actions, reserveActionBar, children }: 
         </PageContainer>
       </main>
 
-      <footer className="border-t border-hairline bg-surface dark:bg-ground py-4 text-center text-sm text-ink-soft">
+      <footer className="border-t border-hairline py-4 text-center text-sm text-ink-soft">
         <p>Adored &middot; Find the things you love</p>
       </footer>
     </div>

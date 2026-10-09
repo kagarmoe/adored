@@ -4,7 +4,7 @@ import { WalkthroughShell } from "@/features/onboarding/WalkthroughShell";
 // all state) — no DB, no auth gate here; that trigger is a separate task.
 export default function WelcomePage() {
   return (
-    <main className="min-h-[100svh] bg-ground">
+    <main className="min-h-[100svh]">
       <WalkthroughShell />
     </main>
   );

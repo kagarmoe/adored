@@ -1,66 +1,22 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui";
-import { useOptionalTriageUndo } from "./TriageUndoProvider";
 
-// The triage "Not mine" affordance: a single quiet tap records that this item
-// isn't the person's to decide (a `set_aside` disposition) via the provider,
-// which then refreshes so the next item comes forward. No confirm step — this
-// is a gentle, reversible escape (the persistent "Bring back" notice lives in
-// TriageUndoNotice, hoisted outside the empty-state branch).
+// The triage "Not mine" affordance: a single quiet tap calls `onDecision` (the
+// round's Not mine, which sets it aside through the provider, or the
+// walkthrough's demo step). No confirm step — this is a gentle, reversible
+// escape (the persistent "Bring back" notice lives in TriageUndoNotice,
+// hoisted outside the empty-state branch).
 //
-// Rendered UN-KEYED in the triage page so this instance survives
-// router.refresh(): keeping the same DOM node means focus stays on the button
-// after the next item arrives, rather than dropping to <body>. Focus is NOT
-// auto-moved anywhere on tap — yanking focus could read as pressure (tap-first
-// charter); we only ensure it isn't lost.
-// `submit` selects the wiring without changing the affordance:
-//  - "session" — TODAY's path: records the set-aside disposition via the mounted
-//    TriageUndoProvider (which supplies collectionId) and refreshes the queue.
-//  - "local" — the /welcome walkthrough: synchronous, no network, no provider;
-//    a tap just advances the demo via onDecision().
-export function SetAsideButton({
-  submit,
-  itemId,
-  itemName,
-}: {
-  submit: { kind: "session" } | { kind: "local"; onDecision: () => void };
-  itemId: string;
-  itemName: string | null;
-}) {
-  // Non-throwing read: local mode renders with no provider mounted. Session mode
-  // still requires one — asserted below, same message as the old hook.
-  const ctx = useOptionalTriageUndo();
-  const [busy, setBusy] = useState(false);
-
-  async function onClick() {
-    if (submit.kind === "local") {
-      submit.onDecision();
-      return;
-    }
-    if (!ctx) throw new Error("useTriageUndo must be used within a TriageUndoProvider");
-    if (busy) return; // the provider also guards in-flight; this is the visual gate
-    setBusy(true);
-    try {
-      await ctx.setAside(itemId, itemName);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const busyInSession = submit.kind === "session" && busy;
-
+// Rendered UN-KEYED in the triage page so this instance survives the optimistic
+// advance to the next piece: keeping the same DOM node means focus stays on the
+// button after the next item arrives, rather than dropping to <body>. Focus is
+// NOT auto-moved anywhere on tap — yanking focus could read as pressure
+// (tap-first charter); we only ensure it isn't lost.
+export function SetAsideButton({ onDecision }: { onDecision: () => void }) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      onClick={onClick}
-      disabled={busyInSession}
-      title="Sets it aside"
-      aria-label="Not mine — sets it aside"
-    >
-      {busyInSession ? "Just a moment…" : "Not mine"}
+    <Button type="button" variant="ghost" onClick={onDecision} title="Sets it aside" aria-label="Not mine — sets it aside">
+      Not mine
     </Button>
   );
 }

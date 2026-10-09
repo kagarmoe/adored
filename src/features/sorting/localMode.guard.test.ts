@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { execSync } from "node:child_process";
 
-// The sorting components carry a `{ kind: "local" }` submit arm for the /welcome
+// `CompareChoice` carries a `{ kind: "local" }` submit arm for the /welcome
 // walkthrough ONLY. Production sort routes must always use `{ kind: "session" }`
 // so decisions actually persist. This guard fails loudly if a production route
 // ever wires a component into local (no-fetch) mode.

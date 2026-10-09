@@ -100,7 +100,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
         </form>
       </Card>
 
-      <div className="flex flex-col items-start gap-3 rounded-control border border-hairline bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col items-start gap-3 rounded-control border border-rim bg-glass px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-sm font-medium text-ink">Theme</p>
           <p className="text-sm text-ink-soft">Switch between light and dark.</p>
@@ -110,7 +110,7 @@ export function ProfileForm({ initialName, email }: ProfileFormProps) {
 
       <section
         aria-labelledby="profile-tutorials-heading"
-        className="rounded-control border border-hairline bg-surface px-4 py-3"
+        className="rounded-control border border-rim bg-glass px-4 py-3"
       >
         <div>
           <h2 id="profile-tutorials-heading" className="text-sm font-medium text-ink">

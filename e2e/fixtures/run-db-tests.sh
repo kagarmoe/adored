@@ -3,15 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 DB_SCRIPT="${ROOT_DIR}/e2e/fixtures/test-db.sh"
-CONTAINER="pi-e2e-db"
 STARTED_HERE=0
 
-if ! command -v docker >/dev/null 2>&1; then
-  echo "test:db: docker is required to run the local e2e database" >&2
-  exit 1
-fi
-
-if ! docker ps --format '{{.Names}}' | grep -q "^${CONTAINER}$"; then
+if ! bash "${DB_SCRIPT}" running; then
   STARTED_HERE=1
 fi
 

@@ -21,6 +21,7 @@ import { trail } from "@/components/layout/breadcrumb-trails";
 import { CardImage, buttonVariants } from "@/components/ui";
 import { WorkspaceModeChips } from "@/features/collections/WorkspaceModeChips";
 import { PendingDecisionsGate } from "@/features/sorting/PendingDecisionsGate";
+import { PendingNotices } from "@/features/sorting/pendingNotices";
 import { BringBackControl } from "@/features/sorting/BringBackControl";
 import { ItemCard } from "@/features/items/ItemCard";
 import { MostLovedHero } from "@/features/results/MostLovedHero";
@@ -100,8 +101,9 @@ export default async function RankingPage({ params }: RankingPageProps) {
   return (
     <AppLayout breadcrumbs={trail.results(collection)}>
       {/* Queued answers land before the ranking is read. */}
-      <PendingDecisionsGate curatorId={curatorId}>
+      <PendingDecisionsGate curatorId={curatorId} collectionId={collection.id}>
         <div className="space-y-8">
+          <PendingNotices collectionId={collection.id} />
           <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 id="ranking-heading" tabIndex={-1} className="font-display text-2xl text-ink focus:outline-hidden sm:text-3xl">
@@ -144,7 +146,7 @@ export default async function RankingPage({ params }: RankingPageProps) {
           )}
 
           {setAside.length > 0 && (
-            <details className="group rounded-card border border-hairline bg-surface p-4">
+            <details className="group rounded-card border border-rim bg-glass p-4">
               <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-control text-ink focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary [&::-webkit-details-marker]:hidden">
                 <span className="flex-1">Set aside</span>
                 <svg aria-hidden viewBox="0 0 24 24" fill="none" className="h-5 w-5 shrink-0 text-ink-soft transition-transform group-open:rotate-180 motion-reduce:transition-none">

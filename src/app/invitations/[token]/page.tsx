@@ -72,8 +72,8 @@ export default function InvitationPage() {
   const signedIn = Boolean(session?.user);
 
   return (
-    <div className="min-h-[100svh] flex items-center justify-center bg-ground p-4 sm:p-6">
-      <div className="max-w-sm w-full bg-surface rounded-lg shadow-lg p-6 sm:p-8">
+    <div className="min-h-[100svh] flex items-center justify-center p-4 sm:p-6">
+      <div className="max-w-sm w-full bg-glass border border-rim rounded-card shadow-card p-6 sm:p-8">
         <h1 className="text-2xl text-ink mb-2">You&apos;re invited!</h1>
 
         <div className="bg-content-soft border border-hairline rounded-lg p-4 mb-4">

@@ -106,7 +106,7 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
     >
       {open.status === "paused" && <ResumeOnLoad curatorId={curatorId} sessionId={open.id} />}
       {/* Recovery gate: queued answers land before this screen trusts the server's view. */}
-      <PendingDecisionsGate curatorId={curatorId}>
+      <PendingDecisionsGate curatorId={curatorId} collectionId={collection.id}>
         {/* The provider and notice sit ABOVE the phase switch so "Bring back" survives the hand-off. */}
         <TriageUndoProvider curatorId={curatorId} sessionId={open.id} collectionId={collection.id}>
           <div className="mx-auto max-w-xl space-y-6">
@@ -128,7 +128,7 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
             {sortPhase.kind === "pairs" && (
               <div className="space-y-6">
                 <SortProgress done={sortPhase.progress.done} total={sortPhase.progress.total} />
-                <PendingNotices />
+                <PendingNotices collectionId={collection.id} sessionId={open.id} />
                 <div>
                   {handingOff && <p className="mb-2 text-ink-soft">Now, between these two…</p>}
                   <h1 className="text-2xl text-ink sm:text-3xl">Which would you reach for first?</h1>
@@ -143,6 +143,7 @@ export default async function SortPage({ params, searchParams }: SortPageProps) 
                 />
               </div>
             )}
+            {sortPhase.kind === "done" && <PendingNotices collectionId={collection.id} sessionId={open.id} />}
             {sortPhase.kind === "done" ? (
               <section className="space-y-4 text-center">
                 <SortDoneHeading>That&rsquo;s everything for now</SortDoneHeading>

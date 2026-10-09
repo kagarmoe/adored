@@ -239,10 +239,8 @@ jobs:
               - 'src/app/**'
               - 'src/components/**'
               - 'src/features/**'
-              - 'src/hooks/**'
               - 'src/lib/design/**'
               - '**/*.css'
-              - 'tailwind.config.ts'
               - 'postcss.config.mjs'
               - 'next.config.mjs'
               - 'e2e/**'
@@ -298,7 +296,6 @@ jobs:
               - 'src/components/ui/**'
               - 'src/lib/design/**'
               - '**/*.css'
-              - 'tailwind.config.ts'
               - 'postcss.config.mjs'
               - 'next.config.mjs'
               - 'e2e/**'
@@ -315,7 +312,6 @@ jobs:
               - 'src/features/sessions/**'
               - 'src/app/collections/*/sort/**'
               - 'src/lib/triage-selection.ts'
-              - 'src/lib/pairwise-selection.ts'
               - 'src/lib/derive-usage.ts'
               - 'src/lib/decision-order.ts'
               - 'src/lib/decision-batch-schema.ts'
@@ -435,7 +431,9 @@ jobs:
           matched=0
           add() { area_specs="$area_specs $1"; matched=1; }
           if [ "$A_SORT" = "true" ]; then
-            add "e2e/sort-images.spec.ts e2e/sort-journey.spec.ts e2e/decision-recovery.spec.ts"
+            # KeepSortingButton / AsyncActionButton (sort area) render in the home's phone
+            # ActionBar and the archived card; lists-and-home owns that geometry.
+            add "e2e/sort-images.spec.ts e2e/sort-journey.spec.ts e2e/decision-recovery.spec.ts e2e/lists-and-home.spec.ts"
           fi
           if [ "$A_RESULTS" = "true" ]; then
             add "e2e/sort-journey.spec.ts"

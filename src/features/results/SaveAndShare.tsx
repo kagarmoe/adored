@@ -95,7 +95,7 @@ export function SaveAndShare({ collectionId, collectionSlug, curatorId, defaultN
 
   if (saved) {
     return (
-      <section aria-labelledby="saved-heading" className="w-full space-y-3 rounded-card border border-hairline bg-surface p-4 sm:w-96">
+      <section aria-labelledby="saved-heading" className="w-full space-y-3 rounded-card border border-rim bg-glass p-4 sm:w-96">
         <h2 id="saved-heading" ref={savedHeading} tabIndex={-1} className="font-display text-xl text-ink focus:outline-hidden">
           Saved
         </h2>
@@ -121,7 +121,7 @@ export function SaveAndShare({ collectionId, collectionSlug, curatorId, defaultN
   }
 
   return (
-    <form onSubmit={save} className="w-full space-y-3 rounded-card border border-hairline bg-surface p-4 sm:w-96">
+    <form onSubmit={save} className="w-full space-y-3 rounded-card border border-rim bg-glass p-4 sm:w-96">
       {/* eslint-disable-next-line jsx-a11y/no-autofocus -- the person just asked to name it */}
       <Input label="Name" autoFocus value={name} maxLength={200} onChange={(e) => setName(e.target.value)} />
       <div className="flex flex-wrap gap-3">

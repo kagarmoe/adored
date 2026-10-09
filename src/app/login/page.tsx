@@ -32,8 +32,8 @@ function LoginContent() {
   }
 
   return (
-    <div className="min-h-[100svh] flex items-center justify-center bg-ground p-4 sm:p-6">
-      <div className="w-full max-w-[420px] bg-surface rounded-card shadow-card p-6 sm:p-8">
+    <div className="min-h-[100svh] flex items-center justify-center p-4 sm:p-6">
+      <div className="w-full max-w-[420px] bg-glass border border-rim rounded-card shadow-card p-6 sm:p-8">
         <h1 className="font-display font-bold text-[2rem] tracking-tight text-center text-ink mb-2">
           Adored
         </h1>

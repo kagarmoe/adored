@@ -4,7 +4,7 @@
 // move that survives a reload) → save and share → the link opens signed out.
 import { test, expect, type Page } from "@playwright/test";
 import { eq } from "drizzle-orm";
-import { seedBaseline, seedJourneyScenario } from "./fixtures/seed";
+import { seedBaseline, seedJourneyScenario, seedSortScenario } from "./fixtures/seed";
 import { getTestDb } from "./fixtures/db";
 import { sessionsTable, sortResultsTable } from "@/lib/db/schema";
 
@@ -100,8 +100,18 @@ test.describe("sort journey", () => {
     await page.reload();
     await expect(rows.first().getByRole("link")).toHaveText(second);
     await expect(page.getByRole("button", { name: `Unpin ${second}` })).toBeVisible();
-    // A pinned row keeps its name readable at this width (phone included): it wraps, never clips.
-    expect(await rows.first().getByRole("link").evaluate((el) => el.scrollHeight <= el.clientHeight && el.clientWidth > 80)).toBe(true);
+    // A pinned row on a phone keeps a small ordinal and a readable name: it wraps, never clips
+    // or scrolls sideways. (Viewport-sensitive; runs in CI's tablet project at iPhone width.)
+    const tablet = page.viewportSize()!;
+    await page.setViewportSize({ width: 390, height: 664 });
+    expect(
+      await rows.first().getByRole("link").evaluate(
+        (el) => el.scrollHeight <= el.clientHeight && el.scrollWidth <= el.clientWidth && el.clientWidth > 80,
+      ),
+    ).toBe(true);
+    await expect(rows.first().getByText("1", { exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    await page.setViewportSize(tablet);
 
     // ── Save and share ───────────────────────────────────────────────────────
     await page.getByRole("button", { name: "Save and share" }).click();
@@ -138,5 +148,58 @@ test.describe("sort journey", () => {
     // The order shown is the order saved: the piece moved to the top leads the shared page.
     await expect(anon.locator("main h3").first()).toHaveText(second);
     await stranger.close();
+  });
+});
+
+test.describe("saved ranking on a phone", () => {
+  let path: string;
+
+  test.beforeAll(async () => {
+    const ownerId = await seedBaseline();
+    const { slug, finalizedResultNumber } = await seedSortScenario(ownerId);
+    path = `/collections/${slug}/results/${finalizedResultNumber}`;
+  });
+
+  test.beforeEach(async ({ page }) => {
+    await page.route("**/api/photo-files/**", (route) => route.fulfill({ path: FIXTURE, contentType: "image/webp" }));
+  });
+
+  // purses-w7ss.22. Viewport-sensitive; runs in CI's tablet project at iPhone width.
+  test("Onward has room above it, Create link stays on one line, share controls are full-size taps, nothing scrolls sideways", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 664 });
+    await page.goto(path);
+    const noSidewaysScroll = () => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth);
+
+    const ranking = page.getByRole("heading", { name: "The full ranking" }).locator("xpath=ancestor::section[1]");
+    const eyebrow = page.getByText("Onward", { exact: true });
+    const above = (await ranking.boundingBox())!;
+    const label = (await eyebrow.boundingBox())!;
+    expect(label.y - (above.y + above.height)).toBeGreaterThanOrEqual(39);
+
+    const create = page.getByRole("button", { name: "Create link" });
+    const lines = await create.evaluate((el) => {
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+    });
+    expect(lines).toBe(1);
+    expect(await noSidewaysScroll()).toBe(true);
+
+    // The share row and Undo: >= 44px taps (DESIGN.md / WCAG target size), and the row wraps, never scrolls.
+    await create.click();
+    const shareRow = [
+      page.getByRole("button", { name: "Copy" }),
+      page.getByRole("link", { name: "Preview" }),
+      page.getByRole("button", { name: "Stop sharing" }),
+    ];
+    for (const control of shareRow) {
+      await expect(control).toBeVisible();
+      expect((await control.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    }
+    expect(await noSidewaysScroll()).toBe(true);
+    await page.getByRole("button", { name: "Stop sharing" }).click();
+    const undo = page.getByRole("button", { name: "Undo" });
+    await expect(undo).toBeVisible();
+    expect((await undo.boundingBox())!.height).toBeGreaterThanOrEqual(44);
   });
 });

@@ -53,7 +53,8 @@ export class SortResultShareRepository {
     return shares.map((s) => this.mapToShare(s));
   }
 
-  async update(id: string, data: Partial<SortResultShare>): Promise<SortResultShare> {
+  // null when the row is gone (removed after the caller's check).
+  async update(id: string, data: Partial<SortResultShare>): Promise<SortResultShare | null> {
     const [share] = await this.db
       .update(sortResultSharesTable)
       .set({
@@ -62,7 +63,7 @@ export class SortResultShareRepository {
       })
       .where(eq(sortResultSharesTable.id, id))
       .returning();
-    return this.mapToShare(share);
+    return share ? this.mapToShare(share) : null;
   }
 
   async deleteByResult(sortResultId: string): Promise<void> {

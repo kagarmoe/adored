@@ -98,7 +98,7 @@
   color-scheme: light;
 
   /* Surfaces — Sea Glass: cool ground recedes, cards rise to white */
-  --color-ground: #d3e2e5;
+  --color-ground: #dbe9ec;
   --color-surface: #e5eef0;
   --color-surface-raised: #ffffff;
   --color-hairline: #c7dade;
@@ -175,21 +175,27 @@
    * never from what sits behind it. Translucent tokens are rgb()/alpha; each has hex
    * composites (over both ground stops, and black/white for glass-strong) that
    * contrast.test.ts asserts text against and proves against the alpha. */
-  --color-ground-aqua: #cfe6ec;
-  --color-ground-mint: #d5ebe1;
-  --ground-wash: radial-gradient(120% 80% at 10% 0%, var(--color-ground-aqua), transparent 60%),
-    radial-gradient(120% 80% at 90% 100%, var(--color-ground-mint), transparent 60%),
-    var(--color-ground);
+  /* Option A of the 2026-09-30 brainstorm: aqua at 0.65 and mint at 0.55 over the ground,
+   * pre-composited at the blob centres (the darkest points the wash reaches): aqua over the
+   * start stop, mint over the end stop it sits on. Blob radii are viewport units so a long page
+   * keeps viewport-sized blobs instead of one stretched streak. */
+  --color-ground-aqua: #a2d4d9;
+  --color-ground-mint: #c0decc;
+  --color-ground-mid: #e7f0ee;
+  --color-ground-end: #d9e7e2;
+  --ground-wash: radial-gradient(60vw 50vh at 10% 0%, var(--color-ground-aqua), transparent 70%),
+    radial-gradient(50vw 50vh at 95% 100%, var(--color-ground-mint), transparent 70%),
+    linear-gradient(160deg, var(--color-ground), var(--color-ground-mid) 60%, var(--color-ground-end));
   --color-card: #fbfcfc; /* surface-raised @ 0.9 over ground, pre-composited */
   --color-rim: #ffffff;
   --color-chip: #e3eef1;
   --color-chip-ink: #16242b;
-  --color-glass: rgb(255 255 255 / 0.5);
+  --color-glass: rgb(255 255 255 / 0.52);
   --color-glass-strong: rgb(255 255 255 / 0.88);
-  --color-glass-on-aqua: #e7f3f6;
-  --color-glass-on-mint: #eaf5f0;
-  --color-glass-strong-on-aqua: #f9fcfd;
-  --color-glass-strong-on-mint: #fafdfb;
+  --color-glass-on-aqua: #d2eaed;
+  --color-glass-on-mint: #e1efe7;
+  --color-glass-strong-on-aqua: #f4fafa;
+  --color-glass-strong-on-mint: #f7fbf9;
   --color-glass-strong-on-black: #e0e0e0;
   --color-glass-strong-on-white: #ffffff;
 }
@@ -261,6 +267,8 @@
 
   --color-ground-aqua: #022a33;
   --color-ground-mint: #03261f;
+  --color-ground-mid: #001b21;
+  --color-ground-end: #001b21;
   --color-card: #10374a;
   --color-rim: #3f7fa0;
   --color-chip: #173f4d;
@@ -304,9 +312,15 @@
     box-sizing: border-box;
   }
 
-  html,
+  /* The ground wash is painted on <body> and propagates to the canvas, which is sized by
+   * <html>: html must grow with its content (min-height, not height), or the gradient is
+   * sized to one viewport and tiles with a seam on long pages. */
+  html {
+    min-height: 100%;
+  }
+
   body {
-    height: 100%;
+    min-height: 100dvh;
   }
 
   body {
@@ -435,5 +449,27 @@
 @media (width < 48rem) and (min-height: 501px) {
   html:has([data-action-bar]) {
     scroll-padding-bottom: 9rem;
+  }
+}
+
+/* PoolActionBar (the pool's selection bar) is fixed at EVERY width while photos are selected —
+   unlike ActionBar it never becomes an inline row — and on phone it carries a count row and a
+   2×2 button grid (plus the over-cap line when shown). Reserve that height below the page's end
+   and as scroll padding so the last tile, the footer and a focused tile clear it. A short
+   viewport (browser zoom) keeps the bar static, so nothing is reserved. */
+@media (min-height: 501px) {
+  html:has([data-selection-bar]) {
+    scroll-padding-bottom: 14rem;
+  }
+  [data-app-shell]:has([data-selection-bar]) {
+    padding-bottom: 14rem;
+  }
+}
+@media (width >= 40rem) and (min-height: 501px) {
+  html:has([data-selection-bar]) {
+    scroll-padding-bottom: 9rem;
+  }
+  [data-app-shell]:has([data-selection-bar]) {
+    padding-bottom: 9rem;
   }
 }

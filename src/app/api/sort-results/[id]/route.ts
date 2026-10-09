@@ -23,30 +23,6 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const user = await requireAuth();
-    const body = await request.json();
-    const db = getDb();
-    const access = await requireApiResultAccess(db, id, user.id);
-    if (access instanceof NextResponse) return access;
-    if (access.status === "finalized") {
-      return NextResponse.json(
-        { error: "Result is finalized" },
-        { status: 409 },
-      );
-    }
-    const result = await ResultController.fromDb(db).updateResult(id, body);
-    return NextResponse.json(result);
-  } catch (error) {
-    return errorResponse(error);
-  }
-}
-
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

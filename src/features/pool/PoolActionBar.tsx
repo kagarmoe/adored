@@ -71,8 +71,15 @@ export function PoolActionBar({
           className="fixed inset-0 z-10 cursor-default bg-transparent"
         />
       )}
+      {/* The PR 3 bottom-bar surface (ActionBar): glass-strong + blur + lift + hairline edge,
+          z-30 under the z-40 header. Fixed at every width (a selection follows the person
+          through a long grid); static on a short viewport. No mb-0: it is the last child of
+          PoolPhotoGrid's space-y-4, which gets no margin. No safe-area padding: the root viewport
+          is not viewportFit "cover", so the inset is always 0. globals.css reserves its
+          height via data-selection-bar. */}
       <div
-        className="fixed inset-x-0 bottom-0 z-20 border-t border-rim bg-glass-strong px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 backdrop-blur-sm"
+        data-selection-bar
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-hairline bg-glass-strong px-4 py-3 shadow-lift backdrop-blur-md [@media(max-height:500px)]:static"
         role="region"
         aria-label="Grouping actions"
       >
@@ -124,7 +131,7 @@ export function PoolActionBar({
               {count} selected
             </span>
             <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
-              <Button type="button" variant="ghost" className="min-h-11 w-full sm:w-auto" disabled={busy} onClick={onClear}>
+              <Button type="button" variant="ghost" className="min-h-11 w-full text-ink! sm:w-auto" disabled={busy} onClick={onClear}>
                 Clear
               </Button>
               <Button

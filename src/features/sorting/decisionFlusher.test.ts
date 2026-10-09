@@ -11,7 +11,7 @@ import {
   type PendingEntry,
   type QueueKey,
 } from "./decisionQueue";
-import type { FlushNotice } from "./decisionFlusher";
+import type { AckOutcome } from "./decisionFlusher";
 
 // The engine holds module-level state (drain promises, backoff attempts, ack
 // resolvers), so every test loads a FRESH instance. react and other
@@ -445,8 +445,6 @@ describe("drain — cross-tab exclusion via Web Locks (F11)", () => {
 describe("drain — failure taxonomy", () => {
   it("disposition 409: that entry removed, ONE disposition_superseded notice, drain continues — the following triage still lands (F4)", async () => {
     const engine = await loadEngine();
-    const notices: FlushNotice[] = [];
-    engine.subscribeNotices((n) => notices.push(n));
     const fetchMock = vi.fn(async (url: string, init: RequestInit = {}) => {
       if (url.includes("/decisions/batch")) return respondCreated(init);
       return jsonRes(409, { error: "already triaged" });
@@ -460,7 +458,7 @@ describe("drain — failure taxonomy", () => {
 
     await engine.drain([keyA]);
 
-    expect(notices.filter((n) => n.kind === "disposition_superseded")).toHaveLength(1);
+    expect(engine.getNoticeSet()).toEqual([{ kind: "disposition_superseded", collectionId: "col_1" }]);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(fetchMock.mock.calls[1][0]).toBe(BATCH_URL);
     expect(batchBodyKeys(fetchMock.mock.calls[1][1])).toEqual([y.clientKey]);
@@ -469,8 +467,6 @@ describe("drain — failure taxonomy", () => {
 
   it("disposition 404: silent drop, drain continues", async () => {
     const engine = await loadEngine();
-    const notices: FlushNotice[] = [];
-    engine.subscribeNotices((n) => notices.push(n));
     const fetchMock = vi.fn(async (url: string, init: RequestInit = {}) => {
       if (url.includes("/decisions/batch")) return respondCreated(init);
       return jsonRes(404);
@@ -483,15 +479,13 @@ describe("drain — failure taxonomy", () => {
 
     await engine.drain([keyA]);
 
-    expect(notices).toEqual([]);
+    expect(engine.getNoticeSet()).toEqual([]);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(readQueue(keyA)).toEqual([]);
   });
 
   it("a stale-shape entry is quarantined pre-flight (shared Zod schema); the rest are POSTed and acked; one quarantined notice", async () => {
     const engine = await loadEngine();
-    const notices: FlushNotice[] = [];
-    engine.subscribeNotices((n) => notices.push(n));
     const fetchMock = installAutoFetch();
 
     const stale = triage({ decision: { itemId: `item_${ulid().toLowerCase()}`, result: "loved" } });
@@ -505,13 +499,11 @@ describe("drain — failure taxonomy", () => {
     expect(batchBodyKeys(fetchMock.mock.calls[0][1])).toEqual([valid.clientKey]); // offender never sent
     expect(readQuarantine(keyA).map((e) => e.clientKey)).toEqual([stale.clientKey]);
     expect(readQueue(keyA)).toEqual([]);
-    expect(notices.filter((n) => n.kind === "quarantined")).toEqual([{ kind: "quarantined", count: 1 }]);
+    expect(engine.getNoticeSet()).toEqual([{ kind: "quarantined", count: 1, collectionId: "col_1" }]);
   });
 
   it("server 400 on a locally-valid chunk (deploy skew): chunk quarantined — never a hot retry loop", async () => {
     const engine = await loadEngine();
-    const notices: FlushNotice[] = [];
-    engine.subscribeNotices((n) => notices.push(n));
     const fetchMock = vi.fn(async () => jsonRes(400, { error: "Invalid request" }));
     global.fetch = fetchMock as unknown as typeof fetch;
 
@@ -525,13 +517,11 @@ describe("drain — failure taxonomy", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(readQuarantine(keyA).map((e) => e.clientKey)).toEqual([e1.clientKey, e2.clientKey]);
     expect(readQueue(keyA)).toEqual([]);
-    expect(notices.filter((n) => n.kind === "quarantined")).toEqual([{ kind: "quarantined", count: 2 }]);
+    expect(engine.getNoticeSet()).toEqual([{ kind: "quarantined", count: 2, collectionId: "col_1" }]);
   });
 
   it("401: queue preserved, drain stops, one auth_required notice", async () => {
     const engine = await loadEngine();
-    const notices: FlushNotice[] = [];
-    engine.subscribeNotices((n) => notices.push(n));
     global.fetch = vi.fn(async () => jsonRes(401)) as unknown as typeof fetch;
 
     const e1 = triage();
@@ -539,14 +529,12 @@ describe("drain — failure taxonomy", () => {
     await engine.drain([keyA]); // resolves: the taxonomy said stop
 
     expect(readQueue(keyA).map((e) => e.clientKey)).toEqual([e1.clientKey]);
-    expect(notices).toEqual([{ kind: "auth_required" }]);
+    expect(engine.getNoticeSet()).toEqual([{ kind: "auth_required" }]);
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
   it("403: queue preserved and stopped — storage intact, never deleted live", async () => {
     const engine = await loadEngine();
-    const notices: FlushNotice[] = [];
-    engine.subscribeNotices((n) => notices.push(n));
     global.fetch = vi.fn(async () => jsonRes(403)) as unknown as typeof fetch;
 
     await enqueue(keyA, triage());
@@ -554,40 +542,34 @@ describe("drain — failure taxonomy", () => {
 
     expect(window.localStorage.getItem(pendingStorageKey(keyA))).not.toBeNull();
     expect(readQueue(keyA)).toHaveLength(1);
-    expect(notices).toEqual([]);
+    expect(engine.getNoticeSet()).toEqual([]);
   });
 
   it("batch 409 mid-round (no recovery): stop + preserve + one session_conflict notice", async () => {
     const engine = await loadEngine();
-    const notices: FlushNotice[] = [];
-    engine.subscribeNotices((n) => notices.push(n));
     global.fetch = vi.fn(async () => jsonRes(409)) as unknown as typeof fetch;
 
     await enqueue(keyA, triage());
     await engine.drain([keyA]);
 
-    expect(notices).toEqual([{ kind: "session_conflict" }]);
+    expect(engine.getNoticeSet()).toEqual([{ kind: "session_conflict", sessionId: "sess_1", collectionId: "col_1" }]);
     expect(readQueue(keyA)).toHaveLength(1);
     expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 
-  it("batch 409 during recovery: one session_conflict surface, then the queue is deleted (terminal-session disposal)", async () => {
+  it("batch 409 during recovery: one closed_session_discarded notice (not a conflict), then the queue is deleted (terminal-session disposal)", async () => {
     const engine = await loadEngine();
-    const notices: FlushNotice[] = [];
-    engine.subscribeNotices((n) => notices.push(n));
     global.fetch = vi.fn(async () => jsonRes(409)) as unknown as typeof fetch;
 
     await enqueue(keyA, triage());
     await engine.drain([keyA], { recovery: true });
 
-    expect(notices).toEqual([{ kind: "session_conflict" }]);
+    expect(engine.getNoticeSet()).toEqual([{ kind: "closed_session_discarded" }]);
     expect(window.localStorage.getItem(pendingStorageKey(keyA))).toBeNull();
   });
 
   it("rejected acks: entry removed, one rejected_unknown_item notice per drain with the count", async () => {
     const engine = await loadEngine();
-    const notices: FlushNotice[] = [];
-    engine.subscribeNotices((n) => notices.push(n));
     global.fetch = vi.fn(async (_url: string, init: RequestInit = {}) => {
       const body = JSON.parse(String(init.body)) as { decisions: Array<{ clientKey: string }> };
       return jsonRes(201, {
@@ -604,9 +586,107 @@ describe("drain — failure taxonomy", () => {
     await engine.drain([keyA]);
 
     expect(readQueue(keyA)).toEqual([]);
-    expect(notices.filter((n) => n.kind === "rejected_unknown_item")).toEqual([
-      { kind: "rejected_unknown_item", count: 1 },
-    ]);
+    expect(engine.getNoticeSet()).toEqual([{ kind: "rejected_unknown_item", count: 1, collectionId: "col_1" }]);
+  });
+});
+
+describe("notices are sticky (a surface that mounts later still reads them)", () => {
+  it("the current set holds the notice; dismissNotice clears it; a later 2xx clears auth_required", async () => {
+    const engine = await loadEngine();
+    global.fetch = vi.fn(async () => jsonRes(401)) as unknown as typeof fetch;
+    await enqueue(keyA, triage());
+    await engine.drain([keyA]);
+
+    expect(engine.getNoticeSet()).toEqual([{ kind: "auth_required" }]);
+    engine.dismissNotice({ kind: "auth_required" });
+    expect(engine.getNoticeSet()).toEqual([]);
+
+    await engine.drain([keyA]); // still signed out: raised again
+    expect(engine.getNoticeSet()).toEqual([{ kind: "auth_required" }]);
+    global.fetch = vi.fn(async (_url: string, init: RequestInit = {}) => respondCreated(init)) as unknown as typeof fetch;
+    await engine.drain([keyA]); // signed back in: the 2xx resolves it
+    expect(engine.getNoticeSet()).toEqual([]);
+    expect(readQueue(keyA)).toEqual([]);
+  });
+
+  it("two collections' lines of one kind stand side by side, and each is dismissed alone (purses-w7ss.31)", async () => {
+    const engine = await loadEngine();
+    const keyB: QueueKey = { curatorId: "user_a", sessionId: "sess_2", collectionId: "col_2" };
+    const stale = () => triage({ decision: { itemId: `item_${ulid().toLowerCase()}`, result: "loved" } });
+    await enqueue(keyA, stale());
+    await enqueue(keyB, stale());
+    await engine.drain([keyA, keyB]);
+
+    expect(engine.getNoticeSet()).toHaveLength(2); // parallel drains: order not pinned
+    expect(engine.getNoticeSet()).toEqual(
+      expect.arrayContaining([
+        { kind: "quarantined", count: 1, collectionId: "col_1" },
+        { kind: "quarantined", count: 1, collectionId: "col_2" },
+      ]),
+    );
+    engine.dismissNotice({ kind: "quarantined", count: 1, collectionId: "col_1" }); // keyed by kind + collection
+    expect(engine.getNoticeSet()).toEqual([{ kind: "quarantined", count: 1, collectionId: "col_2" }]);
+  });
+});
+
+describe("drain — a recovery caller joining a live drain (purses-w7ss.32)", () => {
+  it("makes it a recovery drain: a 409 lets the closed sort's answers go instead of holding them as a mid-round conflict", async () => {
+    const engine = await loadEngine();
+    let respond: ((r: Response) => void) | undefined;
+    global.fetch = vi.fn(
+      () => new Promise<Response>((resolve) => { respond = resolve; }),
+    ) as unknown as typeof fetch;
+    await enqueue(keyA, triage());
+
+    const live = engine.triggerFlush(keyA); // a mid-round drain, request in flight
+    await vi.waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(1));
+    const recovery = engine.drain([keyA], { recovery: true });
+    expect(recovery).toBe(live); // still one drain (F12)
+
+    respond?.(jsonRes(409));
+    await recovery;
+
+    expect(engine.getNoticeSet()).toEqual([{ kind: "closed_session_discarded" }]);
+    expect(window.localStorage.getItem(pendingStorageKey(keyA))).toBeNull();
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("drain — a recovery 409 tells waiting answers they never landed (purses-w7ss.35)", () => {
+  it("resolves each discarded entry's ack as rejected (closed), so no 'it's safe' line outlives the queue", async () => {
+    const engine = await loadEngine();
+    global.fetch = vi.fn(async () => jsonRes(409)) as unknown as typeof fetch;
+    const e = triage();
+    await enqueue(keyA, e);
+    let outcome: AckOutcome | undefined;
+    void engine.awaitAck(keyA, e.clientKey).then((o) => {
+      outcome = o;
+    });
+
+    await engine.drain([keyA], { recovery: true });
+
+    // Pre-fix the queue is deleted and the waiter is never resolved.
+    await vi.waitFor(() => expect(outcome).toEqual({ status: "rejected", reason: "closed" }));
+    expect(window.localStorage.getItem(pendingStorageKey(keyA))).toBeNull();
+  });
+});
+
+describe("notice keys (purses-w7ss.31)", () => {
+  it("a second sort's conflict in the same collection stands beside the first, never replacing it", async () => {
+    const engine = await loadEngine();
+    const keyC: QueueKey = { ...keyA, sessionId: "sess_3" };
+    global.fetch = vi.fn(async () => jsonRes(409)) as unknown as typeof fetch;
+    await enqueue(keyA, triage());
+    await enqueue(keyC, triage());
+    await engine.drain([keyA, keyC]); // mid-round: two conflicts, one collection
+
+    expect(engine.getNoticeSet()).toHaveLength(2); // parallel drains: order not pinned
+    expect(engine.getNoticeSet()).toEqual(
+      expect.arrayContaining([
+        { kind: "session_conflict", sessionId: "sess_1", collectionId: "col_1" },
+        { kind: "session_conflict", sessionId: "sess_3", collectionId: "col_1" },
+      ]),
+    );
   });
 });
 

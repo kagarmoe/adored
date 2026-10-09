@@ -1,0 +1,190 @@
+id: 774ddd99-e94f-49c5-8664-a61ca02e025e
+name: adored-pre-pr
+description: >-
+  The local pre-PR gate (CLAUDE.md "Local pre-PR verification"): lint, auth:verify,
+  unit tests with coverage, build, swamp-extension type-check and tests, DB tests, the full tablet e2e suite, optional
+  phone specs and optional screenshots. Every gate records its exit code as data;
+  the verdict job's asserts fail the run and name every failing gate.
+tags:
+  purpose: pre-pr
+inputs:
+  properties:
+    phoneSpecs:
+      type: string
+      default: ""
+      description: >-
+        Space-separated Playwright specs to also run on phone (PW_VIEWPORT=phone),
+        e.g. "e2e/sort-journey.spec.ts e2e/lists-and-home.spec.ts". Empty = skip.
+    shots:
+      type: string
+      default: ""
+      description: >-
+        Comma-separated screenshot surfaces (SHOTS) to capture on tablet and phone,
+        e.g. "home,ranking,login". Empty = skip.
+jobs:
+  - name: gates
+    description: >-
+      Every gate on the test-suite model runs in sequence: one fan-out gate call (lint,
+      auth:verify, build, test:db), then unit coverage. Steps on one model share swamp's
+      per-model lock, so parallel steps here would time out waiting for it.
+    steps:
+      - name: gates
+        task:
+          type: model_method
+          modelIdOrName: adored-tests
+          methodName: gate
+          inputs:
+            scripts: ["lint", "auth:verify", "build", "test:db"]
+      - name: unit
+        dependsOn:
+          - step: gates
+            condition:
+              type: completed
+        task:
+          type: model_method
+          modelIdOrName: adored-tests
+          methodName: coverage
+  - name: extensions
+    description: >-
+      Swamp extensions are Deno code (outside eslint, vitest and tsc): type-check them and
+      run their tests with swamp's pinned Deno (@swamp/deno-runner fails the step on error).
+      A different model, so this job runs alongside the gates.
+    steps:
+      - name: extensions-check
+        task:
+          type: model_method
+          modelIdOrName: adored-deno
+          methodName: run
+          inputs:
+            args: ["check", "extensions/models/", "extensions/tests/"]
+      - name: extensions-test
+        dependsOn:
+          - step: extensions-check
+            condition:
+              type: completed
+        task:
+          type: model_method
+          modelIdOrName: adored-deno
+          methodName: run
+          inputs:
+            args: ["test", "--no-check", "extensions/tests/"]
+  - name: e2e
+    description: >-
+      Playwright runs, after the gates (same model, and Playwright's web server rebuilds
+      .next, which must not overlap the build gate).
+    dependsOn:
+      - job: gates
+        condition:
+          type: completed
+    steps:
+      - name: e2e-tablet
+        task:
+          type: model_method
+          modelIdOrName: adored-tests
+          methodName: e2e
+          inputs:
+            viewport: tablet
+      - name: e2e-phone
+        dependsOn:
+          - step: e2e-tablet
+            condition:
+              type: completed
+        task:
+          type: model_method
+          modelIdOrName: adored-tests
+          methodName: e2e
+          inputs:
+            viewport: phone
+            spec: ${{ inputs.phoneSpecs }}
+      - name: shots-tablet
+        dependsOn:
+          - step: e2e-phone
+            condition:
+              type: completed
+        task:
+          type: model_method
+          modelIdOrName: adored-tests
+          methodName: screenshots
+          inputs:
+            viewport: tablet
+            shots: ${{ inputs.shots }}
+      - name: shots-phone
+        dependsOn:
+          - step: shots-tablet
+            condition:
+              type: completed
+        task:
+          type: model_method
+          modelIdOrName: adored-tests
+          methodName: screenshots
+          inputs:
+            viewport: phone
+            shots: ${{ inputs.shots }}
+  - name: verdict
+    description: >-
+      One assert per recorded gate result. A gate whose method throws (no report written)
+      fails its own step, and that fails the run.
+    dependsOn:
+      - job: e2e
+        condition:
+          type: completed
+    steps:
+      - name: lint-passed
+        task:
+          type: assert
+          expr: data.latest("adored-tests", "gate-lint").attributes.exitCode == 0
+          message: lint failed (exit ${{ data.latest("adored-tests", "gate-lint").attributes.exitCode }})
+          severity: high
+      - name: auth-verify-passed
+        task:
+          type: assert
+          expr: data.latest("adored-tests", "gate-auth-verify").attributes.exitCode == 0
+          message: auth:verify failed (exit ${{ data.latest("adored-tests", "gate-auth-verify").attributes.exitCode }})
+          severity: high
+      - name: unit-passed
+        task:
+          type: assert
+          expr: data.latest("adored-tests", "coverage-total").attributes.testsPassed == true
+          message: unit tests failed (exit ${{ data.latest("adored-tests", "coverage-total").attributes.exitCode }})
+          severity: high
+      - name: build-passed
+        task:
+          type: assert
+          expr: data.latest("adored-tests", "gate-build").attributes.exitCode == 0
+          message: build failed (exit ${{ data.latest("adored-tests", "gate-build").attributes.exitCode }})
+          severity: high
+      - name: test-db-passed
+        task:
+          type: assert
+          expr: data.latest("adored-tests", "gate-test-db").attributes.exitCode == 0
+          message: test:db failed (exit ${{ data.latest("adored-tests", "gate-test-db").attributes.exitCode }})
+          severity: high
+      - name: e2e-tablet-passed
+        task:
+          type: assert
+          expr: >-
+            data.latest("adored-tests", "e2e-latest").attributes.exitCode == 0
+            && int(data.latest("adored-tests", "e2e-latest").attributes.failed) == 0
+          message: >-
+            tablet e2e: ${{ data.latest("adored-tests", "e2e-latest").attributes.failed }} failed
+            (exit ${{ data.latest("adored-tests", "e2e-latest").attributes.exitCode }})
+          severity: high
+      - name: e2e-phone-passed
+        task:
+          type: assert
+          expr: >-
+            data.latest("adored-tests", "e2e-phone").attributes.exitCode == 0
+            && int(data.latest("adored-tests", "e2e-phone").attributes.failed) == 0
+          message: >-
+            phone e2e: ${{ data.latest("adored-tests", "e2e-phone").attributes.failed }} failed
+            (exit ${{ data.latest("adored-tests", "e2e-phone").attributes.exitCode }})
+          severity: high
+      - name: screenshots-captured
+        task:
+          type: assert
+          expr: >-
+            data.latest("adored-tests", "screenshots-tablet").attributes.exitCode == 0
+            && data.latest("adored-tests", "screenshots-phone").attributes.exitCode == 0
+          message: screenshot capture failed (tablet or phone)
+          severity: high
+version: 1

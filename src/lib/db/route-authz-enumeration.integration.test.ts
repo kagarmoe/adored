@@ -535,10 +535,7 @@ function buildStrangerCases(
     c("sort-results/[id]/route.ts", "GET",
       `/api/sort-results/${sortResultId}`,
       { id: sortResultId }),
-    c("sort-results/[id]/route.ts", "PATCH",
-      `/api/sort-results/${sortResultId}`,
-      { id: sortResultId },
-      { name: "Stranger rename" }),
+    // PATCH removed (purses-w7ss.21): no caller, and it renamed outside the curator lock.
     c("sort-results/[id]/route.ts", "DELETE",
       `/api/sort-results/${sortResultId}`,
       { id: sortResultId }),

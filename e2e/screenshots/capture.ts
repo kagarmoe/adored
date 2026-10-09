@@ -22,6 +22,8 @@ import { CollectionPreferenceItemRepository } from "@/server/repositories/implem
 import { ItemDispositionRepository } from "@/server/repositories/implementations/ItemDispositionRepository";
 import { SessionRepository } from "@/server/repositories/implementations/SessionRepository";
 import { ItemRepository } from "@/server/repositories/implementations/ItemRepository";
+import { PhotoRepository } from "@/server/repositories/implementations/PhotoRepository";
+import { SortResultService } from "@/server/services/SortResultService";
 
 // A real photo so the shots show a real rendered image, not a labeled test card.
 const FIXTURE = "public/onboarding/blue-mixing-bowl.webp";
@@ -43,7 +45,10 @@ const only = process.env.SHOTS?.split(",");
 
 test.beforeAll(async () => {
   ownerId = await seedBaseline();
-  ({ slug, finalizedResultNumber } = await seedSortScenario(ownerId));
+  const sorted = await seedSortScenario(ownerId);
+  ({ slug, finalizedResultNumber } = sorted);
+  // UX redesign PR 5: one hand-placed piece, so the ranking shot shows Unpin (the word, at phone width too).
+  await SortResultService.fromDb(getTestDb().db).pinItem(sorted.collectionId, ownerId, sorted.itemIds[1], 1);
   // A collection with real owner + curator membership rows so the members shot
   // shows the RoleBadge (the baseline seed inserts collections without them).
   ({ slug: membersSlug } = await seedMembersScenario(ownerId));
@@ -76,6 +81,10 @@ test.beforeAll(async () => {
   await new ItemRepository(db).update(waiting.itemIds[0], {
     story:
       "To my niece, who always borrowed it for weekend trips — I hope it carries her somewhere good.",
+  });
+  await new PhotoRepository(db).create({
+    itemId: waiting.itemIds[0], collectionId: waiting.collectionId, blobKey: "e2e-placeholder",
+    filename: "second-look.jpg", mimeType: "image/jpeg", fileSize: 1, uploadedBy: ownerId, isHero: false,
   });
 
   // The Ranking's Set aside group. A 2-item journey where one item carries a
@@ -127,7 +136,7 @@ test.beforeAll(async () => {
 });
 
 for (const theme of ["light", "dark"] as const) {
-  test(`capture ${theme}`, async ({ page }, testInfo) => {
+  test(`capture ${theme}`, async ({ page, browser }, testInfo) => {
     // Seeded PER TEST so each theme's feelings shot starts from an untouched queue.
     const { slug: triageSlug } = await seedJourneyScenario(ownerId, 3);
 
@@ -172,6 +181,7 @@ for (const theme of ["light", "dark"] as const) {
       // PR1a (purses-wew): editable display-name profile (no image — the img
       // wait below just times out harmlessly via .catch).
       ["profile", "/profile"],
+      ["collection-settings", `/collections/${slug}/edit`],
       // The one Sort screen: feelings, a waiting (Not yet) piece, and pairs.
       ["sort-feelings", `/collections/${triageSlug}/sort`],
       ["sort-not-yet", `/collections/${waitingSlug}/sort`],
@@ -194,6 +204,18 @@ for (const theme of ["light", "dark"] as const) {
         .first()
         .waitFor({ state: "visible", timeout: 10_000 })
         .catch(() => {});
+      // next/image tiles are loading="lazy": below the fold on a phone they never request
+      // in a full-page shot. Load them all eagerly and wait until each has painted.
+      await page.evaluate(() => {
+        for (const img of document.images) img.loading = "eager";
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+      await page
+        .waitForFunction(() => [...document.images].every((i) => i.complete && i.naturalWidth > 0), null, {
+          timeout: 10_000,
+        })
+        .catch(() => {});
+      await page.evaluate(() => window.scrollTo(0, 0));
       await page.waitForTimeout(400);
       await page.screenshot({
         path: `pr-screenshots/${name}-${theme}-${proj}.png`,
@@ -203,6 +225,26 @@ for (const theme of ["light", "dark"] as const) {
 
     const shot = (n: string) =>
       page.screenshot({ path: `pr-screenshots/${n}-${theme}-${proj}.png`, fullPage: true });
+
+    if (!only || only.includes("login")) {
+      // Signed out: the login card on the bare ground wash (no session in this context).
+      const anon = await browser.newContext({
+        storageState: { cookies: [], origins: [] },
+        viewport: page.viewportSize() ?? undefined,
+      });
+      const anonPage = await anon.newPage();
+      await anonPage.addInitScript((t) => {
+        try {
+          localStorage.setItem("pi-theme", t);
+        } catch {
+          /* storage blocked — falls back to light, fine */
+        }
+      }, theme);
+      await anonPage.goto("/login");
+      await anonPage.waitForTimeout(400);
+      await anonPage.screenshot({ path: `pr-screenshots/login-${theme}-${proj}.png`, fullPage: true });
+      await anon.close();
+    }
 
     if (!only || only.includes("result-revision-note")) {
       // purses-w7ss.5: the revision note. A hand move on the Ranking pins a piece off
@@ -223,6 +265,17 @@ for (const theme of ["light", "dark"] as const) {
       await page.waitForTimeout(400);
       await shot("result-revision-note");
       await page.getByRole("button", { name: "Keep my ranking" }).click();
+    }
+
+    // UX redesign PR 5: the pool's selection bar (fixed at every width). Viewport-only shot:
+    // a full-page capture paints a fixed bar at the fold (memory phone-fullpage-capture-fixed-bar-artifact).
+    if (!only || only.includes("pool-selected")) {
+      await page.goto(`/collections/${workspacePoolFirstSlug}/pool`);
+      await page.getByRole("img").first().waitFor({ state: "visible", timeout: 10_000 }).catch(() => {});
+      await page.getByRole("button", { name: "pool 1", exact: true }).click();
+      await page.getByRole("button", { name: "pool 2", exact: true }).click();
+      await page.waitForTimeout(400);
+      await page.screenshot({ path: `pr-screenshots/pool-selected-${theme}-${proj}.png` });
     }
 
     if (only && !only.includes("item-delete-confirm")) return;

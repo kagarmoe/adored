@@ -285,6 +285,12 @@ describe("one primary action, in the Next step bar", () => {
 });
 
 describe("header: See your ranking and the ··· menu", () => {
+  it("the home carries no Build / Sort / Decide chips (they live on the section pages)", async () => {
+    itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
+    await renderPage();
+    expect(screen.queryByRole("navigation", { name: "Workspace mode" })).not.toBeInTheDocument();
+  });
+
   it("See your ranking appears once something is placed or a sort finished, not for a fresh open sort", async () => {
     itemRepo.findByCollection.mockResolvedValue([makeItem(1, "Tote")]);
     prefRepo.findByCollection.mockResolvedValue([{ itemId: "item_1", rankBucket: "high" }]);

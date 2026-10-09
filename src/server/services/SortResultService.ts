@@ -1,5 +1,5 @@
 import { randomBytes } from "crypto";
-import type { SortResult, SortResultItem } from "@/types";
+import type { SortResult, SortResultItem, SortResultShare } from "@/types";
 import type { Database } from "@/lib/db";
 import { lockCollectionCurator, lockSaveKey, withTransaction } from "@/lib/transactions";
 import {
@@ -214,6 +214,11 @@ export class SortResultService {
   }
 
   // Invariant: tx-bound repos only — a write on this.sortResultRepo would not roll back.
+  // One multi-row insert under the curator lock (purses-w7ss.23); `slots` pins rows at insert
+  // (a revision's saved loved order — distinct slots, see savedOrderPositions).
+  // ponytail: one createMany binds ~10 params per row, so it breaks past ~6,500 rows (Postgres'
+  // 65,535-param limit) — saveAndShare has the same ceiling; collections are hundreds of pieces.
+  // Chunk the insert if a collection ever nears it.
   private async insertResultWithItems(
     tx: Database,
     collectionId: string,
@@ -221,14 +226,19 @@ export class SortResultService {
     name: string,
     items: MaterializedItem[],
     usageByItemId: ReadonlyMap<string, UsageAnswer>,
+    slots: ReadonlyMap<string, number> = new Map(),
   ): Promise<SortResult> {
     const resultRepo = new SortResultRepository(tx);
-    const itemRepo = new SortResultItemRepository(tx);
     const number = await resultRepo.getNextResultNumber(collectionId);
     const result = await resultRepo.insertWithNumber({ collectionId, curatorId, name, status: "draft", number });
-    for (const item of items) {
-      await itemRepo.create({ sortResultId: result.id, ...item, usage: usageByItemId.get(item.itemId) ?? null });
-    }
+    await new SortResultItemRepository(tx).createMany(
+      items.map((item) => ({
+        sortResultId: result.id,
+        ...item,
+        manualRank: slots.get(item.itemId) ?? null,
+        usage: usageByItemId.get(item.itemId) ?? null,
+      })),
+    );
     return result;
   }
 
@@ -341,10 +351,6 @@ export class SortResultService {
     });
   }
 
-  async getDraftResult(collectionId: string, curatorId: string): Promise<SortResult | null> {
-    return this.sortResultRepo.findDraft(collectionId, curatorId);
-  }
-
   async getResult(id: string): Promise<{ result: SortResult; items: SortResultItem[] } | null> {
     const result = await this.sortResultRepo.findById(id);
     if (!result) return null;
@@ -420,12 +426,8 @@ export class SortResultService {
       }
       await this.deleteDrafts(tx, source.collectionId, source.curatorId);
       const revision = await this.insertResultWithItems(
-        tx, source.collectionId, source.curatorId, `${source.name} (Revision)`, items, usageByItemId,
+        tx, source.collectionId, source.curatorId, `${source.name} (Revision)`, items, usageByItemId, slots,
       );
-      for (const row of await itemRepo.findByResult(revision.id)) {
-        const slot = slots.get(row.itemId);
-        if (slot !== undefined) await itemRepo.update(row.id, { manualRank: slot, manualBucket: null });
-      }
       return { revision };
     });
     if ("pinsLost" in outcome) throw new RevisionDiscardsPinsError(outcome.pinsLost);
@@ -457,6 +459,23 @@ export class SortResultService {
       await new SortResultItemRepository(tx).deleteByResult(id);
       await resultRepo.delete(id);
       return true;
+    });
+  }
+
+  /**
+   * Mint a share link under the result's curator lock (purses-w7ss.18): account deletion, a
+   * collection purge and a draft delete all remove sort_result_shares before sort_results, so a
+   * share inserted in between would 23503 their sort_results delete. The pre-tx read only supplies
+   * the lock key; the row is re-read under the lock, and gone → null (route 404).
+   */
+  async createShare(id: string, expiresAt?: Date): Promise<(SortResultShare & { shareToken: string }) | null> {
+    const owner = await this.sortResultRepo.findById(id);
+    if (!owner) return null;
+    return this.inCuratorTx(owner.collectionId, owner.curatorId, "create_share", async (tx) => {
+      if (!(await new SortResultRepository(tx).findByIdForUpdate(id))) return null;
+      const shareToken = randomBytes(32).toString("hex");
+      const share = await new SortResultShareRepository(tx).create({ sortResultId: id, shareToken, expiresAt });
+      return { ...share, shareToken };
     });
   }
 

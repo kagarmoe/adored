@@ -46,7 +46,7 @@ export default async function SharedResultPage({ params }: SharedResultPageProps
   };
 
   return (
-    <main className="min-h-screen bg-ground px-4 py-6 sm:py-8">
+    <main className="min-h-screen px-4 py-6 sm:py-8">
       <div className="mx-auto max-w-6xl space-y-8">
         <div>
           <div className="mb-3">

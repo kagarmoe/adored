@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db";
 import { decisionEventsTable, itemsTable } from "@/lib/db/schema";
-import { generateOrderedIdFactory } from "@/lib/id";
+import { generateId } from "@/lib/id";
 import { getSession } from "@/lib/auth";
 import { withTransaction, lockCollectionCurator } from "@/lib/transactions";
 import { requireApiCollectionAccess } from "@/server/dal/collection-access";
@@ -144,11 +144,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         );
       const committedKeys = new Set(existingRows.map((r) => r.clientKey));
 
-      // §2.3.4/5 — classify in array order; insert survivors with monotonic
-      // ids (later array entries get strictly greater ids, so at the shared
-      // transaction timestamp the (createdAt, id) comparator resolves in-batch
-      // same-item conflicts to the later entry).
-      const nextId = generateOrderedIdFactory();
+      // §2.3.4/5 — classify in array order; insert survivors with generateId's process-wide monotonic
+      // ids (later array entries get strictly greater ids, so at the shared transaction timestamp the
+      // (createdAt, id) comparator resolves in-batch same-item conflicts to the later entry).
       const seenKeys = new Set<string>();
       const insertedTriagedItemIds = new Set<string>();
       // §2.4 (Epic R) — count only inserted SCORING entries (triage/compare, not
@@ -175,7 +173,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         const inserted = await tx
           .insert(decisionEventsTable)
           .values({
-            id: nextId(),
+            id: generateId("event"),
             sessionId: id,
             type: entry.type,
             decision: entry.decision,
