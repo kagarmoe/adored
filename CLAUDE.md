@@ -73,17 +73,19 @@ bd close <id>         # Complete work
 
 **Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
 
-## Agent Modes
+## Agent Models
 
-Agents and subagents MUST use one of these models:
+Match model strength to the task. Running the largest model on every subagent was this repo's
+biggest token cost; reserve it for judgment.
 
-Anthropic/Claude:
-  model: Opus 4.8
-  effort: ultracode
+| Task | Claude (subagent `model:`) | Codex (reasoning effort) |
+|---|---|---|
+| Judgment: adversarial-review personas, spec review, architecture decisions, systematic-debugging of non-obvious bugs | `opus` | `high` |
+| Executing a written plan step, writing tests to a spec, routine edits | `sonnet` | `medium` |
+| Searches and read-only sweeps | `haiku` (or the Explore agent) | `low` |
 
-OpenAI/Codex:
-  model: gpt-5.5
-  effort: "xhigh"
+- If a task fits no row, don't set a model — let the agent type use its own default.
+- Use aliases (`opus`, `sonnet`, `haiku`), never pinned versions, so this stays current.
 
 ## Agent Context Profiles
 
@@ -118,21 +120,13 @@ This protocol applies when ending a Beads implementation workflow. It is subordi
 - If a required sync or push is blocked, stop and report the exact command and error.
 <!-- END BEADS INTEGRATION -->
 
-**Definition of done for beads**
-- An epic is not complete until all follow-up beads are complete.
-- When working outside of an epic, an issue is not complete until all follow-up beads are complete.
+**Profile: Team-maintainer.** This repository opts in: agents may commit, push, open PRs, merge, and
+run `/close-out` when finishing a branch, unless the user says otherwise.
 
 ## Build & Test
 
-Gates (CI runs all five; the pre-push hook mirrors lint + test:ci + build):
-
-```bash
-npm run build         # next build
-npm run test:ci       # unit tests
-npm run lint          # eslint
-npm run auth:verify   # auth wiring check
-npm run test:db       # DB-backed tests (Docker; RUN_DB_TESTS=1)
-```
+CI runs lint, test:ci, build, auth:verify, and test:db (Docker; `RUN_DB_TESTS=1`); the pre-push hook
+mirrors lint + test:ci + build.
 
 **Local pre-PR verification is mandatory.** CI minutes are scarce; CI should confirm local evidence,
 not discover predictable failures. Before opening or updating a PR, run the complete local gate set
@@ -169,7 +163,7 @@ Next.js is opinionated. Follow its conventions, not workarounds:
 3. **Data fetching in Server Components** — Async functions in Server Components, never in Client Components
 4. **API Routes for mutations** — All POST/PATCH/DELETE via `src/app/api/` routes, no direct DB calls from client
 5. **Native fetch()** — No SWR/React Query; use `fetch()` with error handling
-6. **NextAuth v4 integration** — Follow canonical patterns: DrizzleAdapter, JWT strategy, session callbacks
+6. **better-auth integration** — Server config in `src/lib/auth.ts` / `src/lib/auth-server.ts`, client in `src/lib/auth-client.ts`, handler at `src/app/api/auth/[...all]`; follow those patterns
 7. **Proxy for route protection** — optimistic login redirect in `src/proxy.ts` (Next 16 convention; was middleware.ts); real authz lives in the DAL guards
 8. **Suspense for async UI** — Stream loading states with React Suspense
 9. **No hardcoded secrets** — All config via `process.env.*` with validation at module load
@@ -179,10 +173,10 @@ Next.js is opinionated. Follow its conventions, not workarounds:
 
 - **Comments on WHY only** — Code is self-documenting via naming
 - **No premature abstraction** — Three lines before helper; DRY within reason
-- **Validate at boundaries** — *input validation*, not test scope: re-check untrusted data (user input, external APIs) at the edge; don't re-validate trusted internal call results. Testing is separate and broad — see Workflow gates.
+- **Validate at boundaries** — *input validation*, not test scope: re-check untrusted data (user input, external APIs) at the edge; don't re-validate trusted internal call results. Testing is separate and broad — see Build & Test.
 - **Follow auth patterns** — API routes, error responses, validation precedent already set
 
-## Workflow
+## Development process
 
 Use the **superpowers** skills for all substantive work, in this order — each arrow is a gate, don't
 skip ahead. Track work in **beads** (`bd`), never TodoWrite.
@@ -204,10 +198,6 @@ skip ahead. Track work in **beads** (`bd`), never TodoWrite.
    evidence (the command + its output), never assertion.
 7. **`superpowers:finishing-a-development-branch`** to merge/PR/clean up — don't hand-roll it.
 
-**Reviews always call the adversarial-review personas** — spec (step 2), per-task, and whole-branch.
-Generic review rubber-stamps; scale the persona set to what changed (lens→engine table under
-*Conventions & Patterns*). The spec review is the first review of every effort.
-
 **Git discipline:**
 - **Branch:** feature branch off `main` → PR → squash-merge → Vercel auto-deploys prod. Never commit
   directly to `main`.
@@ -215,6 +205,9 @@ Generic review rubber-stamps; scale the persona set to what changed (lens→engi
   agent's uncommitted changes. For substantial/parallel work, branch into your own git worktree (or
   `EnterWorktree`); never switch branches with uncommitted changes (commit or stash first).
 - **Commit:** frequent, one logical change per commit; don't park work only in the working tree.
+- **Commit and PR style:** Conventional Commits (`type(scope): summary`) for commits and PR titles.
+  Write messages and PR bodies in Simplified Technical English (STE): short sentences, active voice,
+  one idea per sentence. Be brief.
 
 ## PR lifecycle automation
 
@@ -260,7 +253,8 @@ matches what changed:
 | **UX** | rendered UI, interaction, accessibility | `src/app/**/*.tsx` (view/page components) |
 | **QA/Test** | new/changed behavior — and proof the test runs in CI | `**/*.test.ts`, `**/*.spec.ts`, `.github/**` |
 
-The skill and its engines are global (personal `~/.claude/skills/`), so there's no per-repo setup.
+`adversarial-review`, `system-design-review`, and `postgres-review` are personal global skills;
+`ponytail` is a plugin. No per-repo setup.
 
 **Testing:** DB-backed tests live in `src/lib/db/` behind `RUN_DB_TESTS=1`; they run serially in CI
 via the `db-tests` job and locally via `npm run test:db`. A change with new tests must prove the
@@ -279,7 +273,8 @@ carousel beside editable details, filters, overflow menus. The purpose is **real
 most** (affirmation), not culling; prefer "which would you reach for first?" over "keep or toss?".
 Gentle, reversible, photo-first. One decision in focus at a time. Still off the table: gamification
 (confetti/streaks/scores), shaming metrics ("too many"), and shopping language (buy/cart/offer/price).
-Tablet-first, phone-ready; taps primary, swipe fine where native (carousels). WCAG 2.1 AA.
+Tablet-first, phone-ready; taps primary, swipe fine where native (carousels, dismiss), drag where it
+helps (reordering, moving items between buckets). Touch targets ≥44px (`h-11`). WCAG 2.1 AA.
 
 The `/impeccable` skill (and its sub-commands) reads `PRODUCT.md` automatically. The visual system is
 defined in [`DESIGN.md`](DESIGN.md) — palette, type, elevation, components — and follows `TONE.md`.
@@ -292,11 +287,8 @@ Deviate whenever a better flow serves the user — the governing authorities are
 [`PRODUCT.md`](PRODUCT.md) (purpose) and [`TONE.md`](TONE.md) (feel),
 **not** the wireframes. When a wireframe and a better flow conflict, choose the better flow.
 
-**Durable interaction principles (these hold regardless of any wireframe):**
-
-- **Tablet-first, tap-first** — taps are the primary affordance; swipe where it is native (photo
-  carousels, dismiss); drag where it helps (reordering, moving items between buckets). Touch targets ≥44px (h-11).
-- **Navigation** — top-left back arrow + breadcrumb; top-right user area.
+**Durable navigation (holds regardless of any wireframe):** top-left back arrow + breadcrumb;
+top-right user area. Interaction principles are under Design Context.
 
 The wireframes per-screen layouts (collections grid, item grid, card-based sorting, bucketed results)
 are useful reference, but the **flow may change** — e.g. uploading photos before metadata, deferring
@@ -308,6 +300,5 @@ This project has a knowledge graph at graphify-out/ with god nodes, community st
 
 Rules:
 - For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+- Refresh the committed graph with `/graphify --update` before pushing (see PR lifecycle).
