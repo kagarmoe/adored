@@ -2,7 +2,7 @@ id: 774ddd99-e94f-49c5-8664-a61ca02e025e
 name: adored-pre-pr
 description: >-
   The local pre-PR gate (CLAUDE.md "Local pre-PR verification"): lint, auth:verify,
-  unit tests with coverage, build, swamp-extension type-check and tests, DB tests, the full tablet e2e suite, optional
+  unit tests with coverage, build, swamp-extension type-check and tests, DB tests (when DB-relevant files changed), the full tablet e2e suite, optional
   phone specs and optional screenshots. Every gate records its exit code as data;
   the verdict job's asserts fail the run and name every failing gate.
 tags:
@@ -25,7 +25,8 @@ jobs:
   - name: gates
     description: >-
       Every gate on the test-suite model runs in sequence: one fan-out gate call (lint,
-      auth:verify, build, test:db), then unit coverage. Steps on one model share swamp's
+      auth:verify, build, test:db:changed — test:db only if DB-relevant files changed),
+      then unit coverage. Steps on one model share swamp's
       per-model lock, so parallel steps here would time out waiting for it.
     steps:
       - name: gates
@@ -34,7 +35,7 @@ jobs:
           modelIdOrName: adored-tests
           methodName: gate
           inputs:
-            scripts: ["lint", "auth:verify", "build", "test:db"]
+            scripts: ["lint", "auth:verify", "build", "test:db:changed"]
       - name: unit
         dependsOn:
           - step: gates
@@ -156,8 +157,8 @@ jobs:
       - name: test-db-passed
         task:
           type: assert
-          expr: data.latest("adored-tests", "gate-test-db").attributes.exitCode == 0
-          message: test:db failed (exit ${{ data.latest("adored-tests", "gate-test-db").attributes.exitCode }})
+          expr: data.latest("adored-tests", "gate-test-db-changed").attributes.exitCode == 0
+          message: test:db:changed failed (exit ${{ data.latest("adored-tests", "gate-test-db-changed").attributes.exitCode }})
           severity: high
       - name: e2e-tablet-passed
         task:

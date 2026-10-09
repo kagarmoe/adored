@@ -132,6 +132,7 @@ npm run test:ci       # unit tests
 npm run lint          # eslint
 npm run auth:verify   # auth wiring check
 npm run test:db       # DB-backed tests (Docker; RUN_DB_TESTS=1)
+npm run test:db:changed  # test:db only if DB-relevant files changed vs origin/main
 ```
 
 **Local pre-PR verification is mandatory.** CI minutes are scarce; CI should confirm local evidence,
@@ -146,12 +147,13 @@ swamp workflow run adored-pre-pr --input "phoneSpecs=e2e/<spec>.spec.ts" --input
 ```
 
 It runs lint, auth:verify, unit (coverage), build, the swamp-extension Deno type-check and tests,
-test:db, the full tablet e2e suite, then the phone specs and screenshots you pass (empty = skipped).
+test:db:changed (skips when no file in `.github/db-test-paths.json` changed), the full tablet e2e suite, then the phone specs and screenshots you pass (empty = skipped).
 Per-gate results: `swamp data query 'modelName == "adored-tests"' --json`. The individual commands:
 
 - **Every code PR:** `npm run lint`, `npm run test:ci`, and `npm run build`.
 - **Auth/session/proxy/env changes:** also run `npm run auth:verify`.
-- **DB/schema/repository/service/API persistence changes:** also run `npm run test:db`.
+- **DB/schema/repository/service/API persistence changes:** also run `npm run test:db` (or
+  `npm run test:db:changed`, which skips when no DB-relevant path changed).
 - **UI, page, route-flow, onboarding/tutorial, copy, responsive, or interaction changes:** run the
   mapped Playwright spec(s) locally, for example
   `npm run test:e2e -- e2e/welcome-walkthrough.spec.ts --project=tablet`.
@@ -263,7 +265,9 @@ matches what changed:
 The skill and its engines are global (personal `~/.claude/skills/`), so there's no per-repo setup.
 
 **Testing:** DB-backed tests live in `src/lib/db/` behind `RUN_DB_TESTS=1`; they run serially in CI
-via the `db-tests` job and locally via `npm run test:db`. A change with new tests must prove the
+via the `db-tests` job and locally via `npm run test:db`. Both CI and `test:db:changed` run them only
+when a path in `.github/db-test-paths.json` changed; `scripts/test-db-if-changed.test.ts` fails if
+the suite's imports (pages' UI imports excluded) escape that list; CI always runs them on a push to `main`. A change with new tests must prove the
 important ones execute in CI, and that at least one test crosses the real layers un-mocked.
 
 ## Design Context

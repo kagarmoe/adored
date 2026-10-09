@@ -338,7 +338,11 @@ auto-included.
 In CI these run in a dedicated **`db-tests` job** against a `postgres:16` **service container** on `:5432`
 (`.github/workflows/ci.yml:96`, env at `:122`), with the same `--no-file-parallelism` invocation
 (`ci.yml:135`). `auth:verify` runs in this job too, because it queries the live auth tables and the DB-less
-`gate` job cannot.
+`gate` job cannot. The job runs only when the change touches a path in **`.github/db-test-paths.json`**
+(the `changes` job's `dbfilter` step). `npm run test:db:changed` applies the same list locally against
+`origin/main`, and `scripts/test-db-if-changed.test.ts` bundles the suite (plus every route and the CI
+DB-job scripts) and fails if any loaded file falls outside the list. Components/features that pages
+render are excluded by design; the job always runs on a push to `main` as the backstop.
 
 **E2E** — its own **ephemeral Postgres**, never Neon. `e2e/fixtures/test-db.sh` runs a disposable
 `postgres:16` container named **`pi-e2e-db`** on a **fixed port `5433`** (5433 avoids clashing with a local
