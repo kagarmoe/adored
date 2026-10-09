@@ -27,23 +27,15 @@ git status --short --branch
 
 - Track work in Beads (`bd`), not ad hoc TODO files.
 - For substantive work, follow the Superpowers workflow described in `CLAUDE.md`: spec, review, plan, implementation, review, verification.
+- Pick model strength / reasoning effort per task using the **Agent Models** table in `CLAUDE.md` (high effort only for review, architecture, and hard debugging).
 - Prefer the repo's existing patterns over new abstractions.
 - Preserve unrelated local changes. Do not reset or revert user work unless explicitly asked.
-- Create a feature branch off `main` for code or docs changes. Do not push unless asked.
+- Create a feature branch off `main` for code or docs changes. This repo uses the Team-maintainer git profile (commit, push, PR, merge); see `CLAUDE.md`.
+- Commits and PRs: Conventional Commits, written in Simplified Technical English (STE). Be brief.
 
 ## Verification
 
-Use the gates in `CLAUDE.md` for the level of change:
-
-```bash
-npm run lint
-npm run test:ci
-npm run build
-npm run auth:verify
-npm run test:db
-```
-
-For docs-only changes, run the smallest meaningful checks and report what was not run. Before pushing a PR branch, follow the repo's doc-sync and graphify guidance in `CLAUDE.md`.
+Run the gates in `CLAUDE.md` → Build & Test for the level of change. For docs-only changes, run the smallest meaningful checks and report what was not run. Before pushing, follow the doc-sync and graphify steps in `CLAUDE.md` → PR lifecycle.
 
 ## Keep This File Small
 
