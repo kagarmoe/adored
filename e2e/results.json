@@ -18,27 +18,28 @@
     "maxFailures": 0,
     "metadata": {
       "ci": {
-        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-        "commitHash": "74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37989872494"
+        "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+        "commitHash": "8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+        "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37997057540"
       },
       "gitCommit": {
-        "shortHash": "74d6fef",
-        "hash": "74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-        "subject": "chore(claude): fire graphify nudge once per session, not every tool call (#383)",
-        "body": "chore(claude): fire graphify nudge once per session, not every tool call (#383)\n\n* chore(claude): fire graphify nudge once per session, not every tool call\n\nThe PreToolUse graphify hooks re-injected a \"MANDATORY\" reminder before\nevery grep/find Bash call and every source Read/Glob — hundreds of times\nper long session. Move the logic into .claude/hooks/graphify-nudge.py and\ngate it on a per-session marker so it fires once; CLAUDE.md already\ncarries the standing graphify rule.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01SiBhtPWxPUUSCw2ZgZWZhC\n\n* fix(deps): update source-map-js to 1.2.2\n\nRemove vulnerability GHSA-68fv-2mgg-jv7q (high).\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n* chore(deps): update packages in semver range\n\nSet the postcss pin in overrides.test.ts to 8.5.29.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+        "shortHash": "8c7062f",
+        "hash": "8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+        "subject": "ci: run DB tests only when DB-relevant files change (#386)",
+        "body": "ci: run DB tests only when DB-relevant files change (#386)\n\n* ci: run DB tests only when DB-relevant files change\n\nGate the db-tests job on paths in .github/db-test-paths.json. Run it\non every push to main. Add npm run test:db:changed for local runs and\nthe adored-pre-pr workflow. Add a test that fails when the DB suite\nloads a file outside the list. Remove the unused code filter.\n\nCloses purses-z4ii.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n* ci: lint only Markdown for docs and config changes\n\nSkip eslint, unit tests and build in CI and pre-push when every\nchanged file is docs, agent config or git config. List the paths in\n.github/code-paths.json. Run markdownlint-cli2 with broken-Markdown\nrules on every change. Pin katex and smol-toml to patched versions.\n\nCloses purses-ihod.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
         "author": {
           "name": "Kimberly Garmoe",
           "email": "kagarmoe@gmail.com",
-          "time": 1791579145000
+          "time": 1791583388000
         },
         "committer": {
           "name": "GitHub",
           "email": "noreply@github.com",
-          "time": 1791579145000
+          "time": 1791583388000
         },
         "branch": "main"
-      }
+      },
+      "actualWorkers": 1
     },
     "preserveOutput": "always",
     "projects": [
@@ -48,27 +49,28 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "commitHash": "74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37989872494"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "commitHash": "8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37997057540"
           },
           "gitCommit": {
-            "shortHash": "74d6fef",
-            "hash": "74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "subject": "chore(claude): fire graphify nudge once per session, not every tool call (#383)",
-            "body": "chore(claude): fire graphify nudge once per session, not every tool call (#383)\n\n* chore(claude): fire graphify nudge once per session, not every tool call\n\nThe PreToolUse graphify hooks re-injected a \"MANDATORY\" reminder before\nevery grep/find Bash call and every source Read/Glob — hundreds of times\nper long session. Move the logic into .claude/hooks/graphify-nudge.py and\ngate it on a per-session marker so it fires once; CLAUDE.md already\ncarries the standing graphify rule.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01SiBhtPWxPUUSCw2ZgZWZhC\n\n* fix(deps): update source-map-js to 1.2.2\n\nRemove vulnerability GHSA-68fv-2mgg-jv7q (high).\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n* chore(deps): update packages in semver range\n\nSet the postcss pin in overrides.test.ts to 8.5.29.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+            "shortHash": "8c7062f",
+            "hash": "8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "subject": "ci: run DB tests only when DB-relevant files change (#386)",
+            "body": "ci: run DB tests only when DB-relevant files change (#386)\n\n* ci: run DB tests only when DB-relevant files change\n\nGate the db-tests job on paths in .github/db-test-paths.json. Run it\non every push to main. Add npm run test:db:changed for local runs and\nthe adored-pre-pr workflow. Add a test that fails when the DB suite\nloads a file outside the list. Remove the unused code filter.\n\nCloses purses-z4ii.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n* ci: lint only Markdown for docs and config changes\n\nSkip eslint, unit tests and build in CI and pre-push when every\nchanged file is docs, agent config or git config. List the paths in\n.github/code-paths.json. Run markdownlint-cli2 with broken-Markdown\nrules on every change. Pin katex and smol-toml to patched versions.\n\nCloses purses-ihod.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1791579145000
+              "time": 1791583388000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1791579145000
+              "time": 1791583388000
             },
             "branch": "main"
-          }
+          },
+          "actualWorkers": 1
         },
         "id": "setup",
         "name": "setup",
@@ -85,27 +87,28 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "commitHash": "74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37989872494"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "commitHash": "8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37997057540"
           },
           "gitCommit": {
-            "shortHash": "74d6fef",
-            "hash": "74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "subject": "chore(claude): fire graphify nudge once per session, not every tool call (#383)",
-            "body": "chore(claude): fire graphify nudge once per session, not every tool call (#383)\n\n* chore(claude): fire graphify nudge once per session, not every tool call\n\nThe PreToolUse graphify hooks re-injected a \"MANDATORY\" reminder before\nevery grep/find Bash call and every source Read/Glob — hundreds of times\nper long session. Move the logic into .claude/hooks/graphify-nudge.py and\ngate it on a per-session marker so it fires once; CLAUDE.md already\ncarries the standing graphify rule.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01SiBhtPWxPUUSCw2ZgZWZhC\n\n* fix(deps): update source-map-js to 1.2.2\n\nRemove vulnerability GHSA-68fv-2mgg-jv7q (high).\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n* chore(deps): update packages in semver range\n\nSet the postcss pin in overrides.test.ts to 8.5.29.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+            "shortHash": "8c7062f",
+            "hash": "8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "subject": "ci: run DB tests only when DB-relevant files change (#386)",
+            "body": "ci: run DB tests only when DB-relevant files change (#386)\n\n* ci: run DB tests only when DB-relevant files change\n\nGate the db-tests job on paths in .github/db-test-paths.json. Run it\non every push to main. Add npm run test:db:changed for local runs and\nthe adored-pre-pr workflow. Add a test that fails when the DB suite\nloads a file outside the list. Remove the unused code filter.\n\nCloses purses-z4ii.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n* ci: lint only Markdown for docs and config changes\n\nSkip eslint, unit tests and build in CI and pre-push when every\nchanged file is docs, agent config or git config. List the paths in\n.github/code-paths.json. Run markdownlint-cli2 with broken-Markdown\nrules on every change. Pin katex and smol-toml to patched versions.\n\nCloses purses-ihod.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1791579145000
+              "time": 1791583388000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1791579145000
+              "time": 1791583388000
             },
             "branch": "main"
-          }
+          },
+          "actualWorkers": 1
         },
         "id": "tablet",
         "name": "tablet",
@@ -128,27 +131,28 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "commitHash": "74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37989872494"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "commitHash": "8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37997057540"
           },
           "gitCommit": {
-            "shortHash": "74d6fef",
-            "hash": "74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "subject": "chore(claude): fire graphify nudge once per session, not every tool call (#383)",
-            "body": "chore(claude): fire graphify nudge once per session, not every tool call (#383)\n\n* chore(claude): fire graphify nudge once per session, not every tool call\n\nThe PreToolUse graphify hooks re-injected a \"MANDATORY\" reminder before\nevery grep/find Bash call and every source Read/Glob — hundreds of times\nper long session. Move the logic into .claude/hooks/graphify-nudge.py and\ngate it on a per-session marker so it fires once; CLAUDE.md already\ncarries the standing graphify rule.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01SiBhtPWxPUUSCw2ZgZWZhC\n\n* fix(deps): update source-map-js to 1.2.2\n\nRemove vulnerability GHSA-68fv-2mgg-jv7q (high).\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n* chore(deps): update packages in semver range\n\nSet the postcss pin in overrides.test.ts to 8.5.29.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+            "shortHash": "8c7062f",
+            "hash": "8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "subject": "ci: run DB tests only when DB-relevant files change (#386)",
+            "body": "ci: run DB tests only when DB-relevant files change (#386)\n\n* ci: run DB tests only when DB-relevant files change\n\nGate the db-tests job on paths in .github/db-test-paths.json. Run it\non every push to main. Add npm run test:db:changed for local runs and\nthe adored-pre-pr workflow. Add a test that fails when the DB suite\nloads a file outside the list. Remove the unused code filter.\n\nCloses purses-z4ii.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n* ci: lint only Markdown for docs and config changes\n\nSkip eslint, unit tests and build in CI and pre-push when every\nchanged file is docs, agent config or git config. List the paths in\n.github/code-paths.json. Run markdownlint-cli2 with broken-Markdown\nrules on every change. Pin katex and smol-toml to patched versions.\n\nCloses purses-ihod.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1791579145000
+              "time": 1791583388000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1791579145000
+              "time": 1791583388000
             },
             "branch": "main"
-          }
+          },
+          "actualWorkers": 1
         },
         "name": "setup",
         "testDir": "/home/runner/work/purseinator-app/purseinator-app/e2e",
@@ -173,27 +177,28 @@
         "retries": 2,
         "metadata": {
           "ci": {
-            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "commitHash": "74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37989872494"
+            "commitHref": "https://github.com/kagarmoe/purseinator-app/commit/8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "commitHash": "8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "buildHref": "https://github.com/kagarmoe/purseinator-app/actions/runs/37997057540"
           },
           "gitCommit": {
-            "shortHash": "74d6fef",
-            "hash": "74d6fef68e509e363b0db8db437ac4d8948ecf1f",
-            "subject": "chore(claude): fire graphify nudge once per session, not every tool call (#383)",
-            "body": "chore(claude): fire graphify nudge once per session, not every tool call (#383)\n\n* chore(claude): fire graphify nudge once per session, not every tool call\n\nThe PreToolUse graphify hooks re-injected a \"MANDATORY\" reminder before\nevery grep/find Bash call and every source Read/Glob — hundreds of times\nper long session. Move the logic into .claude/hooks/graphify-nudge.py and\ngate it on a per-session marker so it fires once; CLAUDE.md already\ncarries the standing graphify rule.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01SiBhtPWxPUUSCw2ZgZWZhC\n\n* fix(deps): update source-map-js to 1.2.2\n\nRemove vulnerability GHSA-68fv-2mgg-jv7q (high).\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n* chore(deps): update packages in semver range\n\nSet the postcss pin in overrides.test.ts to 8.5.29.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+            "shortHash": "8c7062f",
+            "hash": "8c7062fc9ebfc2a8f28eecba301a8ecb9fba8f81",
+            "subject": "ci: run DB tests only when DB-relevant files change (#386)",
+            "body": "ci: run DB tests only when DB-relevant files change (#386)\n\n* ci: run DB tests only when DB-relevant files change\n\nGate the db-tests job on paths in .github/db-test-paths.json. Run it\non every push to main. Add npm run test:db:changed for local runs and\nthe adored-pre-pr workflow. Add a test that fails when the DB suite\nloads a file outside the list. Remove the unused code filter.\n\nCloses purses-z4ii.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n* ci: lint only Markdown for docs and config changes\n\nSkip eslint, unit tests and build in CI and pre-push when every\nchanged file is docs, agent config or git config. List the paths in\n.github/code-paths.json. Run markdownlint-cli2 with broken-Markdown\nrules on every change. Pin katex and smol-toml to patched versions.\n\nCloses purses-ihod.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01M9e6kZgVnq963dQEsp1zdK\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
             "author": {
               "name": "Kimberly Garmoe",
               "email": "kagarmoe@gmail.com",
-              "time": 1791579145000
+              "time": 1791583388000
             },
             "committer": {
               "name": "GitHub",
               "email": "noreply@github.com",
-              "time": 1791579145000
+              "time": 1791583388000
             },
             "branch": "main"
-          }
+          },
+          "actualWorkers": 1
         },
         "name": "tablet",
         "testDir": "/home/runner/work/purseinator-app/purseinator-app/e2e",
@@ -265,17 +270,1786 @@
       }
     }
   },
-  "suites": [],
-  "errors": [
+  "suites": [
     {
-      "message": "Error: Command failed: bash /home/runner/work/purseinator-app/purseinator-app/e2e/fixtures/test-db.sh reset\nUnable to find image 'postgres:16' locally\ndocker: Error response from daemon: toomanyrequests: You have reached your unauthenticated pull rate limit. https://www.docker.com/increase-rate-limit\n\nRun 'docker run --help' for more information\n",
-      "stack": "Error: Command failed: bash /home/runner/work/purseinator-app/purseinator-app/e2e/fixtures/test-db.sh reset\nUnable to find image 'postgres:16' locally\ndocker: Error response from daemon: toomanyrequests: You have reached your unauthenticated pull rate limit. https://www.docker.com/increase-rate-limit\n\nRun 'docker run --help' for more information\n"
+      "title": "auth.setup.ts",
+      "file": "auth.setup.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "authenticate",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "setup",
+              "projectName": "setup",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 296,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:05:38.525Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "17e3fe6f4d9d8bd79c6b-60f085b113a677673906",
+          "file": "auth.setup.ts",
+          "line": 57,
+          "column": 6
+        }
+      ]
+    },
+    {
+      "title": "a11y.spec.ts",
+      "file": "a11y.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "a11y: core authed screens — no serious/critical violations (light)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 19834,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[a11y] collections/light: 26 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] collection-workspace/light: 27 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] home-archived/light: 25 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] collections-archived/light: 25 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] item-detail/light: 27 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] ranking/light: 24 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] saved-ranking/light: 22 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] members/light: 25 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] profile/light: 24 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] sort/light: 21 checks passed, 0 violation(s)\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:05:39.441Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "aa3ad05f8c0e05077efb-c8daa9c4b45c7d0f643f",
+          "file": "a11y.spec.ts",
+          "line": 93,
+          "column": 7
+        },
+        {
+          "title": "a11y: core authed screens — no serious/critical violations (dark)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 14339,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[a11y] collections/dark: 26 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] collection-workspace/dark: 27 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] home-archived/dark: 25 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] collections-archived/dark: 25 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] item-detail/dark: 27 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] ranking/dark: 24 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] saved-ranking/dark: 22 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] members/dark: 25 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] profile/dark: 24 checks passed, 0 violation(s)\n"
+                    },
+                    {
+                      "text": "[a11y] sort/dark: 21 checks passed, 0 violation(s)\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:00.150Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "aa3ad05f8c0e05077efb-662e3664f9f772bdb673",
+          "file": "a11y.spec.ts",
+          "line": 93,
+          "column": 7
+        },
+        {
+          "title": "a11y: unauthenticated login — no serious/critical violations (light)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1961,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[a11y] login/light: 17 checks passed, 0 violation(s)\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:14.508Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "aa3ad05f8c0e05077efb-e4dd77b7eeac3ab31464",
+          "file": "a11y.spec.ts",
+          "line": 136,
+          "column": 7
+        },
+        {
+          "title": "a11y: unauthenticated login — no serious/critical violations (dark)",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1673,
+                  "errors": [],
+                  "stdout": [
+                    {
+                      "text": "[a11y] login/dark: 17 checks passed, 0 violation(s)\n"
+                    }
+                  ],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:16.488Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "aa3ad05f8c0e05077efb-a92bbce8d7ae6ee22f51",
+          "file": "a11y.spec.ts",
+          "line": 136,
+          "column": 7
+        }
+      ]
+    },
+    {
+      "title": "auth-navigation.spec.ts",
+      "file": "auth-navigation.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "authenticated storageState reaches /collections",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1354,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:18.189Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b1138252f0945470f4d3-8ed9137cfee9fae7bdf1",
+          "file": "auth-navigation.spec.ts",
+          "line": 19,
+          "column": 5
+        },
+        {
+          "title": "authenticated storageState survives a fresh protected navigation",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1395,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:19.566Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "b1138252f0945470f4d3-2cde40aea05e0260d6be",
+          "file": "auth-navigation.spec.ts",
+          "line": 25,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "auth.spec.ts",
+      "file": "auth.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "login offers Google only and starts without a session",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1168,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:20.991Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-fe2ba680abebd63db5e6",
+          "file": "auth.spec.ts",
+          "line": 6,
+          "column": 5
+        },
+        {
+          "title": "/signup redirects to /login",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1204,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:22.176Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "d748ac400d08b85935ef-5c11a9bc8d12df6daac2",
+          "file": "auth.spec.ts",
+          "line": 17,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "decision-recovery.spec.ts",
+      "file": "decision-recovery.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "decision queue — crash and unload recovery",
+          "file": "decision-recovery.spec.ts",
+          "line": 37,
+          "column": 6,
+          "specs": [
+            {
+              "title": "crash-reload: the gate drains queued answers in order before the screen renders",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3536,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:06:23.408Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d16123381cc8822176c0-902a211412f6a6e55f96",
+              "file": "decision-recovery.spec.ts",
+              "line": 42,
+              "column": 7
+            },
+            {
+              "title": "pagehide: a still-queued answer is delivered on unload and persists",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2264,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:06:26.967Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "d16123381cc8822176c0-6996234d5f466759bdc4",
+              "file": "decision-recovery.spec.ts",
+              "line": 82,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "delete-collection.spec.ts",
+      "file": "delete-collection.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "delete a collection",
+          "file": "delete-collection.spec.ts",
+          "line": 7,
+          "column": 6,
+          "specs": [
+            {
+              "title": "owner types the name to permanently delete, then lands on /collections",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2435,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:06:29.258Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b4d359e9405cf2cbd405-9ac7b395acf7f708c441",
+              "file": "delete-collection.spec.ts",
+              "line": 17,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "image-perf.spec.ts",
+      "file": "image-perf.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "per-surface image widths",
+          "file": "image-perf.spec.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "the home grid requests the resized card width (w=640)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1339,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:06:31.750Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af38cfc44e4f9b50eb98-4cb8cc330b189b4cb57e",
+              "file": "image-perf.spec.ts",
+              "line": 20,
+              "column": 7
+            },
+            {
+              "title": "the item-detail hero requests the large width (w=1280)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1349,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:06:33.144Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "af38cfc44e4f9b50eb98-8e3cc0f8c310195e787f",
+              "file": "image-perf.spec.ts",
+              "line": 29,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "item-panel.spec.ts",
+      "file": "item-panel.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "item panel journey",
+          "file": "item-panel.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "view, rotate, cover, delete a photo, edit, choose, archive, bring back",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 90000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10183,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:06:34.528Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "b2ee760dc8e91c5c4388-7ce4d1e52da2c2edd24a",
+              "file": "item-panel.spec.ts",
+              "line": 39,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "item-removal.spec.ts",
+      "file": "item-removal.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "item removal workflow (purge + remove-from-sorts) — purses-u3p",
+          "file": "item-removal.spec.ts",
+          "line": 64,
+          "column": 6,
+          "specs": [
+            {
+              "title": "(1) un-block → purge chain: 409 → remove-from-sorts → purge → gone",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 213,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:06:44.791Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "241066be453527c2ea91-7d08dc0aad17f781577f",
+              "file": "item-removal.spec.ts",
+              "line": 69,
+              "column": 7
+            },
+            {
+              "title": "(2) finalized dead-end: remove-from-sorts leaves 1 finalized, purge stays 409",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 70,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:06:45.017Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "241066be453527c2ea91-9f3fa1d6e9bbd15aefed",
+              "file": "item-removal.spec.ts",
+              "line": 110,
+              "column": 7
+            },
+            {
+              "title": "(3) authz: a non-owner is 403 on BOTH ops; item + results survive",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 53,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:06:45.094Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "241066be453527c2ea91-658a379b1b7048509c89",
+              "file": "item-removal.spec.ts",
+              "line": 136,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "layout.spec.ts",
+      "file": "layout.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "login page fits the viewport and has tap-sized controls",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 979,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:45.166Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f98fd8c8d1538f5ebbb-328c5ef9ece0935c24d9",
+          "file": "layout.spec.ts",
+          "line": 20,
+          "column": 5
+        },
+        {
+          "title": "collections page renders the grid without overflow when authenticated",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1319,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:46.188Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "9f98fd8c8d1538f5ebbb-3d79aa2a02cf6674e064",
+          "file": "layout.spec.ts",
+          "line": 48,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "lists-and-home.spec.ts",
+      "file": "lists-and-home.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "collections: search, archive with Undo, Archived, Bring back",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5026,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:47.543Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-0b3089ab93f11df17bb0",
+          "file": "lists-and-home.spec.ts",
+          "line": 73,
+          "column": 5
+        },
+        {
+          "title": "home: the items grid with Start sorting and Add photos beside it",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2584,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:52.792Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-f21149e85157e10e414c",
+          "file": "lists-and-home.spec.ts",
+          "line": 115,
+          "column": 5
+        },
+        {
+          "title": "home before items: Make items leads when photos wait",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1788,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:55.396Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-aa5add2b6a0a70dca1bb",
+          "file": "lists-and-home.spec.ts",
+          "line": 135,
+          "column": 5
+        },
+        {
+          "title": "phone: with a ranking, the link is hidden so a card row stays above the bar",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1455,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:57.199Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-aa22dce888a71b9022c4",
+          "file": "lists-and-home.spec.ts",
+          "line": 144,
+          "column": 5
+        },
+        {
+          "title": "phone: the bar is pinned to the bottom and never hides the last row",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2098,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:06:58.670Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-86acc525d43969331c40",
+          "file": "lists-and-home.spec.ts",
+          "line": 157,
+          "column": 5
+        },
+        {
+          "title": "pool: the selection bar is pinned at phone and tablet widths and never hides the last tile or the footer",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 3379,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:00.790Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-edda86e4ec1d01b370aa",
+          "file": "lists-and-home.spec.ts",
+          "line": 223,
+          "column": 5
+        },
+        {
+          "title": "keyboard order on the home: trail → menu → primary → pill → search → cards",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1680,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:04.187Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-1c45cde80c328d0ef303",
+          "file": "lists-and-home.spec.ts",
+          "line": 267,
+          "column": 5
+        },
+        {
+          "title": "back arrow on a deep page: the tablet pointer shortcut lands on the parent route",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1642,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:05.888Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-54d9a17f42e1c003365f",
+          "file": "lists-and-home.spec.ts",
+          "line": 288,
+          "column": 5
+        },
+        {
+          "title": "phone: the trail collapses to a single accessible back link",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1374,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:07.549Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-d8cdbcde6db9948381cd",
+          "file": "lists-and-home.spec.ts",
+          "line": 310,
+          "column": 5
+        },
+        {
+          "title": "phone: an archived card's Bring back lines up with the name and fits the card, idle and busy",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1150,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:08.939Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "0f2981fd45d15e4d853d-1d89151a4296a2871054",
+          "file": "lists-and-home.spec.ts",
+          "line": 330,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "members.spec.ts",
+      "file": "members.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "owner sees both RoleBadges and the email-only InviteForm",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1253,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:10.138Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-665e5b12467c70a0005c",
+          "file": "members.spec.ts",
+          "line": 34,
+          "column": 5
+        },
+        {
+          "title": "Remove is gated to the non-owner row",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1433,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:11.454Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-e8b72caedee0342e0519",
+          "file": "members.spec.ts",
+          "line": 53,
+          "column": 5
+        },
+        {
+          "title": "submitting a valid email shows the announced success",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1862,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:12.911Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "01480a904f937bb0a1f8-16a0057158965d3a7188",
+          "file": "members.spec.ts",
+          "line": 73,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "profile.spec.ts",
+      "file": "profile.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "saving a new display name reflects in the header without a reload",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1950,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:14.813Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8b79b4ee550a37632f1-4dd4a58c47c7d10f604a",
+          "file": "profile.spec.ts",
+          "line": 20,
+          "column": 5
+        },
+        {
+          "title": "profile links to tutorials and the completed sort tutorial",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1434,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:16.781Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "e8b79b4ee550a37632f1-64a75c1062991b97fb47",
+          "file": "profile.spec.ts",
+          "line": 64,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "smoke.spec.ts",
+      "file": "smoke.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "/ redirects to /login when logged out",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1094,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:18.231Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-87374521e11ce0354589",
+          "file": "smoke.spec.ts",
+          "line": 13,
+          "column": 5
+        },
+        {
+          "title": "/collections redirects to /login when logged out",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1158,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:19.342Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-1fc64d0843f181d20143",
+          "file": "smoke.spec.ts",
+          "line": 20,
+          "column": 5
+        },
+        {
+          "title": "/login renders the Google-only auth surface without overflow",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1083,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:20.521Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "4219922fea2e2bd3c691-c16a1b6748451f480f91",
+          "file": "smoke.spec.ts",
+          "line": 25,
+          "column": 5
+        }
+      ]
+    },
+    {
+      "title": "sort-images.spec.ts",
+      "file": "sort-images.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "triage hero image",
+          "file": "sort-images.spec.ts",
+          "line": 5,
+          "column": 6,
+          "specs": [
+            {
+              "title": "renders the item's hero photo, requested via the collection ULID",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1324,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:07:21.622Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "5c838b8e991f37fbc5c7-24e9a9ea8e8f56aa3d21",
+              "file": "sort-images.spec.ts",
+              "line": 14,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "sort-journey.spec.ts",
+      "file": "sort-journey.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "sort journey",
+          "file": "sort-journey.spec.ts",
+          "line": 16,
+          "column": 6,
+          "specs": [
+            {
+              "title": "start, feelings, pairs, ranking, save and share, open the link",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 120000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 10155,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:07:23.018Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0f1c6c2c0bc67f2ec539-5b352a3af9ee42bd73be",
+              "file": "sort-journey.spec.ts",
+              "line": 29,
+              "column": 7
+            }
+          ]
+        },
+        {
+          "title": "saved ranking on a phone",
+          "file": "sort-journey.spec.ts",
+          "line": 154,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Onward has room above it, Create link stays on one line, share controls are full-size taps, nothing scrolls sideways",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "tablet",
+                  "projectName": "tablet",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2026,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-09T22:07:33.250Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0f1c6c2c0bc67f2ec539-962d8feafb485dbdcbc2",
+              "file": "sort-journey.spec.ts",
+              "line": 168,
+              "column": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "welcome-walkthrough.spec.ts",
+      "file": "welcome-walkthrough.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "zero-collection first login walks through and hands off",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2285,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:35.514Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "daf62efdea02cf6d69a5-4e2f7dfe2469e2717031",
+          "file": "welcome-walkthrough.spec.ts",
+          "line": 56,
+          "column": 5
+        },
+        {
+          "title": "finishing then exploring dismisses for good",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 2285,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:37.823Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "daf62efdea02cf6d69a5-a51788f12e82ad76a36c",
+          "file": "welcome-walkthrough.spec.ts",
+          "line": 66,
+          "column": 5
+        },
+        {
+          "title": "leave tutorial mid-walkthrough dismisses too",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "tablet",
+              "projectName": "tablet",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1883,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-10-09T22:07:40.134Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "daf62efdea02cf6d69a5-2353d3eb1ccdc04351f0",
+          "file": "welcome-walkthrough.spec.ts",
+          "line": 79,
+          "column": 5
+        }
+      ]
     }
   ],
+  "errors": [],
   "stats": {
-    "startTime": "2026-10-09T20:54:06.345Z",
-    "duration": 25198.258,
-    "expected": 0,
+    "startTime": "2026-10-09T22:04:42.795Z",
+    "duration": 179665.44,
+    "expected": 44,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
