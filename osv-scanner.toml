@@ -2,6 +2,6 @@
 # Each entry must carry a reason and an ignoreUntil date; re-check at that date.
 
 [[IgnoredVulns]]
-id = "GHSA-vfj7-8cjw-p6xm"
-ignoreUntil = 2026-11-02
-reason = "braces <=3.0.3 stack-exhaustion DoS (CVE-2026-93687). Dev-only: eslint-config-next -> @next/eslint-plugin-next -> fast-glob -> micromatch -> braces; no runtime exposure. No fixed version published yet; drop this entry when braces > 3.0.3 ships."
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2026-11-30
+reason = "minimatch <11.0.1 globparts-amplification DoS (medium). Dev-only, lint tooling: eslint, @eslint/config-array, @eslint/eslintrc, eslint-plugin-import, eslint-plugin-react and eslint-plugin-jsx-a11y need minimatch ^3 (3.1.5), @typescript-eslint/typescript-estree needs ^10 (10.2.6). Patterns come from our own lint config, not untrusted input. Only 11.x is patched and its API differs from 3.x, so an override would break lint. Drop this entry when the eslint chain accepts minimatch >=11.0.1 or a patched 3.x/10.x ships."
