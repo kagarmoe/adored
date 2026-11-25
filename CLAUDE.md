@@ -254,7 +254,8 @@ skip ahead. Track work in **beads** (`bd`), never TodoWrite.
   `.git/sdd/$(git branch --show-current | tr '/' '-')/progress.md`, so a second problem never clobbers
   an in-flight one's scratch. `/close-out` deletes exactly that per-branch path.
 - Hooks are committed in `.githooks/` (`core.hooksPath=.githooks`; enable once per clone:
-  `git config core.hooksPath .githooks`). Nothing to install.
+  `git config core.hooksPath .githooks`). Nothing to install. `pre-commit` refuses commits on
+  `main`. `pre-push` runs the local gate. GitHub also rejects direct pushes to `main`, for admins too.
 
 ## Conventions & Patterns
 
