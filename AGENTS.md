@@ -7,8 +7,7 @@ This repository is **Adored**, a Next.js App Router application.
 ## Start Here
 
 1. Read `CLAUDE.md`.
-2. Run `bd prime` if you need the full Beads workflow context.
-3. Check the current branch and worktree before editing:
+2. Check the current branch and worktree before editing:
 
 ```bash
 git status --short --branch
@@ -25,17 +24,15 @@ git status --short --branch
 
 ## Workflow
 
-- Track work in Beads (`bd`), not ad hoc TODO files.
-- For substantive work, follow the Superpowers workflow described in `CLAUDE.md`: spec, review, plan, implementation, review, verification.
 - Pick model strength / reasoning effort per task using the **Agent Models** table in `CLAUDE.md` (high effort only for review, architecture, and hard debugging).
 - Prefer the repo's existing patterns over new abstractions.
 - Preserve unrelated local changes. Do not reset or revert user work unless explicitly asked.
-- Create a feature branch off `main` for code or docs changes. This repo uses the Team-maintainer git profile (commit, push, PR, merge); see `CLAUDE.md`.
+- Create a feature branch off `main` for code or docs changes. Agents may commit, push, open PRs, and merge; see `CLAUDE.md` → Git policy.
 - Commits and PRs: Conventional Commits, written in Simplified Technical English (STE). Be brief.
 
 ## Verification
 
-Run the gates in `CLAUDE.md` → Build & Test for the level of change. For docs-only changes, `npm run lint:md` is the gate (CI and the pre-push hook skip lint/test/build). Before pushing, follow the doc-sync and graphify steps in `CLAUDE.md` → PR lifecycle.
+Run the gates in `CLAUDE.md` → Build & Test for the level of change. For docs-only changes, `npm run lint:md` is the gate (CI and the pre-push hook skip lint/test/build). Before pushing, follow the doc-sync step in `CLAUDE.md` → PR lifecycle.
 
 ## Keep This File Small
 

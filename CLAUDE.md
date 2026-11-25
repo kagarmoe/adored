@@ -59,28 +59,6 @@ This file provides instructions and context for AI coding agents working on this
 
 Be brief.
 
-<!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:6cd5cc61 -->
-## Beads Issue Tracker
-
-This project uses **bd (beads)** for issue tracking. Run `bd prime` to see full workflow context and commands.
-
-### Quick Reference
-
-```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --claim  # Claim work
-bd close <id>         # Complete work
-```
-
-### Rules
-
-- Use `bd` for ALL task tracking — do NOT use TodoWrite, TaskCreate, or markdown TODO lists
-- Run `bd prime` for detailed command reference and session close protocol
-- Use `bd remember` for persistent knowledge — do NOT use MEMORY.md files
-
-**Architecture in one line:** issues live in a local Dolt DB; sync uses `refs/dolt/data` on your git remote; `.beads/issues.jsonl` is a passive export. See https://github.com/gastownhall/beads/blob/main/docs/SYNC_CONCEPTS.md for details and anti-patterns.
-
 ## Agent Models
 
 Match model strength to the task. Running the largest model on every subagent was this repo's
@@ -88,48 +66,17 @@ biggest token cost; reserve it for judgment.
 
 | Task | Claude (subagent `model:`) | Codex (reasoning effort) |
 |---|---|---|
-| Judgment: adversarial-review personas, spec review, architecture decisions, systematic-debugging of non-obvious bugs | `opus` | `high` |
+| Judgment: code review, spec review, architecture decisions, debugging non-obvious bugs | `opus` | `high` |
 | Executing a written plan step, writing tests to a spec, routine edits | `sonnet` | `medium` |
 | Searches and read-only sweeps | `haiku` (or the Explore agent) | `low` |
 
 - If a task fits no row, don't set a model — let the agent type use its own default.
 - Use aliases (`opus`, `sonnet`, `haiku`), never pinned versions, so this stays current.
 
-## Agent Context Profiles
+## Git policy
 
-The managed Beads block is task-tracking guidance, not permission to override repository, user, or orchestrator instructions.
-
-- **Conservative (default)**: Use `bd` for task tracking. Do not run git commits, git pushes, or Dolt remote sync unless explicitly asked. At handoff, report changed files, validation, and suggested next commands.
-- **Minimal**: Keep tool instruction files as pointers to `bd prime`; use the same conservative git policy unless active instructions say otherwise.
-- **Team-maintainer**: Only when the repository explicitly opts in, agents may close beads, run quality gates, commit, and push as part of session close. A current "do not commit" or "do not push" instruction still wins.
-
-## Session Completion
-
-This protocol applies when ending a Beads implementation workflow. It is subordinate to explicit user, repository, and orchestrator instructions.
-
-1. **File issues for remaining work** - Create beads for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **Handle git/sync by active profile**:
-   ```bash
-   # Conservative/minimal/default: report status and proposed commands; wait for approval.
-   git status
-
-   # Team-maintainer opt-in only, unless current instructions forbid it:
-   git pull --rebase
-   git push
-   git status
-   ```
-5. **Hand off** - Summarize changes, validation, issue status, and any blocked sync/commit/push step
-
-**Critical rules:**
-- Explicit user or orchestrator instructions override this Beads block.
-- Do not commit or push without clear authority from the active profile or the current user request.
-- If a required sync or push is blocked, stop and report the exact command and error.
-<!-- END BEADS INTEGRATION -->
-
-**Profile: Team-maintainer.** This repository opts in: agents may commit, push, open PRs, merge, and
-run `/close-out` when finishing a branch, unless the user says otherwise.
+Agents may commit, push, open PRs, and merge when they finish a branch, unless the user says
+otherwise. A current "do not commit" or "do not push" instruction wins.
 
 ## Build & Test
 
@@ -196,29 +143,8 @@ Next.js is opinionated. Follow its conventions, not workarounds:
 - **Validate at boundaries** — *input validation*, not test scope: re-check untrusted data (user input, external APIs) at the edge; don't re-validate trusted internal call results. Testing is separate and broad — see Build & Test.
 - **Follow auth patterns** — API routes, error responses, validation precedent already set
 
-## Development process
+## Git discipline
 
-Use the **superpowers** skills for all substantive work, in this order — each arrow is a gate, don't
-skip ahead. Track work in **beads** (`bd`), never TodoWrite.
-
-1. **`brainstorming`** → design spec to `docs/superpowers/specs/YYYY-MM-DD-<topic>-design.md`.
-2. **Review the spec FIRST.** Before any plan or code, run `adversarial-review` on the spec (personas
-   scaled via the lens→engine table below), then `superpowers:receiving-code-review` to fold the
-   findings back in. A spec that hasn't been adversarially reviewed does not proceed to planning.
-3. **`writing-plans`** → task-by-task plan to `docs/superpowers/plans/YYYY-MM-DD-<topic>.md`.
-4. **Execute** with `superpowers:subagent-driven-development` (same session) or `executing-plans`
-   (parallel session): fresh subagent per task, `test-driven-development` within each task (failing
-   test first), `systematic-debugging` for any bug *before* proposing a fix, plus the per-task
-   spec+quality review.
-5. **Review every change with the personas.** Each review — per-task and the final whole-branch one —
-   runs `adversarial-review` (guilty-until-proven; scale the persona set to the diff via the lens→engine
-   table below) wrapped in the `superpowers:requesting-code-review` → `receiving-code-review` cycle.
-   Review is a GATE before merge; no substantial change merges without it.
-6. **`superpowers:verification-before-completion`** before claiming anything done/passing/fixed —
-   evidence (the command + its output), never assertion.
-7. **`superpowers:finishing-a-development-branch`** to merge/PR/clean up — don't hand-roll it.
-
-**Git discipline:**
 - **Branch:** feature branch off `main` → PR → squash-merge → Vercel auto-deploys prod. Never commit
   directly to `main`.
 - **Isolate concurrent work:** a branch switch in a *shared* working tree silently discards another
@@ -233,7 +159,7 @@ skip ahead. Track work in **beads** (`bd`), never TodoWrite.
 
 - **Before pushing / opening a PR:** complete the local pre-PR verification above, run `/sync-docs`
   (update the governance docs this branch's changes affect, per `docs/doc-ownership.md`; never
-  PRODUCT/TONE), and `/graphify --update` (refresh the committed graph). The `.githooks/pre-push`
+  PRODUCT/TONE). The `.githooks/pre-push`
   doc-sync step soft-blocks a code push whose mapped docs weren't touched — run `/sync-docs`, or
   `git push --no-verify` if no documented fact moved.
 - **Before a UI PR is ready for review:** add inline PR images using
@@ -241,41 +167,17 @@ skip ahead. Track work in **beads** (`bd`), never TodoWrite.
   screenshots for every changed surface. Include phone screenshots when phone/responsive behavior
   changed. It is acceptable to open a draft PR first to get the PR number required by the release
   asset workflow, but do not ask for review without the images or an explicit blocker.
-- **Immediately after `gh pr merge` succeeds:** run `/close-out` — close the bead(s), harvest lessons
-  → `bd remember` (chat-first), delete this branch's `.git/sdd` scratch.
-- **Hard rule:** never close a bead or delete `.git/sdd` scratch before the merge is confirmed. The
-  bead is the "is it done?" truth; the scratch is the review loop's working context.
-- **Epic completion = all beads closed. Full stop.** An epic/project is complete only when every one
-  of its beads is closed — the plan bead, each task bead, and every follow-up bead filed during the
-  work. A merged PR closes that PR's bead; it does **not** finish the epic while any follow-up bead
-  remains open. Follow-ups are not optional and not owner-deferrable: file them and complete them
-  within the epic. Before declaring an epic complete, list its beads and confirm none are open.
+- **After `gh pr merge` succeeds:** delete this branch's `.git/sdd` scratch.
+- **Hard rule:** never delete `.git/sdd` scratch before the merge is confirmed. The scratch is the
+  review loop's working context.
 - **Multiple problems per session:** write each problem's ledger to
   `.git/sdd/$(git branch --show-current | tr '/' '-')/progress.md`, so a second problem never clobbers
-  an in-flight one's scratch. `/close-out` deletes exactly that per-branch path.
+  an in-flight one's scratch. After merge, delete exactly that per-branch path.
 - Hooks are committed in `.githooks/` (`core.hooksPath=.githooks`; enable once per clone:
   `git config core.hooksPath .githooks`). Nothing to install. `pre-commit` refuses commits on
   `main`. `pre-push` runs the local gate. GitHub also rejects direct pushes to `main`, for admins too.
 
 ## Conventions & Patterns
-
-**Review gate — `adversarial-review`.** Before merging substantial work, run the global
-`adversarial-review` skill (guilty-until-proven, seven personas; defeats rubber-stamping where
-generic review rubber-stamps). Scale the set to the diff — reach for the lens + engine that
-matches what changed:
-
-| Lens → engine | Invoke when the change touches… | Typical paths |
-|---|---|---|
-| **Security** | auth, access control, user input, secrets, API surface | `src/app/api/**`, `src/proxy.ts`, `**/*auth*` |
-| **Data/Persistence** → `postgres-review` | schema, migrations, queries, indexes | `src/lib/db/**`, `drizzle/**`, `*.sql` |
-| **Architect** → `system-design-review` | cross-layer seams, concurrency, idempotency, silent failures, type design | service/repo/route wiring |
-| **Craftsman** → `ponytail` | any non-trivial logic (simplicity / YAGNI) | `**/*.ts`, `**/*.tsx` |
-| **Graphic Design** → `DESIGN.md` | components, tokens, styling, theming | `**/*.tsx`, `**/*.css`, `tailwind*` |
-| **UX** | rendered UI, interaction, accessibility | `src/app/**/*.tsx` (view/page components) |
-| **QA/Test** | new/changed behavior — and proof the test runs in CI | `**/*.test.ts`, `**/*.spec.ts`, `.github/**` |
-
-`adversarial-review`, `system-design-review`, and `postgres-review` are personal global skills;
-`ponytail` is a plugin. No per-repo setup.
 
 **Testing:** DB-backed tests live in `src/lib/db/` behind `RUN_DB_TESTS=1`; they run serially in CI
 via the `db-tests` job and locally via `npm run test:db`. Both CI and `test:db:changed` run them only
@@ -299,8 +201,8 @@ Gentle, reversible, photo-first. One decision in focus at a time. Still off the 
 Tablet-first, phone-ready; taps primary, swipe fine where native (carousels, dismiss), drag where it
 helps (reordering, moving items between buckets). Touch targets ≥44px (`h-11`). WCAG 2.1 AA.
 
-The `/impeccable` skill (and its sub-commands) reads `PRODUCT.md` automatically. The visual system is
-defined in [`DESIGN.md`](DESIGN.md) — palette, type, elevation, components — and follows `TONE.md`.
+The visual system is defined in [`DESIGN.md`](DESIGN.md) — palette, type, elevation, components —
+and follows `TONE.md`.
 
 ## Wireframes (reference, not law)
 
@@ -316,12 +218,3 @@ top-right user area. Interaction principles are under Design Context.
 The wireframes per-screen layouts (collections grid, item grid, card-based sorting, bucketed results)
 are useful reference, but the **flow may change** — e.g. uploading photos before metadata, deferring
 metadata to fill in later, and bulk-uploading images.
-
-## graphify
-
-This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
-
-Rules:
-- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
-- Refresh the committed graph with `/graphify --update` before pushing (see PR lifecycle).
