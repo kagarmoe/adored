@@ -1,0 +1,15 @@
+#!/bin/sh
+# Pre-commit guard: refuse commits on main. Work on a feature branch and open a PR.
+# Applies to every agent and person, in every clone and worktree.
+#
+# Enable once per clone:   git config core.hooksPath .githooks
+# Bypass in a pinch:       git commit --no-verify
+#   (GitHub still rejects a direct push to main.)
+
+branch=$(git symbolic-ref --quiet --short HEAD 2>/dev/null) || exit 0   # detached HEAD
+
+if [ "$branch" = "main" ]; then
+  echo "pre-commit: refusing to commit on main." >&2
+  echo "pre-commit: create a branch first: git switch -c <type>/<topic>" >&2
+  exit 1
+fi
