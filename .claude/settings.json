@@ -4,27 +4,5 @@
       "Write(.git/sdd/**/**)",
       "Edit(.git/sdd/**/**)"
     ]
-  },
-  "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/graphify-nudge.py\" bash"
-          }
-        ]
-      },
-      {
-        "matcher": "Read|Glob",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/graphify-nudge.py\" read"
-          }
-        ]
-      }
-    ]
   }
 }
